@@ -380,11 +380,39 @@ inline uint256 HashX16R(const T1 pbegin, const T1 pend, const uint256 PrevBlockH
     sph_whirlpool_context    ctx_whirlpool;  //E
     sph_sha512_context       ctx_sha512;     //F
 
+
+    //////
+    // Insert x16rc code here...
+    //
+    // Cliffnotes: use last sixteen of PrevBlockHash to shuffle
+    // a list of all algos and append that to PrevBlockHash and pass to hasher
+    //////
+
+    std::string hashString = PrevBlockHash.GetHex(); // uint256 to string
+    std::string list = "0123456789abcdef";
+    std::string order = list;
+
+    std::string hashFront = hashString.substr(0,48); // preserve first 48 chars
+    std::string sixteen = hashString.substr(48,64); // extract last sixteen chars
+
+    for(int i=0; i<16; i++){
+      int offset = list.find(sixteen[i]); // find offset of sixteen char
+
+      order.insert(0, 1, order[offset]); // insert the nth character at the beginning
+      order.erase(offset+1, 1);  // erase the n+1 character (was nth)
+    }
+
+    const uint256 scrambleHash = uint256S(hashFront + order); // uint256 with length of hash and shuffled last sixteen
+
+    //////
+    //
+    //////
+
     static unsigned char pblank[1];
 
     uint512 hash[16];
 
-    for (int i=0;i<16;i++) 
+    for (int i=0;i<16;i++)
     {
         const void *toHash;
         int lenToHash;
@@ -396,7 +424,7 @@ inline uint256 HashX16R(const T1 pbegin, const T1 pend, const uint256 PrevBlockH
             lenToHash = 64;
         }
 
-        hashSelection = GetHashSelection(PrevBlockHash, i);
+        hashSelection = GetHashSelection(scrambleHash, i); // change PrevBlockHash to scrambleHash (x16rc)
 
         switch(hashSelection) {
             case 0:

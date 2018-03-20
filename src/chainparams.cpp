@@ -174,7 +174,7 @@ public:
 
 //////////////
 //////////////
-/*
+
         // calculate Genesis Block
         // Reset genesis
         consensus.hashGenesisBlock = uint256S("0x");
@@ -213,7 +213,7 @@ public:
         }
         std::cout << std::string("Finished calculating Mainnet Genesis Block:\n");
 
-*/
+
 
 
 //////////////
