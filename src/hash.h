@@ -382,7 +382,7 @@ inline uint256 HashX16R(const T1 pbegin, const T1 pend, const uint256 PrevBlockH
 
 
     //////
-    // Insert x16rc code here...
+    // Insert x16s code here...
     //
     // Cliffnotes: use last sixteen of PrevBlockHash to shuffle
     // a list of all algos and append that to PrevBlockHash and pass to hasher
@@ -424,7 +424,7 @@ inline uint256 HashX16R(const T1 pbegin, const T1 pend, const uint256 PrevBlockH
             lenToHash = 64;
         }
 
-        hashSelection = GetHashSelection(scrambleHash, i); // change PrevBlockHash to scrambleHash (x16rc)
+        hashSelection = GetHashSelection(scrambleHash, i); // change PrevBlockHash to scrambleHash (x16s)
 
         switch(hashSelection) {
             case 0:

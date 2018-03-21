@@ -224,8 +224,8 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0x00000066c6d4ff3385021f3c77b3e42fe04b22c4aec133f028c2ae275558ba7e"));
         assert(genesis.hashMerkleRoot == uint256S("0x5604f612f182609c0bbc70c622b918c879daa16fa9edcc3868188f095c943719"));
 
-        vSeeds.emplace_back("seed.x16rc.org", false);
-        vSeeds.emplace_back("dev.x16rc.org", false);
+        vSeeds.emplace_back("seed.x16s.org", false);
+        vSeeds.emplace_back("seed.pigeoncoin.org", false);
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,55); // changed 60 to 55
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,122); // changed 122 to 123
@@ -308,8 +308,8 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
 
-        vSeeds.emplace_back("seed-testnet-pigeon.pigeoncoin.org", false);
-        vSeeds.emplace_back("seed-testnet-pigeon.bitactivate.com", false);
+        vSeeds.emplace_back("test-seed.x16s.org", false);
+        vSeeds.emplace_back("test-seed.pigeoncoin.org", false);
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,112); // from 111
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,193); // from 196
