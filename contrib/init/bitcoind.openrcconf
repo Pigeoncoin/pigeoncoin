@@ -1,33 +1,33 @@
-# /etc/conf.d/ravend: config file for /etc/init.d/ravend
+# /etc/conf.d/pigeond: config file for /etc/init.d/pigeond
 
 # Config file location
-#RAVEND_CONFIGFILE="/etc/raven/raven.conf"
+#PIGEOND_CONFIGFILE="/etc/pigeon/pigeon.conf"
 
-# What directory to write pidfile to?  (created and owned by $RAVEND_USER)
-#RAVEND_PIDDIR="/var/run/ravend"
+# What directory to write pidfile to?  (created and owned by $PIGEOND_USER)
+#PIGEOND_PIDDIR="/var/run/pigeond"
 
 # What filename to give the pidfile
-#RAVEND_PIDFILE="${RAVEND_PIDDIR}/ravend.pid"
+#PIGEOND_PIDFILE="${PIGEOND_PIDDIR}/pigeond.pid"
 
-# Where to write ravend data (be mindful that the blockchain is large)
-#RAVEND_DATADIR="/var/lib/ravend"
+# Where to write pigeond data (be mindful that the blockchain is large)
+#PIGEOND_DATADIR="/var/lib/pigeond"
 
-# User and group to own ravend process
-#RAVEND_USER="raven"
-#RAVEND_GROUP="raven"
+# User and group to own pigeond process
+#PIGEOND_USER="pigeon"
+#PIGEOND_GROUP="pigeon"
 
-# Path to ravend executable
-#RAVEND_BIN="/usr/bin/ravend"
+# Path to pigeond executable
+#PIGEOND_BIN="/usr/bin/pigeond"
 
-# Nice value to run ravend under
-#RAVEND_NICE=0
+# Nice value to run pigeond under
+#PIGEOND_NICE=0
 
 # Additional options (avoid -conf and -datadir, use flags above)
-#RAVEND_OPTS=""
+#PIGEOND_OPTS=""
 
-# The timeout in seconds OpenRC will wait for ravend to terminate
+# The timeout in seconds OpenRC will wait for pigeond to terminate
 # after a SIGTERM has been raised.
 # Note that this will be mapped as argument to start-stop-daemon's
 # '--retry' option, which means you can specify a retry schedule
 # here. For more information see man 8 start-stop-daemon.
-RAVEND_SIGTERM_TIMEOUT=60
+PIGEOND_SIGTERM_TIMEOUT=60

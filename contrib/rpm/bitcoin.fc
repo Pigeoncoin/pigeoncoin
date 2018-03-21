@@ -1,8 +1,8 @@
-/usr/bin/raven-cli		--	gen_context(system_u:object_r:raven_exec_t,s0)
-/usr/sbin/ravend		--	gen_context(system_u:object_r:raven_exec_t,s0)
-/usr/lib(64)?/raven/ravend		--	gen_context(system_u:object_r:raven_exec_t,s0)
+/usr/bin/pigeon-cli		--	gen_context(system_u:object_r:pigeon_exec_t,s0)
+/usr/sbin/pigeond		--	gen_context(system_u:object_r:pigeon_exec_t,s0)
+/usr/lib(64)?/pigeon/pigeond		--	gen_context(system_u:object_r:pigeon_exec_t,s0)
 
-/etc/raven(/.*)?		gen_context(system_u:object_r:raven_conf_t,s0)
-/var/lib/raven(/.*)?		gen_context(system_u:object_r:raven_var_lib_t,s0)
+/etc/pigeon(/.*)?		gen_context(system_u:object_r:pigeon_conf_t,s0)
+/var/lib/pigeon(/.*)?		gen_context(system_u:object_r:pigeon_var_lib_t,s0)
 
-(/var)?/run/ravend(/.*)?   gen_context(system_u:object_r:raven_var_run_t,s0)
+(/var)?/run/pigeond(/.*)?   gen_context(system_u:object_r:pigeon_var_run_t,s0)

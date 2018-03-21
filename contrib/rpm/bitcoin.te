@@ -1,81 +1,81 @@
-policy_module(raven, 1.100.1)
+policy_module(pigeon, 1.100.1)
 
 ########################################
 #
 # Declarations
 #
 
-type raven_t;
-type raven_exec_t;
-init_daemon_domain(raven_t, raven_exec_t)
+type pigeon_t;
+type pigeon_exec_t;
+init_daemon_domain(pigeon_t, pigeon_exec_t)
 
-permissive raven_t;
+permissive pigeon_t;
 
-type raven_initrc_exec_t;
-init_script_file(raven_initrc_exec_t)
+type pigeon_initrc_exec_t;
+init_script_file(pigeon_initrc_exec_t)
 
-type raven_conf_t;
-files_type(raven_conf_t)
+type pigeon_conf_t;
+files_type(pigeon_conf_t)
 
-type raven_var_lib_t;
-files_type(raven_var_lib_t)
+type pigeon_var_lib_t;
+files_type(pigeon_var_lib_t)
 
-type raven_var_run_t;
-files_type(raven_var_run_t)
+type pigeon_var_run_t;
+files_type(pigeon_var_run_t)
 
-type raven_port_t;
-corenet_port(raven_port_t)
+type pigeon_port_t;
+corenet_port(pigeon_port_t)
 
 ########################################
 #
-# raven local policy
+# pigeon local policy
 #
-allow raven_t self:process { fork };
+allow pigeon_t self:process { fork };
 
-allow raven_t self:fifo_file rw_fifo_file_perms;
-allow raven_t self:unix_stream_socket create_stream_socket_perms;
+allow pigeon_t self:fifo_file rw_fifo_file_perms;
+allow pigeon_t self:unix_stream_socket create_stream_socket_perms;
 
-manage_dirs_pattern(raven_t, raven_conf_t, raven_conf_t)
-manage_files_pattern(raven_t, raven_conf_t, raven_conf_t)
+manage_dirs_pattern(pigeon_t, pigeon_conf_t, pigeon_conf_t)
+manage_files_pattern(pigeon_t, pigeon_conf_t, pigeon_conf_t)
 
-manage_dirs_pattern(raven_t, raven_var_lib_t, raven_var_lib_t)
-manage_files_pattern(raven_t, raven_var_lib_t, raven_var_lib_t)
-files_var_lib_filetrans(raven_t, raven_var_lib_t, { dir file })
+manage_dirs_pattern(pigeon_t, pigeon_var_lib_t, pigeon_var_lib_t)
+manage_files_pattern(pigeon_t, pigeon_var_lib_t, pigeon_var_lib_t)
+files_var_lib_filetrans(pigeon_t, pigeon_var_lib_t, { dir file })
 
-manage_dirs_pattern(raven_t, raven_var_run_t, raven_var_run_t)
-manage_files_pattern(raven_t, raven_var_run_t, raven_var_run_t)
+manage_dirs_pattern(pigeon_t, pigeon_var_run_t, pigeon_var_run_t)
+manage_files_pattern(pigeon_t, pigeon_var_run_t, pigeon_var_run_t)
 
-sysnet_dns_name_resolve(raven_t)
-corenet_all_recvfrom_unlabeled(raven_t)
+sysnet_dns_name_resolve(pigeon_t)
+corenet_all_recvfrom_unlabeled(pigeon_t)
 
-allow raven_t self:tcp_socket create_stream_socket_perms;
-corenet_tcp_sendrecv_generic_if(raven_t)
-corenet_tcp_sendrecv_generic_node(raven_t)
-corenet_tcp_sendrecv_all_ports(raven_t)
-corenet_tcp_bind_generic_node(raven_t)
-
-gen_require(`
-    type raven_port_t;
-')
-allow raven_t raven_port_t:tcp_socket name_bind;
+allow pigeon_t self:tcp_socket create_stream_socket_perms;
+corenet_tcp_sendrecv_generic_if(pigeon_t)
+corenet_tcp_sendrecv_generic_node(pigeon_t)
+corenet_tcp_sendrecv_all_ports(pigeon_t)
+corenet_tcp_bind_generic_node(pigeon_t)
 
 gen_require(`
-    type raven_port_t;
+    type pigeon_port_t;
 ')
-allow raven_t raven_port_t:tcp_socket name_connect;
+allow pigeon_t pigeon_port_t:tcp_socket name_bind;
 
-domain_use_interactive_fds(raven_t)
+gen_require(`
+    type pigeon_port_t;
+')
+allow pigeon_t pigeon_port_t:tcp_socket name_connect;
 
-files_read_etc_files(raven_t)
+domain_use_interactive_fds(pigeon_t)
 
-miscfiles_read_localization(raven_t)
+files_read_etc_files(pigeon_t)
 
-sysnet_dns_name_resolve(raven_t)
+miscfiles_read_localization(pigeon_t)
 
-allow raven_t raven_exec_t:file execute_no_trans;
-allow raven_t self:process setsched;
-corecmd_exec_ls(raven_t)
-corenet_tcp_connect_http_port(raven_t)
-dev_read_urand(raven_t)
-fs_getattr_xattr_fs(raven_t)
-kernel_read_system_state(raven_t)
+sysnet_dns_name_resolve(pigeon_t)
+
+allow pigeon_t pigeon_exec_t:file execute_no_trans;
+allow pigeon_t self:process setsched;
+corecmd_exec_ls(pigeon_t)
+corenet_tcp_connect_http_port(pigeon_t)
+dev_read_urand(pigeon_t)
+fs_getattr_xattr_fs(pigeon_t)
+kernel_read_system_state(pigeon_t)

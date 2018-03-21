@@ -1,6 +1,6 @@
 [Protocol]
-exec=raven-qt '%u'
-protocol=raven
+exec=pigeon-qt '%u'
+protocol=pigeon
 input=none
 output=none
 helper=true

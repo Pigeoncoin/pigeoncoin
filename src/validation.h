@@ -1,14 +1,14 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Raven Core developers
+// Copyright (c) 2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef RAVEN_VALIDATION_H
-#define RAVEN_VALIDATION_H
+#ifndef PIGEON_VALIDATION_H
+#define PIGEON_VALIDATION_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/raven-config.h"
+#include "config/pigeon-config.h"
 #endif
 
 #include "amount.h"
@@ -483,4 +483,4 @@ bool DumpMempool();
 /** Load the mempool from disk. */
 bool LoadMempool();
 
-#endif // RAVEN_VALIDATION_H
+#endif // PIGEON_VALIDATION_H

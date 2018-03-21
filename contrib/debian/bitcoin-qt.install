@@ -1,6 +1,6 @@
-usr/local/bin/raven-qt usr/bin
-share/pixmaps/raven32.xpm usr/share/pixmaps
-share/pixmaps/raven16.xpm usr/share/pixmaps
-share/pixmaps/raven128.png usr/share/pixmaps
-debian/raven-qt.desktop usr/share/applications
-debian/raven-qt.protocol usr/share/kde4/services/
+usr/local/bin/pigeon-qt usr/bin
+share/pixmaps/pigeon32.xpm usr/share/pixmaps
+share/pixmaps/pigeon16.xpm usr/share/pixmaps
+share/pixmaps/pigeon128.png usr/share/pixmaps
+debian/pigeon-qt.desktop usr/share/applications
+debian/pigeon-qt.protocol usr/share/kde4/services/

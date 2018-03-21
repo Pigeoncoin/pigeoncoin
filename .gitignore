@@ -1,14 +1,14 @@
 *.tar.gz
 
-src/raven
-src/ravend
-src/raven-cli
-src/raven-tx
-src/test/test_raven
-src/test/test_raven_fuzzy
-src/qt/test/test_raven-qt
-src/qt/raven-qt
-src/qt/raven-qt.exe
+src/pigeon
+src/pigeond
+src/pigeon-cli
+src/pigeon-tx
+src/test/test_pigeon
+src/test/test_pigeon_fuzzy
+src/qt/test/test_pigeon-qt
+src/qt/pigeon-qt
+src/qt/pigeon-qt.exe
 .vscode
 output.txt
 
@@ -33,8 +33,8 @@ config.log
 config.status
 configure
 libtool
-src/config/raven-config.h
-src/config/raven-config.h.in
+src/config/pigeon-config.h
+src/config/pigeon-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
@@ -81,11 +81,11 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-Raven-Qt.app
+Pigeon-Qt.app
 
 # Unit-tests
 Makefile.test
-raven-qt_test
+pigeon-qt_test
 
 # Resources cpp
 qrc_*.cpp
@@ -98,7 +98,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_raven.coverage/
+test_pigeon.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -113,5 +113,5 @@ test/cache/*
 
 /doc/doxygen/
 
-libravenconsensus.pc
+libpigeonconsensus.pc
 contrib/devtools/split-debug.sh

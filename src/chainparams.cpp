@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Raven Core developers
+// Copyright (c) 2009-2016 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -227,13 +227,13 @@ public:
         vSeeds.emplace_back("seed.x16rc.org", false);
         vSeeds.emplace_back("dev.x16rc.org", false);
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,60);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,122);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,55); // changed 60 to 55
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,122); // changed 122 to 123
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
-        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x08, 0x77, 0xA1, 0x2A}; // was {0x04, 0x88, 0xB2, 0x1E}
+        base58Prefixes[EXT_SECRET_KEY] = {0x08, 0x77, 0xA1, 0x2A}; // was {0x04, 0x88, 0xB2, 0x1E}
 
-        bech32_hrp = "rc";
+        bech32_hrp = "pc"; // changed from "rc" to "pc"
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
@@ -249,7 +249,7 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Update as we know more about the contents of the Raven chain
+            // Update as we know more about the contents of the Pigeon chain
             1509572692, // * UNIX timestamp of last known number of transactions
             1,          // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
@@ -308,14 +308,14 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
 
-        vSeeds.emplace_back("seed-testnet-raven.ravencoin.org", false);
-        vSeeds.emplace_back("seed-testnet-raven.bitactivate.com", false);
+        vSeeds.emplace_back("seed-testnet-pigeon.pigeoncoin.org", false);
+        vSeeds.emplace_back("seed-testnet-pigeon.bitactivate.com", false);
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
-        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,112); // from 111
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,193); // from 196
+        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,233); // from 239
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x03, 0x53, 0x77, 0xCA}; // from {0x04, 0x35, 0x87, 0xCF};
+        base58Prefixes[EXT_SECRET_KEY] = {0x03, 0x53, 0x88, 0x91}; // {0x04, 0x35, 0x83, 0x94};
 
         bech32_hrp = "tr";
 
@@ -332,7 +332,7 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Update as we know more about the contents of the Raven chain
+            // Update as we know more about the contents of the Pigeon chain
             1513705170, // * UNIX timestamp of last known number of transactions
             1,          // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
@@ -406,11 +406,11 @@ public:
             0
         };
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
-        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,112); // from 111
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,193); // from 196
+        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,233); // from 239
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x03, 0x53, 0x77, 0xCA}; // from {0x04, 0x35, 0x87, 0xCF};
+        base58Prefixes[EXT_SECRET_KEY] = {0x03, 0x53, 0x88, 0x91}; // {0x04, 0x35, 0x83, 0x94};
 
         bech32_hrp = "rcrt";
     }

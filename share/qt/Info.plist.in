@@ -11,7 +11,7 @@
   </array>
 
   <key>CFBundleIconFile</key>
-  <string>raven.icns</string>
+  <string>pigeon.icns</string>
 
   <key>CFBundlePackageType</key>
   <string>APPL</string>
@@ -29,16 +29,16 @@
   <string>????</string>
 
   <key>CFBundleExecutable</key>
-  <string>Raven-Qt</string>
+  <string>Pigeon-Qt</string>
   
   <key>CFBundleName</key>
-  <string>Raven-Qt</string>
+  <string>Pigeon-Qt</string>
 
   <key>LSHasLocalizedDisplayName</key>
   <true/>
 
   <key>CFBundleIdentifier</key>
-  <string>org.ravenfoundation.Raven-Qt</string>
+  <string>org.pigeonfoundation.Pigeon-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>
@@ -46,10 +46,10 @@
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>CFBundleURLName</key>
-      <string>org.raven.RavenPayment</string>
+      <string>org.pigeon.PigeonPayment</string>
       <key>CFBundleURLSchemes</key>
       <array>
-        <string>raven</string>
+        <string>pigeon</string>
       </array>
     </dict>
   </array>
@@ -58,9 +58,9 @@
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>org.raven.paymentrequest</string>
+      <string>org.pigeon.paymentrequest</string>
       <key>UTTypeDescription</key>
-      <string>Raven payment request</string>
+      <string>Pigeon payment request</string>
       <key>UTTypeConformsTo</key>
       <array>
         <string>public.data</string>
@@ -68,10 +68,10 @@
       <key>UTTypeTagSpecification</key>
       <dict>
         <key>public.mime-type</key>
-        <string>application/x-raven-payment-request</string>
+        <string>application/x-pigeon-payment-request</string>
         <key>public.filename-extension</key>
         <array>
-          <string>ravenpaymentrequest</string>
+          <string>pigeonpaymentrequest</string>
         </array>
       </dict>
     </dict>
@@ -84,7 +84,7 @@
       <string>Editor</string>
       <key>LSItemContentTypes</key>
       <array>
-        <string>org.raven.paymentrequest</string>
+        <string>org.pigeon.paymentrequest</string>
       </array>
       <key>LSHandlerRank</key>
       <string>Owner</string>

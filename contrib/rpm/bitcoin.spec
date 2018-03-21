@@ -13,31 +13,31 @@
 %endif
 %endif
 
-Name:		raven
+Name:		pigeon
 Version:	0.12.0
 Release:	2%{?dist}
 Summary:	Peer to Peer Cryptographic Currency
 
 Group:		Applications/System
 License:	MIT
-URL:		https://raven.org/
-Source0:	https://raven.org/bin/raven-core-%{version}/raven-%{version}.tar.gz
+URL:		https://pigeon.org/
+Source0:	https://pigeon.org/bin/pigeon-core-%{version}/pigeon-%{version}.tar.gz
 Source1:	http://download.oracle.com/berkeley-db/db-%{bdbv}.NC.tar.gz
 
-Source10:	https://raw.githubusercontent.com/raven/raven/v%{version}/contrib/debian/examples/raven.conf
+Source10:	https://raw.githubusercontent.com/pigeon/pigeon/v%{version}/contrib/debian/examples/pigeon.conf
 
 #man pages
-Source20:	https://raw.githubusercontent.com/raven/raven/v%{version}/doc/man/ravend.1
-Source21:	https://raw.githubusercontent.com/raven/raven/v%{version}/doc/man/raven-cli.1
-Source22:	https://raw.githubusercontent.com/raven/raven/v%{version}/doc/man/raven-qt.1
+Source20:	https://raw.githubusercontent.com/pigeon/pigeon/v%{version}/doc/man/pigeond.1
+Source21:	https://raw.githubusercontent.com/pigeon/pigeon/v%{version}/doc/man/pigeon-cli.1
+Source22:	https://raw.githubusercontent.com/pigeon/pigeon/v%{version}/doc/man/pigeon-qt.1
 
 #selinux
-Source30:	https://raw.githubusercontent.com/raven/raven/v%{version}/contrib/rpm/raven.te
-# Source31 - what about raven-tx and bench_raven ???
-Source31:	https://raw.githubusercontent.com/raven/raven/v%{version}/contrib/rpm/raven.fc
-Source32:	https://raw.githubusercontent.com/raven/raven/v%{version}/contrib/rpm/raven.if
+Source30:	https://raw.githubusercontent.com/pigeon/pigeon/v%{version}/contrib/rpm/pigeon.te
+# Source31 - what about pigeon-tx and bench_pigeon ???
+Source31:	https://raw.githubusercontent.com/pigeon/pigeon/v%{version}/contrib/rpm/pigeon.fc
+Source32:	https://raw.githubusercontent.com/pigeon/pigeon/v%{version}/contrib/rpm/pigeon.if
 
-Source100:	https://upload.wikimedia.org/wikipedia/commons/4/46/Raven.svg
+Source100:	https://upload.wikimedia.org/wikipedia/commons/4/46/Pigeon.svg
 
 %if 0%{?_use_libressl:1}
 BuildRequires:	libressl-devel
@@ -50,13 +50,13 @@ BuildRequires:	autoconf automake libtool
 BuildRequires:	libevent-devel
 
 
-Patch0:		raven-0.12.0-libressl.patch
+Patch0:		pigeon-0.12.0-libressl.patch
 
 
 %description
-Raven is a digital cryptographic currency that uses peer-to-peer technology to
+Pigeon is a digital cryptographic currency that uses peer-to-peer technology to
 operate with no central authority or banks; managing transactions and the
-issuing of ravens is carried out collectively by the network.
+issuing of pigeons is carried out collectively by the network.
 
 %if %{_buildqt}
 %package core
@@ -79,42 +79,42 @@ BuildRequires:	%{_bindir}/inkscape
 BuildRequires:	%{_bindir}/convert
 
 %description core
-Raven is a digital cryptographic currency that uses peer-to-peer technology to
+Pigeon is a digital cryptographic currency that uses peer-to-peer technology to
 operate with no central authority or banks; managing transactions and the
-issuing of ravens is carried out collectively by the network.
+issuing of pigeons is carried out collectively by the network.
 
 This package contains the Qt based graphical client and node. If you are looking
-to run a Raven wallet, this is probably the package you want.
+to run a Pigeon wallet, this is probably the package you want.
 %endif
 
 
 %package libs
-Summary:	Raven shared libraries
+Summary:	Pigeon shared libraries
 Group:		System Environment/Libraries
 
 %description libs
-This package provides the ravenconsensus shared libraries. These libraries
+This package provides the pigeonconsensus shared libraries. These libraries
 may be used by third party software to provide consensus verification
 functionality.
 
 Unless you know need this package, you probably do not.
 
 %package devel
-Summary:	Development files for raven
+Summary:	Development files for pigeon
 Group:		Development/Libraries
 Requires:	%{name}-libs = %{version}-%{release}
 
 %description devel
 This package contains the header files and static library for the
-ravenconsensus shared library. If you are developing or compiling software
+pigeonconsensus shared library. If you are developing or compiling software
 that wants to link against that library, then you need this package installed.
 
 Most people do not need this package installed.
 
 %package server
-Summary:	The raven daemon
+Summary:	The pigeon daemon
 Group:		System Environment/Daemons
-Requires:	raven-utils = %{version}-%{release}
+Requires:	pigeon-utils = %{version}-%{release}
 Requires:	selinux-policy policycoreutils-python
 Requires(pre):	shadow-utils
 Requires(post):	%{_sbindir}/semodule %{_sbindir}/restorecon %{_sbindir}/fixfiles %{_sbindir}/sestatus
@@ -124,34 +124,34 @@ BuildRequires:	checkpolicy
 BuildRequires:	%{_datadir}/selinux/devel/Makefile
 
 %description server
-This package provides a stand-alone raven-core daemon. For most users, this
+This package provides a stand-alone pigeon-core daemon. For most users, this
 package is only needed if they need a full-node without the graphical client.
 
 Some third party wallet software will want this package to provide the actual
-raven-core node they use to connect to the network.
+pigeon-core node they use to connect to the network.
 
-If you use the graphical raven-core client then you almost certainly do not
+If you use the graphical pigeon-core client then you almost certainly do not
 need this package.
 
 %package utils
-Summary:	Raven utilities
+Summary:	Pigeon utilities
 Group:		Applications/System
 
 %description utils
 This package provides several command line utilities for interacting with a
-raven-core daemon.
+pigeon-core daemon.
 
-The raven-cli utility allows you to communicate and control a raven daemon
-over RPC, the raven-tx utility allows you to create a custom transaction, and
-the bench_raven utility can be used to perform some benchmarks.
+The pigeon-cli utility allows you to communicate and control a pigeon daemon
+over RPC, the pigeon-tx utility allows you to create a custom transaction, and
+the bench_pigeon utility can be used to perform some benchmarks.
 
-This package contains utilities needed by the raven-server package.
+This package contains utilities needed by the pigeon-server package.
 
 
 %prep
 %setup -q
 %patch0 -p1 -b .libressl
-cp -p %{SOURCE10} ./raven.conf.example
+cp -p %{SOURCE10} ./pigeon.conf.example
 tar -zxf %{SOURCE1}
 cp -p db-%{bdbv}.NC/LICENSE ./db-%{bdbv}.NC-LICENSE
 mkdir db4 SELinux
@@ -172,7 +172,7 @@ make %{?_smp_mflags}
 pushd SELinux
 for selinuxvariant in %{selinux_variants}; do
 	make NAME=${selinuxvariant} -f %{_datadir}/selinux/devel/Makefile
-	mv raven.pp raven.pp.${selinuxvariant}
+	mv pigeon.pp pigeon.pp.${selinuxvariant}
 	make NAME=${selinuxvariant} -f %{_datadir}/selinux/devel/Makefile clean
 done
 popd
@@ -182,42 +182,42 @@ popd
 make install DESTDIR=%{buildroot}
 
 mkdir -p -m755 %{buildroot}%{_sbindir}
-mv %{buildroot}%{_bindir}/ravend %{buildroot}%{_sbindir}/ravend
+mv %{buildroot}%{_bindir}/pigeond %{buildroot}%{_sbindir}/pigeond
 
 # systemd stuff
 mkdir -p %{buildroot}%{_tmpfilesdir}
-cat <<EOF > %{buildroot}%{_tmpfilesdir}/raven.conf
-d /run/ravend 0750 raven raven -
+cat <<EOF > %{buildroot}%{_tmpfilesdir}/pigeon.conf
+d /run/pigeond 0750 pigeon pigeon -
 EOF
-touch -a -m -t 201504280000 %{buildroot}%{_tmpfilesdir}/raven.conf
+touch -a -m -t 201504280000 %{buildroot}%{_tmpfilesdir}/pigeon.conf
 
 mkdir -p %{buildroot}%{_sysconfdir}/sysconfig
-cat <<EOF > %{buildroot}%{_sysconfdir}/sysconfig/raven
-# Provide options to the raven daemon here, for example
+cat <<EOF > %{buildroot}%{_sysconfdir}/sysconfig/pigeon
+# Provide options to the pigeon daemon here, for example
 # OPTIONS="-testnet -disable-wallet"
 
 OPTIONS=""
 
 # System service defaults.
 # Don't change these unless you know what you're doing.
-CONFIG_FILE="%{_sysconfdir}/raven/raven.conf"
-DATA_DIR="%{_localstatedir}/lib/raven"
-PID_FILE="/run/ravend/ravend.pid"
+CONFIG_FILE="%{_sysconfdir}/pigeon/pigeon.conf"
+DATA_DIR="%{_localstatedir}/lib/pigeon"
+PID_FILE="/run/pigeond/pigeond.pid"
 EOF
-touch -a -m -t 201504280000 %{buildroot}%{_sysconfdir}/sysconfig/raven
+touch -a -m -t 201504280000 %{buildroot}%{_sysconfdir}/sysconfig/pigeon
 
 mkdir -p %{buildroot}%{_unitdir}
-cat <<EOF > %{buildroot}%{_unitdir}/raven.service
+cat <<EOF > %{buildroot}%{_unitdir}/pigeon.service
 [Unit]
-Description=Raven daemon
+Description=Pigeon daemon
 After=syslog.target network.target
 
 [Service]
 Type=forking
-ExecStart=%{_sbindir}/ravend -daemon -conf=\${CONFIG_FILE} -datadir=\${DATA_DIR} -pid=\${PID_FILE} \$OPTIONS
-EnvironmentFile=%{_sysconfdir}/sysconfig/raven
-User=raven
-Group=raven
+ExecStart=%{_sbindir}/pigeond -daemon -conf=\${CONFIG_FILE} -datadir=\${DATA_DIR} -pid=\${PID_FILE} \$OPTIONS
+EnvironmentFile=%{_sysconfdir}/sysconfig/pigeon
+User=pigeon
+Group=pigeon
 
 Restart=on-failure
 PrivateTmp=true
@@ -229,63 +229,63 @@ StartLimitBurst=5
 [Install]
 WantedBy=multi-user.target
 EOF
-touch -a -m -t 201504280000 %{buildroot}%{_unitdir}/raven.service
+touch -a -m -t 201504280000 %{buildroot}%{_unitdir}/pigeon.service
 #end systemd stuff
 
-mkdir %{buildroot}%{_sysconfdir}/raven
-mkdir -p %{buildroot}%{_localstatedir}/lib/raven
+mkdir %{buildroot}%{_sysconfdir}/pigeon
+mkdir -p %{buildroot}%{_localstatedir}/lib/pigeon
 
 #SELinux
 for selinuxvariant in %{selinux_variants}; do
 	install -d %{buildroot}%{_datadir}/selinux/${selinuxvariant}
-	install -p -m 644 SELinux/raven.pp.${selinuxvariant} %{buildroot}%{_datadir}/selinux/${selinuxvariant}/raven.pp
+	install -p -m 644 SELinux/pigeon.pp.${selinuxvariant} %{buildroot}%{_datadir}/selinux/${selinuxvariant}/pigeon.pp
 done
 
 %if %{_buildqt}
 # qt icons
-install -D -p share/pixmaps/raven.ico %{buildroot}%{_datadir}/pixmaps/raven.ico
+install -D -p share/pixmaps/pigeon.ico %{buildroot}%{_datadir}/pixmaps/pigeon.ico
 install -p share/pixmaps/nsis-header.bmp %{buildroot}%{_datadir}/pixmaps/
 install -p share/pixmaps/nsis-wizard.bmp %{buildroot}%{_datadir}/pixmaps/
-install -p %{SOURCE100} %{buildroot}%{_datadir}/pixmaps/raven.svg
-%{_bindir}/inkscape %{SOURCE100} --export-png=%{buildroot}%{_datadir}/pixmaps/raven16.png -w16 -h16
-%{_bindir}/inkscape %{SOURCE100} --export-png=%{buildroot}%{_datadir}/pixmaps/raven32.png -w32 -h32
-%{_bindir}/inkscape %{SOURCE100} --export-png=%{buildroot}%{_datadir}/pixmaps/raven64.png -w64 -h64
-%{_bindir}/inkscape %{SOURCE100} --export-png=%{buildroot}%{_datadir}/pixmaps/raven128.png -w128 -h128
-%{_bindir}/inkscape %{SOURCE100} --export-png=%{buildroot}%{_datadir}/pixmaps/raven256.png -w256 -h256
-%{_bindir}/convert -resize 16x16 %{buildroot}%{_datadir}/pixmaps/raven256.png %{buildroot}%{_datadir}/pixmaps/raven16.xpm
-%{_bindir}/convert -resize 32x32 %{buildroot}%{_datadir}/pixmaps/raven256.png %{buildroot}%{_datadir}/pixmaps/raven32.xpm
-%{_bindir}/convert -resize 64x64 %{buildroot}%{_datadir}/pixmaps/raven256.png %{buildroot}%{_datadir}/pixmaps/raven64.xpm
-%{_bindir}/convert -resize 128x128 %{buildroot}%{_datadir}/pixmaps/raven256.png %{buildroot}%{_datadir}/pixmaps/raven128.xpm
-%{_bindir}/convert %{buildroot}%{_datadir}/pixmaps/raven256.png %{buildroot}%{_datadir}/pixmaps/raven256.xpm
+install -p %{SOURCE100} %{buildroot}%{_datadir}/pixmaps/pigeon.svg
+%{_bindir}/inkscape %{SOURCE100} --export-png=%{buildroot}%{_datadir}/pixmaps/pigeon16.png -w16 -h16
+%{_bindir}/inkscape %{SOURCE100} --export-png=%{buildroot}%{_datadir}/pixmaps/pigeon32.png -w32 -h32
+%{_bindir}/inkscape %{SOURCE100} --export-png=%{buildroot}%{_datadir}/pixmaps/pigeon64.png -w64 -h64
+%{_bindir}/inkscape %{SOURCE100} --export-png=%{buildroot}%{_datadir}/pixmaps/pigeon128.png -w128 -h128
+%{_bindir}/inkscape %{SOURCE100} --export-png=%{buildroot}%{_datadir}/pixmaps/pigeon256.png -w256 -h256
+%{_bindir}/convert -resize 16x16 %{buildroot}%{_datadir}/pixmaps/pigeon256.png %{buildroot}%{_datadir}/pixmaps/pigeon16.xpm
+%{_bindir}/convert -resize 32x32 %{buildroot}%{_datadir}/pixmaps/pigeon256.png %{buildroot}%{_datadir}/pixmaps/pigeon32.xpm
+%{_bindir}/convert -resize 64x64 %{buildroot}%{_datadir}/pixmaps/pigeon256.png %{buildroot}%{_datadir}/pixmaps/pigeon64.xpm
+%{_bindir}/convert -resize 128x128 %{buildroot}%{_datadir}/pixmaps/pigeon256.png %{buildroot}%{_datadir}/pixmaps/pigeon128.xpm
+%{_bindir}/convert %{buildroot}%{_datadir}/pixmaps/pigeon256.png %{buildroot}%{_datadir}/pixmaps/pigeon256.xpm
 touch %{buildroot}%{_datadir}/pixmaps/*.png -r %{SOURCE100}
 touch %{buildroot}%{_datadir}/pixmaps/*.xpm -r %{SOURCE100}
 
 # Desktop File - change the touch timestamp if modifying
 mkdir -p %{buildroot}%{_datadir}/applications
-cat <<EOF > %{buildroot}%{_datadir}/applications/raven-core.desktop
+cat <<EOF > %{buildroot}%{_datadir}/applications/pigeon-core.desktop
 [Desktop Entry]
 Encoding=UTF-8
-Name=Raven
-Comment=Raven P2P Cryptocurrency
-Comment[fr]=Raven, monnaie virtuelle cryptographique pair à pair
-Comment[tr]=Raven, eşten eşe kriptografik sanal para birimi
-Exec=raven-qt %u
+Name=Pigeon
+Comment=Pigeon P2P Cryptocurrency
+Comment[fr]=Pigeon, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=Pigeon, eşten eşe kriptografik sanal para birimi
+Exec=pigeon-qt %u
 Terminal=false
 Type=Application
-Icon=raven128
-MimeType=x-scheme-handler/raven;
+Icon=pigeon128
+MimeType=x-scheme-handler/pigeon;
 Categories=Office;Finance;
 EOF
 # change touch date when modifying desktop
-touch -a -m -t 201511100546 %{buildroot}%{_datadir}/applications/raven-core.desktop
-%{_bindir}/desktop-file-validate %{buildroot}%{_datadir}/applications/raven-core.desktop
+touch -a -m -t 201511100546 %{buildroot}%{_datadir}/applications/pigeon-core.desktop
+%{_bindir}/desktop-file-validate %{buildroot}%{_datadir}/applications/pigeon-core.desktop
 
 # KDE protocol - change the touch timestamp if modifying
 mkdir -p %{buildroot}%{_datadir}/kde4/services
-cat <<EOF > %{buildroot}%{_datadir}/kde4/services/raven-core.protocol
+cat <<EOF > %{buildroot}%{_datadir}/kde4/services/pigeon-core.protocol
 [Protocol]
-exec=raven-qt '%u'
-protocol=raven
+exec=pigeon-qt '%u'
+protocol=pigeon
 input=none
 output=none
 helper=true
@@ -296,14 +296,14 @@ makedir=false
 deleting=false
 EOF
 # change touch date when modifying protocol
-touch -a -m -t 201511100546 %{buildroot}%{_datadir}/kde4/services/raven-core.protocol
+touch -a -m -t 201511100546 %{buildroot}%{_datadir}/kde4/services/pigeon-core.protocol
 %endif
 
 # man pages
-install -D -p %{SOURCE20} %{buildroot}%{_mandir}/man1/ravend.1
-install -p %{SOURCE21} %{buildroot}%{_mandir}/man1/raven-cli.1
+install -D -p %{SOURCE20} %{buildroot}%{_mandir}/man1/pigeond.1
+install -p %{SOURCE21} %{buildroot}%{_mandir}/man1/pigeon-cli.1
 %if %{_buildqt}
-install -p %{SOURCE22} %{buildroot}%{_mandir}/man1/raven-qt.1
+install -p %{SOURCE22} %{buildroot}%{_mandir}/man1/pigeon-qt.1
 %endif
 
 # nuke these, we do extensive testing of binaries in %%check before packaging
@@ -311,7 +311,7 @@ rm -f %{buildroot}%{_bindir}/test_*
 
 %check
 make check
-srcdir=src test/raven-util-test.py
+srcdir=src test/pigeon-util-test.py
 test/functional/test_runner.py --extended
 
 %post libs -p /sbin/ldconfig
@@ -319,37 +319,37 @@ test/functional/test_runner.py --extended
 %postun libs -p /sbin/ldconfig
 
 %pre server
-getent group raven >/dev/null || groupadd -r raven
-getent passwd raven >/dev/null ||
-	useradd -r -g raven -d /var/lib/raven -s /sbin/nologin \
-	-c "Raven wallet server" raven
+getent group pigeon >/dev/null || groupadd -r pigeon
+getent passwd pigeon >/dev/null ||
+	useradd -r -g pigeon -d /var/lib/pigeon -s /sbin/nologin \
+	-c "Pigeon wallet server" pigeon
 exit 0
 
 %post server
-%systemd_post raven.service
+%systemd_post pigeon.service
 # SELinux
 if [ `%{_sbindir}/sestatus |grep -c "disabled"` -eq 0 ]; then
 for selinuxvariant in %{selinux_variants}; do
-	%{_sbindir}/semodule -s ${selinuxvariant} -i %{_datadir}/selinux/${selinuxvariant}/raven.pp &> /dev/null || :
+	%{_sbindir}/semodule -s ${selinuxvariant} -i %{_datadir}/selinux/${selinuxvariant}/pigeon.pp &> /dev/null || :
 done
-%{_sbindir}/semanage port -a -t raven_port_t -p tcp 8756
-%{_sbindir}/semanage port -a -t raven_port_t -p tcp 8757
-%{_sbindir}/semanage port -a -t raven_port_t -p tcp 18756
-%{_sbindir}/semanage port -a -t raven_port_t -p tcp 18757
-%{_sbindir}/semanage port -a -t raven_port_t -p tcp 18443
-%{_sbindir}/semanage port -a -t raven_port_t -p tcp 18444
-%{_sbindir}/fixfiles -R raven-server restore &> /dev/null || :
-%{_sbindir}/restorecon -R %{_localstatedir}/lib/raven || :
+%{_sbindir}/semanage port -a -t pigeon_port_t -p tcp 8756
+%{_sbindir}/semanage port -a -t pigeon_port_t -p tcp 8757
+%{_sbindir}/semanage port -a -t pigeon_port_t -p tcp 18756
+%{_sbindir}/semanage port -a -t pigeon_port_t -p tcp 18757
+%{_sbindir}/semanage port -a -t pigeon_port_t -p tcp 18443
+%{_sbindir}/semanage port -a -t pigeon_port_t -p tcp 18444
+%{_sbindir}/fixfiles -R pigeon-server restore &> /dev/null || :
+%{_sbindir}/restorecon -R %{_localstatedir}/lib/pigeon || :
 fi
 
 %posttrans server
 %{_bindir}/systemd-tmpfiles --create
 
 %preun server
-%systemd_preun raven.service
+%systemd_preun pigeon.service
 
 %postun server
-%systemd_postun raven.service
+%systemd_postun pigeon.service
 # SELinux
 if [ $1 -eq 0 ]; then
 	if [ `%{_sbindir}/sestatus |grep -c "disabled"` -eq 0 ]; then
@@ -360,11 +360,11 @@ if [ $1 -eq 0 ]; then
 	%{_sbindir}/semanage port -d -p tcp 18443
 	%{_sbindir}/semanage port -d -p tcp 18444
 	for selinuxvariant in %{selinux_variants}; do
-		%{_sbindir}/semodule -s ${selinuxvariant} -r raven &> /dev/null || :
+		%{_sbindir}/semodule -s ${selinuxvariant} -r pigeon &> /dev/null || :
 	done
-	%{_sbindir}/fixfiles -R raven-server restore &> /dev/null || :
-	[ -d %{_localstatedir}/lib/raven ] && \
-		%{_sbindir}/restorecon -R %{_localstatedir}/lib/raven &> /dev/null || :
+	%{_sbindir}/fixfiles -R pigeon-server restore &> /dev/null || :
+	[ -d %{_localstatedir}/lib/pigeon ] && \
+		%{_sbindir}/restorecon -R %{_localstatedir}/lib/pigeon &> /dev/null || :
 	fi
 fi
 
@@ -375,16 +375,16 @@ rm -rf %{buildroot}
 %files core
 %defattr(-,root,root,-)
 %license COPYING db-%{bdbv}.NC-LICENSE
-%doc COPYING raven.conf.example doc/README.md doc/bips.md doc/files.md doc/multiwallet-qt.md doc/reduce-traffic.md doc/release-notes.md doc/tor.md
-%attr(0755,root,root) %{_bindir}/raven-qt
-%attr(0644,root,root) %{_datadir}/applications/raven-core.desktop
-%attr(0644,root,root) %{_datadir}/kde4/services/raven-core.protocol
+%doc COPYING pigeon.conf.example doc/README.md doc/bips.md doc/files.md doc/multiwallet-qt.md doc/reduce-traffic.md doc/release-notes.md doc/tor.md
+%attr(0755,root,root) %{_bindir}/pigeon-qt
+%attr(0644,root,root) %{_datadir}/applications/pigeon-core.desktop
+%attr(0644,root,root) %{_datadir}/kde4/services/pigeon-core.protocol
 %attr(0644,root,root) %{_datadir}/pixmaps/*.ico
 %attr(0644,root,root) %{_datadir}/pixmaps/*.bmp
 %attr(0644,root,root) %{_datadir}/pixmaps/*.svg
 %attr(0644,root,root) %{_datadir}/pixmaps/*.png
 %attr(0644,root,root) %{_datadir}/pixmaps/*.xpm
-%attr(0644,root,root) %{_mandir}/man1/raven-qt.1*
+%attr(0644,root,root) %{_mandir}/man1/pigeon-qt.1*
 %endif
 
 %files libs
@@ -406,30 +406,30 @@ rm -rf %{buildroot}
 %files server
 %defattr(-,root,root,-)
 %license COPYING db-%{bdbv}.NC-LICENSE
-%doc COPYING raven.conf.example doc/README.md doc/REST-interface.md doc/bips.md doc/dnsseed-policy.md doc/files.md doc/reduce-traffic.md doc/release-notes.md doc/tor.md
-%attr(0755,root,root) %{_sbindir}/ravend
-%attr(0644,root,root) %{_tmpfilesdir}/raven.conf
-%attr(0644,root,root) %{_unitdir}/raven.service
-%dir %attr(0750,raven,raven) %{_sysconfdir}/raven
-%dir %attr(0750,raven,raven) %{_localstatedir}/lib/raven
-%config(noreplace) %attr(0600,root,root) %{_sysconfdir}/sysconfig/raven
+%doc COPYING pigeon.conf.example doc/README.md doc/REST-interface.md doc/bips.md doc/dnsseed-policy.md doc/files.md doc/reduce-traffic.md doc/release-notes.md doc/tor.md
+%attr(0755,root,root) %{_sbindir}/pigeond
+%attr(0644,root,root) %{_tmpfilesdir}/pigeon.conf
+%attr(0644,root,root) %{_unitdir}/pigeon.service
+%dir %attr(0750,pigeon,pigeon) %{_sysconfdir}/pigeon
+%dir %attr(0750,pigeon,pigeon) %{_localstatedir}/lib/pigeon
+%config(noreplace) %attr(0600,root,root) %{_sysconfdir}/sysconfig/pigeon
 %attr(0644,root,root) %{_datadir}/selinux/*/*.pp
-%attr(0644,root,root) %{_mandir}/man1/ravend.1*
+%attr(0644,root,root) %{_mandir}/man1/pigeond.1*
 
 %files utils
 %defattr(-,root,root,-)
 %license COPYING
-%doc COPYING raven.conf.example doc/README.md
-%attr(0755,root,root) %{_bindir}/raven-cli
-%attr(0755,root,root) %{_bindir}/raven-tx
-%attr(0755,root,root) %{_bindir}/bench_raven
-%attr(0644,root,root) %{_mandir}/man1/raven-cli.1*
+%doc COPYING pigeon.conf.example doc/README.md
+%attr(0755,root,root) %{_bindir}/pigeon-cli
+%attr(0755,root,root) %{_bindir}/pigeon-tx
+%attr(0755,root,root) %{_bindir}/bench_pigeon
+%attr(0644,root,root) %{_mandir}/man1/pigeon-cli.1*
 
 
 
 %changelog
 * Fri Feb 26 2016 Alice Wonder <buildmaster@librelamp.com> - 0.12.0-2
-- Rename Qt package from raven to raven-core
+- Rename Qt package from pigeon to pigeon-core
 - Make building of the Qt package optional
 - When building the Qt package, default to Qt5 but allow building
 -  against Qt4
@@ -439,4 +439,4 @@ rm -rf %{buildroot}
 - Initial spec file for 0.12.0 release
 
 # This spec file is written from scratch but a lot of the packaging decisions are directly
-# based upon the 0.11.2 package spec file from https://www.ringingliberty.com/raven/
+# based upon the 0.11.2 package spec file from https://www.ringingliberty.com/pigeon/

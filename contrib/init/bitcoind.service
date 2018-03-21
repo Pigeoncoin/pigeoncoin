@@ -1,15 +1,15 @@
 [Unit]
-Description=Raven's distributed currency daemon
+Description=Pigeon's distributed currency daemon
 After=network.target
 
 [Service]
-User=raven
-Group=raven
+User=pigeon
+Group=pigeon
 
 Type=forking
-PIDFile=/var/lib/ravend/ravend.pid
-ExecStart=/usr/bin/ravend -daemon -pid=/var/lib/ravend/ravend.pid \
--conf=/etc/raven/raven.conf -datadir=/var/lib/ravend -disablewallet
+PIDFile=/var/lib/pigeond/pigeond.pid
+ExecStart=/usr/bin/pigeond -daemon -pid=/var/lib/pigeond/pigeond.pid \
+-conf=/etc/pigeon/pigeon.conf -datadir=/var/lib/pigeond -disablewallet
 
 Restart=always
 PrivateTmp=true

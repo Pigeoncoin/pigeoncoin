@@ -1,4 +1,4 @@
-# RavenBinaries Linux Download Instructions
+# PigeonBinaries Linux Download Instructions
 
 Download and copy binaries to desired folder
 
@@ -8,7 +8,7 @@ Download and copy binaries to desired folder
  
 `ubuntu@server:~$ sudo apt-get update` 
 
-2 -- Install the raven dependencies
+2 -- Install the pigeon dependencies
 
 `ubuntu@server:~$ sudo apt-get -y install libevent-dev libboost-all-dev libminiupnpc10 libzmq5 software-properties-common`
 
@@ -24,15 +24,15 @@ Download and copy binaries to desired folder
 
 `ubuntu@server:~$ sudo apt-get -y install libdb4.8-dev libdb4.8++-dev`
 
-6a -- If you want to run the ravend binary
+6a -- If you want to run the pigeond binary
 
-`ubuntu@server:~$ ./ravend -daemon`
+`ubuntu@server:~$ ./pigeond -daemon`
 
-6b -- If you want to run the GUI raven-qt binary you will need to add an addtional library before starting
+6b -- If you want to run the GUI pigeon-qt binary you will need to add an addtional library before starting
 
 `ubuntu@server:~$ sudo apt install libqrencode3`
 
-`ubuntu@server:~$ ./raven-qt`
+`ubuntu@server:~$ ./pigeon-qt`
 
 ##CentOS
 
@@ -40,23 +40,23 @@ Download and copy binaries to desired folder
 
 `root@server:~# yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm`
 
-2 -- Install the raven dependencies
+2 -- Install the pigeon dependencies
 
 `root@server:~# yum -y install zeromq libevent boost libdb4-cxx miniupnpc`
 
-3 -- Start ravend
+3 -- Start pigeond
 
-`root@server:~# ./ravend -daemon`
+`root@server:~# ./pigeond -daemon`
 
 ##Fedora
 
-1 -- Install the raven dependencies
+1 -- Install the pigeon dependencies
 
 `root@server:~# yum -y install zeromq libevent boost libdb4-cxx miniupnpc`
 
-2 -- Start ravend
+2 -- Start pigeond
 
-`root@server:~# ./ravend -daemon`
+`root@server:~# ./pigeond -daemon`
 
 
 
