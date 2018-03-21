@@ -54,7 +54,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  */
 static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
-    const char* pszTimestamp = "NYTimes 18/Mar/2018 Can Venezuela Be Saved? By WIL S. HYLTON";
+    const char* pszTimestamp = "Reuters 21/Mar/2018 China stays on the sidelines as Venezuela spirals downward";
     const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
@@ -164,13 +164,13 @@ public:
         nDefaultPort = 8757;
         nPruneAfterHeight = 100000;
 
-        genesis = CreateGenesisBlock(1521579286, 28832485, 0x1e00ffff, 4, 5000 * COIN);
+        genesis = CreateGenesisBlock(1521661111, 17434278, 0x1e00ffff, 4, 5000 * COIN);
 
         //(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        std::cout << "Genesis: "<< consensus.hashGenesisBlock.GetHex() << "\n"; //
-        std::cout << "Merkle: " << genesis.hashMerkleRoot.GetHex() << "\n"; //
+        //std::cout << "Genesis: "<< consensus.hashGenesisBlock.GetHex() << "\n"; //
+        //std::cout << "Merkle: " << genesis.hashMerkleRoot.GetHex() << "\n"; //
 
 //////////////
 //////////////
@@ -221,8 +221,8 @@ public:
 
 
 
-        assert(consensus.hashGenesisBlock == uint256S("0x00000066c6d4ff3385021f3c77b3e42fe04b22c4aec133f028c2ae275558ba7e"));
-        assert(genesis.hashMerkleRoot == uint256S("0x5604f612f182609c0bbc70c622b918c879daa16fa9edcc3868188f095c943719"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000000f049bef9fec0179131874c54c76c0ff59f695db30a4f0da52072c99492"));
+        assert(genesis.hashMerkleRoot == uint256S("0xf0cc5f92b11a6655a4939fc239e8bf960cd0453b87b5a0820ab36904279341a5"));
 
         vSeeds.emplace_back("seed.x16s.org", false);
         vSeeds.emplace_back("seed.pigeoncoin.org", false);
@@ -298,12 +298,12 @@ public:
         nDefaultPort = 18757;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1521579921, 11426787, 0x1e00ffff, 4, 5000 * COIN);
+        genesis = CreateGenesisBlock(1521662222, 32516807, 0x1e00ffff, 4, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
         //Test MerkleRoot and GenesisBlock
-        assert(consensus.hashGenesisBlock == uint256S("0x000000ee125941c49bd5c5306220c0842dcc6becf18a1f45f6b79c0722d6781b"));
-        assert(genesis.hashMerkleRoot == uint256S("0x5604f612f182609c0bbc70c622b918c879daa16fa9edcc3868188f095c943719"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000000c256f01af5da46131c1da1ca67907bac5c6bf2ea231126a1a79c787294"));
+        assert(genesis.hashMerkleRoot == uint256S("0xf0cc5f92b11a6655a4939fc239e8bf960cd0453b87b5a0820ab36904279341a5"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -379,14 +379,14 @@ public:
         nDefaultPort = 18444;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1510082300, 2, 0x207fffff, 4, 5000 * COIN);
+        genesis = CreateGenesisBlock(1521663333, 5898126, 0x207fffff, 4, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
 
         std::cout << "HGB: " << consensus.hashGenesisBlock.GetHex() << std::endl;
         std::cout << "HGR: " << genesis.hashMerkleRoot.GetHex() << std::endl;
 
-        assert(consensus.hashGenesisBlock == uint256S("0x0ae5a91dc8c60c02f68cf6579e153d428b2298f231c89e96cbeb609ecc00d9a0"));
-        assert(genesis.hashMerkleRoot == uint256S("0x9686ea5f254a7542381897095789b44282f5d8685cee089e94c4f373cec99128"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000000c0407bb6b446d75201d50724ce23d61b970700827b02632b4c47714761"));
+        assert(genesis.hashMerkleRoot == uint256S("0xf0cc5f92b11a6655a4939fc239e8bf960cd0453b87b5a0820ab36904279341a5"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
