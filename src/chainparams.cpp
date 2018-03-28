@@ -226,6 +226,7 @@ public:
 
         vSeeds.emplace_back("seed.x16s.org", false);
         vSeeds.emplace_back("seed.pigeoncoin.org", false);
+        vSeeds.emplace_back("seed.pigeoncoin.cc", false);
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,55); // changed 60 to 55
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,122); // changed 122 to 123
