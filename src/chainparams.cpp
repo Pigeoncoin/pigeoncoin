@@ -227,6 +227,7 @@ public:
         vSeeds.emplace_back("seed.x16s.org", false);
         vSeeds.emplace_back("seed.pigeoncoin.org", false);
         vSeeds.emplace_back("seed.pigeoncoin.cc", false);
+        vSeeds.emplace_back("seed2.pigeoncoin.cc", false);
         vSeeds.emplace_back("pgndns1.pigeoncoin.cc", false);
         vSeeds.emplace_back("pigeoncoin.online", false);
 
