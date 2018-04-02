@@ -1,5 +1,6 @@
 *.tar.gz
 
+*.exe
 src/pigeon
 src/pigeond
 src/pigeon-cli
@@ -8,7 +9,6 @@ src/test/test_pigeon
 src/test/test_pigeon_fuzzy
 src/qt/test/test_pigeon-qt
 src/qt/pigeon-qt
-src/qt/pigeon-qt.exe
 .vscode
 output.txt
 
