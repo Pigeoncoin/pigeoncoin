@@ -49,6 +49,10 @@ struct Params {
     // int BIP65Height;
     /** Block height at which BIP66 becomes active */
     // int BIP66Height;
+    
+    /** Block height at which Zawy's LWMA difficulty algorithm becomes active */
+    int zawyLWMAHeight;
+
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,
      * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
@@ -59,6 +63,10 @@ struct Params {
     BIP9Deployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
     /** Proof of work parameters */
     uint256 powLimit;
+    //used for pre/post LWMA fork
+    uint256 powLimitLegacy;
+    const uint256& PowLimit(bool postfork) const { return postfork ? powLimit : powLimitLegacy; }
+
     bool fPowAllowMinDifficultyBlocks;
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
@@ -68,6 +76,10 @@ struct Params {
     uint256 defaultAssumeValid;
     bool nSegwitEnabled;
     bool nCSVEnabled;
+
+    // Params for Zawy's LWMA difficulty adjustment algorithm. (Used by testnet and regtest)
+    int64_t nZawyLwmaAveragingWindow;  // N
+    int64_t nZawyLwmaAjustedWeight;  // k = (N+1)/2 * 0.9989^(500/N) * T
 };
 } // namespace Consensus
 

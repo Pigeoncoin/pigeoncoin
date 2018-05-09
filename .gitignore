@@ -51,6 +51,14 @@ src/qt/test/moc*.cpp
 .cproject
 .project
 .vscode
+.vs
+
+pigeoncoin.VC.VC.opendb
+pigeoncoin.VC.db
+pigeoncoin.sln
+pigeoncoin.vcxproj
+pigeoncoin.vcxproj.filters
+pigeoncoin.vcxproj.user
 
 .deps
 .dirstamp

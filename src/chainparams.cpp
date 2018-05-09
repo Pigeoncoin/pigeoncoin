@@ -12,6 +12,7 @@
 #include "arith_uint256.h"
 
 #include <assert.h>
+#include <limits>
 
 #include "chainparamsseeds.h"
 
@@ -134,6 +135,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
 
+                                                                                       // Lawry's LWMA algorithm values
+                                                                                       // added for pre/post LWMA fork
+        consensus.zawyLWMAHeight = std::numeric_limits<int>::max(); // Not activated on mainnet
+        consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nZawyLwmaAveragingWindow = 45;
+        consensus.nZawyLwmaAjustedWeight = 13632;
 
 
         // The best chain should have at least this much work.
@@ -275,7 +282,7 @@ public:
         consensus.nBIP66Enabled = true;
         consensus.nSegwitEnabled = true;
         consensus.nCSVEnabled = true;
-
+        
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
         consensus.nPowTargetSpacing = 1 * 60;
@@ -287,6 +294,12 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
 
+        // Lawry's LWMA algorithm values
+        // added for pre/post LWMA fork
+        consensus.zawyLWMAHeight = 45000; // Activated on testnet
+        consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nZawyLwmaAveragingWindow = 45;
+        consensus.nZawyLwmaAjustedWeight = 13632;
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
@@ -359,6 +372,7 @@ public:
         consensus.nSegwitEnabled = true;
         consensus.nCSVEnabled = true;
         consensus.nSubsidyHalvingInterval = 150;
+        
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
         consensus.nPowTargetSpacing = 1 * 60;
@@ -369,6 +383,13 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999ULL;
+
+        // Lawry's LWMA algorithm values
+        consensus.zawyLWMAHeight = -1; // Activated on regnet
+        //needed for pre/post LWMA fork
+        consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nZawyLwmaAveragingWindow = 45;
+        consensus.nZawyLwmaAjustedWeight = 13632;
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
