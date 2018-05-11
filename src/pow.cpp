@@ -127,8 +127,8 @@ unsigned int LwmaCalculateNextWorkRequired(const CBlockIndex* pindexLast, const 
 
     //remove this check when we apply to mainnet.  We will have to reset testnet at this time
     int nHeight = pindexLast->nHeight + 1;
-    const int N = (nHeight > 45000 && nHeight < 49000)? 45 : 45;
-    const int k = (nHeight > 45000 && nHeight < 49000) ? 13632 : 2 * 60 * 60; 
+    const int N = (nHeight >= 45000 && nHeight < 49000)? 45 : 45;
+    const int k = (nHeight >= 45000 && nHeight < 49000) ? 13632 : 2 * 60 * 60; 
 
     const int height = pindexLast->nHeight + 1;
     assert(height > N);
