@@ -139,7 +139,7 @@ public:
         // added for pre/post LWMA fork
         consensus.zawyLWMAHeight = std::numeric_limits<int>::max(); // Not activated on mainnet
         consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-
+	consensus.zawyLWMAHeightv2 = std::numeric_limits<int>::max(); // Not activated on mainnet
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
@@ -294,7 +294,8 @@ public:
 
         // Lawry's LWMA algorithm values
         // added for pre/post LWMA fork
-        consensus.zawyLWMAHeight = 49000; // Activated on testnet
+        consensus.zawyLWMAHeight = 45000; // Activated on testnet
+	consensus.zawyLWMAHeightv2 = 49000;
         consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
         // The best chain should have at least this much work.
@@ -382,6 +383,7 @@ public:
 
         // Lawry's LWMA algorithm values
         consensus.zawyLWMAHeight = -1; // Activated on regnet
+	consensus.zawyLWMAHeightv2 = -1; // Activated on regnet
         //needed for pre/post LWMA fork
         consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 

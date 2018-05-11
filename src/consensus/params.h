@@ -52,6 +52,7 @@ struct Params {
     
     /** Block height at which Zawy's LWMA difficulty algorithm becomes active */
     int zawyLWMAHeight;
+    int zawyLWMAHeightv2;
 
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,
