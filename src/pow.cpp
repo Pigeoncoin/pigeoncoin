@@ -125,8 +125,8 @@ unsigned int LwmaCalculateNextWorkRequired(const CBlockIndex* pindexLast, const 
         return pindexLast->nBits;
     }
 
-    const int N = params.nZawyLwmaAveragingWindow;
-    const int k = params.nZawyLwmaAjustedWeight;
+    const int N = 45;
+    const int k = 1377; //k=(N+1)/2*TargetSolvetime*0.998
     const int height = pindexLast->nHeight + 1;
     assert(height > N);
 
