@@ -1,16 +1,16 @@
-# bash programmable completion for pigeon-tx(1)
+# bash programmable completion for bitcoin-tx(1)
 # Copyright (c) 2016 The Bitcoin Core developers
 # Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-_pigeon_tx() {
+_bitcoin_tx() {
     local cur prev words=() cword
-    local pigeon_tx
+    local bitcoin_tx
 
-    # save and use original argument to invoke pigeon-tx for -help
+    # save and use original argument to invoke bitcoin-tx for -help
     # it might not be in $PATH
-    pigeon_tx="$1"
+    bitcoin_tx="$1"
 
     COMPREPLY=()
     _get_comp_words_by_ref -n =: cur prev words cword
@@ -28,15 +28,15 @@ _pigeon_tx() {
 
     if [[ "$cword" == 1 || ( "$prev" != "-create" && "$prev" == -* ) ]]; then
         # only options (or an uncompletable hex-string) allowed
-        # parse pigeon-tx -help for options
+        # parse bitcoin-tx -help for options
         local helpopts
-        helpopts=$($pigeon_tx -help | sed -e '/^  -/ p' -e d )
+        helpopts=$($bitcoin_tx -help | sed -e '/^  -/ p' -e d )
         COMPREPLY=( $( compgen -W "$helpopts" -- "$cur" ) )
     else
         # only commands are allowed
         # parse -help for commands
         local helpcmds
-        helpcmds=$($pigeon_tx -help | sed -e '1,/Commands:/d' -e 's/=.*/=/' -e '/^  [a-z]/ p' -e d )
+        helpcmds=$($bitcoin_tx -help | sed -e '1,/Commands:/d' -e 's/=.*/=/' -e '/^  [a-z]/ p' -e d )
         COMPREPLY=( $( compgen -W "$helpcmds" -- "$cur" ) )
     fi
 
@@ -47,7 +47,7 @@ _pigeon_tx() {
 
     return 0
 } &&
-complete -F _pigeon_tx pigeon-tx
+complete -F _bitcoin_tx bitcoin-tx
 
 # Local variables:
 # mode: shell-script

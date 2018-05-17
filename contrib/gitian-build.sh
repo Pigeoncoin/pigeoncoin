@@ -7,7 +7,6 @@
 sign=false
 verify=false
 build=false
-setupenv=false
 
 # Systems to build
 linux=true
@@ -18,7 +17,7 @@ osx=true
 SIGNER=
 VERSION=
 commit=false
-url=https://github.com/PigeonProject/Pigeoncoin
+url=https://github.com/pigeoncoin/pigeoncoin
 proc=2
 mem=2000
 lxc=true
@@ -40,7 +39,7 @@ version		Version number, commit, or branch to build. If building a commit or bra
 
 Options:
 -c|--commit	Indicate that the version argument is for a commit or branch
--u|--url	Specify the URL of the repository. Default is https://github.com/PigeonProject/Pigeoncoin
+-u|--url	Specify the URL of the repository. Default is https://github.com/pigeoncoin/pigeoncoin
 -v|--verify 	Verify the Gitian build
 -b|--build	Do a Gitian build
 -s|--sign	Make signed binaries for Windows and Mac OSX
@@ -107,7 +106,7 @@ while :; do
 		fi
 		shift
 	    else
-		echo 'Error: "--os" requires an argument containing an l (for linux), w (for windows), or x (for Mac OSX)\n'
+		echo 'Error: "--os" requires an argument containing an l (for linux), w (for windows), or x (for Mac OSX)'
 		exit 1
 	    fi
 	    ;;
@@ -190,7 +189,7 @@ then
 fi
 
 # Get signer
-if [[ -n"$1" ]]
+if [[ -n "$1" ]]
 then
     SIGNER=$1
     shift
@@ -231,8 +230,8 @@ echo ${COMMIT}
 if [[ $setup = true ]]
 then
     sudo apt-get install ruby apache2 git apt-cacher-ng python-vm-builder qemu-kvm qemu-utils
-    git clone https://github.com/pigeon-core/gitian.sigs.git
-    git clone https://github.com/pigeon-core/pigeon-detached-sigs.git
+    git clone https://github.com/pigeoncoin/gitian.sigs.git
+    git clone https://github.com/pigeoncoin/pigeon-detached-sigs.git
     git clone https://github.com/devrandom/gitian-builder.git
     pushd ./gitian-builder
     if [[ -n "$USE_LXC" ]]
@@ -246,7 +245,7 @@ then
 fi
 
 # Set up build
-pushd ./pigeon
+pushd ./pigeoncoin
 git fetch
 git checkout ${COMMIT}
 popd
@@ -255,7 +254,7 @@ popd
 if [[ $build = true ]]
 then
 	# Make output folder
-	mkdir -p ./pigeon-binaries/${VERSION}
+	mkdir -p ./pigeoncoin-binaries/${VERSION}
 	
 	# Build Dependencies
 	echo ""
@@ -265,7 +264,7 @@ then
 	mkdir -p inputs
 	wget -N -P inputs $osslPatchUrl
 	wget -N -P inputs $osslTarUrl
-	make -C ../pigeon/depends download SOURCES_PATH=`pwd`/cache/common
+	make -C ../pigeoncoin/depends download SOURCES_PATH=`pwd`/cache/common
 
 	# Linux
 	if [[ $linux = true ]]
@@ -273,9 +272,9 @@ then
             echo ""
 	    echo "Compiling ${VERSION} Linux"
 	    echo ""
-	    ./bin/gbuild -j ${proc} -m ${mem} --commit pigeon=${COMMIT} --url pigeon=${url} ../pigeon/contrib/gitian-descriptors/gitian-linux.yml
-	    ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../pigeon/contrib/gitian-descriptors/gitian-linux.yml
-	    mv build/out/pigeon-*.tar.gz build/out/src/pigeon-*.tar.gz ../pigeon-binaries/${VERSION}
+	    ./bin/gbuild -j ${proc} -m ${mem} --commit pigeoncoin=${COMMIT} --url pigeoncoin=${url} ../pigeoncoin/contrib/gitian-descriptors/gitian-linux.yml
+	    ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../pigeoncoin/contrib/gitian-descriptors/gitian-linux.yml
+	    mv build/out/pigeoncoin-*.tar.gz build/out/src/pigeoncoin-*.tar.gz ../pigeoncoin-binaries/${VERSION}
 	fi
 	# Windows
 	if [[ $windows = true ]]
@@ -283,10 +282,10 @@ then
 	    echo ""
 	    echo "Compiling ${VERSION} Windows"
 	    echo ""
-	    ./bin/gbuild -j ${proc} -m ${mem} --commit pigeon=${COMMIT} --url pigeon=${url} ../pigeon/contrib/gitian-descriptors/gitian-win.yml
-	    ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../pigeon/contrib/gitian-descriptors/gitian-win.yml
-	    mv build/out/pigeon-*-win-unsigned.tar.gz inputs/pigeon-win-unsigned.tar.gz
-	    mv build/out/pigeon-*.zip build/out/pigeon-*.exe ../pigeon-binaries/${VERSION}
+	    ./bin/gbuild -j ${proc} -m ${mem} --commit pigeoncoin=${COMMIT} --url pigeoncoin=${url} ../pigeoncoin/contrib/gitian-descriptors/gitian-win.yml
+	    ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../pigeoncoin/contrib/gitian-descriptors/gitian-win.yml
+	    mv build/out/pigeoncoin-*-win-unsigned.tar.gz inputs/pigeoncoin-win-unsigned.tar.gz
+	    mv build/out/pigeoncoin-*.zip build/out/pigeoncoin-*.exe ../pigeoncoin-binaries/${VERSION}
 	fi
 	# Mac OSX
 	if [[ $osx = true ]]
@@ -294,10 +293,10 @@ then
 	    echo ""
 	    echo "Compiling ${VERSION} Mac OSX"
 	    echo ""
-	    ./bin/gbuild -j ${proc} -m ${mem} --commit pigeon=${COMMIT} --url pigeon=${url} ../pigeon/contrib/gitian-descriptors/gitian-osx.yml
-	    ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../pigeon/contrib/gitian-descriptors/gitian-osx.yml
-	    mv build/out/pigeon-*-osx-unsigned.tar.gz inputs/pigeon-osx-unsigned.tar.gz
-	    mv build/out/pigeon-*.tar.gz build/out/pigeon-*.dmg ../pigeon-binaries/${VERSION}
+	    ./bin/gbuild -j ${proc} -m ${mem} --commit pigeoncoin=${COMMIT} --url pigeoncoin=${url} ../pigeoncoin/contrib/gitian-descriptors/gitian-osx.yml
+	    ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../pigeoncoin/contrib/gitian-descriptors/gitian-osx.yml
+	    mv build/out/pigeoncoin-*-osx-unsigned.tar.gz inputs/pigeoncoin-osx-unsigned.tar.gz
+	    mv build/out/pigeoncoin-*.tar.gz build/out/pigeoncoin-*.dmg ../pigeoncoin-binaries/${VERSION}
 	fi
 	popd
 
@@ -324,27 +323,27 @@ then
 	echo ""
 	echo "Verifying v${VERSION} Linux"
 	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-linux ../pigeon/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-linux ../pigeoncoin/contrib/gitian-descriptors/gitian-linux.yml
 	# Windows
 	echo ""
 	echo "Verifying v${VERSION} Windows"
 	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-unsigned ../pigeon/contrib/gitian-descriptors/gitian-win.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-unsigned ../pigeoncoin/contrib/gitian-descriptors/gitian-win.yml
 	# Mac OSX	
 	echo ""
 	echo "Verifying v${VERSION} Mac OSX"
 	echo ""	
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../pigeon/contrib/gitian-descriptors/gitian-osx.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../pigeoncoin/contrib/gitian-descriptors/gitian-osx.yml
 	# Signed Windows
 	echo ""
 	echo "Verifying v${VERSION} Signed Windows"
 	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../pigeon/contrib/gitian-descriptors/gitian-osx-signer.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../pigeoncoin/contrib/gitian-descriptors/gitian-osx-signer.yml
 	# Signed Mac OSX
 	echo ""
 	echo "Verifying v${VERSION} Signed Mac OSX"
 	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../pigeon/contrib/gitian-descriptors/gitian-osx-signer.yml	
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../pigeoncoin/contrib/gitian-descriptors/gitian-osx-signer.yml	
 	popd
 fi
 
@@ -359,10 +358,10 @@ then
 	    echo ""
 	    echo "Signing ${VERSION} Windows"
 	    echo ""
-	    ./bin/gbuild -i --commit signature=${COMMIT} ../pigeon/contrib/gitian-descriptors/gitian-win-signer.yml
-	    ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../pigeon/contrib/gitian-descriptors/gitian-win-signer.yml
-	    mv build/out/pigeon-*win64-setup.exe ../pigeon-binaries/${VERSION}
-	    mv build/out/pigeon-*win32-setup.exe ../pigeon-binaries/${VERSION}
+	    ./bin/gbuild -i --commit signature=${COMMIT} ../pigeoncoin/contrib/gitian-descriptors/gitian-win-signer.yml
+	    ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../pigeoncoin/contrib/gitian-descriptors/gitian-win-signer.yml
+	    mv build/out/pigeoncoin-*win64-setup.exe ../pigeoncoin-binaries/${VERSION}
+	    mv build/out/pigeoncoin-*win32-setup.exe ../pigeoncoin-binaries/${VERSION}
 	fi
 	# Sign Mac OSX
 	if [[ $osx = true ]]
@@ -370,9 +369,9 @@ then
 	    echo ""
 	    echo "Signing ${VERSION} Mac OSX"
 	    echo ""
-	    ./bin/gbuild -i --commit signature=${COMMIT} ../pigeon/contrib/gitian-descriptors/gitian-osx-signer.yml
-	    ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../pigeon/contrib/gitian-descriptors/gitian-osx-signer.yml
-	    mv build/out/pigeon-osx-signed.dmg ../pigeon-binaries/${VERSION}/pigeon-${VERSION}-osx.dmg
+	    ./bin/gbuild -i --commit signature=${COMMIT} ../pigeoncoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	    ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../pigeoncoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	    mv build/out/pigeoncoin-osx-signed.dmg ../pigeoncoin-binaries/${VERSION}/pigeoncoin-${VERSION}-osx.dmg
 	fi
 	popd
 
