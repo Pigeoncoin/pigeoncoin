@@ -278,6 +278,8 @@ public:
 
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
+        consensus.nPowDifficultyRetargetHeight = 49400; // blockheight to change at.
+        consensus.nPowTargetTimespanShort = 1440 * 60; //1 day
         consensus.nPowTargetSpacing = 1 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
