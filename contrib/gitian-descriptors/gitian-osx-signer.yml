@@ -7,7 +7,7 @@ architectures:
 packages:
 - "faketime"
 remotes:
-- "url": "https://github.com/pigeon-core/pigeon-detached-sigs.git"
+- "url": "https://github.com/pigeoncoin/pigeon-detached-sigs.git"
   "dir": "signature"
 files:
 - "pigeon-osx-unsigned.tar.gz"

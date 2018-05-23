@@ -26,7 +26,7 @@ Build-Depends: debhelper,
  python,
  libzmq3-dev
 Standards-Version: 3.9.2
-Homepage: https://pigeoncoin.org/
+Homepage: https://pigeon.org/
 Vcs-Git: git://github.com/PigeonProject/Pigeoncoin.git
 Vcs-Browser: https://github.com/PigeonProject/Pigeoncoin
 

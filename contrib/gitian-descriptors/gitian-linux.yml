@@ -1,5 +1,5 @@
 ---
-name: "pigeon-linux-0.16"
+name: "pigeon-linux-0.15"
 enable_cache: true
 suites:
 - "trusty"
@@ -28,18 +28,18 @@ packages:
 - "ca-certificates"
 - "python"
 remotes:
-- "url": "https://github.com/PigeonProject/Pigeoncoin.git"
+- "url": "https://github.com/pigeoncoin/pigeon.git"
   "dir": "pigeon"
 files: []
 script: |
 
   WRAP_DIR=$HOME/wrapped
-  HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
+  HOSTS="x86_64-linux-gnu"
   CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="date ar ranlib nm"
   HOST_CFLAGS="-O2 -g"
-  HOST_CXXFLAGS="-O2 -g"
+  HOST_CXXFLAGS="-O2 -g -fPIC"
   HOST_LDFLAGS=-static-libstdc++
 
   export QT_RCC_TEST=1
@@ -162,7 +162,7 @@ script: |
     mkdir src/obj
     cp ../src/obj/build.h src/obj/
 
-    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}"
+    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CPPFLAGS="-fPIC -O" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}"
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
 

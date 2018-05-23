@@ -18,12 +18,12 @@ osx=true
 SIGNER=
 VERSION=
 commit=false
-url=https://github.com/PigeonProject/Pigeoncoin
+url=https://github.com/Pigeoncoin/Pigeoncoin
 proc=2
 mem=2000
 lxc=true
 osslTarUrl=http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
-osslPatchUrl=https://pigeoncoin.org/cfields/osslsigncode-Backports-to-1.7.1.patch
+osslPatchUrl=https://bitcoin.org/cfields/osslsigncode-Backports-to-1.7.1.patch
 scriptName=$(basename -- "$0")
 signProg="gpg --detach-sign"
 commitFiles=true
@@ -40,7 +40,7 @@ version		Version number, commit, or branch to build. If building a commit or bra
 
 Options:
 -c|--commit	Indicate that the version argument is for a commit or branch
--u|--url	Specify the URL of the repository. Default is https://github.com/PigeonProject/Pigeoncoin
+-u|--url	Specify the URL of the repository. Default is https://github.com/Pigeoncoin/Pigeoncoin
 -v|--verify 	Verify the Gitian build
 -b|--build	Do a Gitian build
 -s|--sign	Make signed binaries for Windows and Mac OSX
@@ -231,8 +231,8 @@ echo ${COMMIT}
 if [[ $setup = true ]]
 then
     sudo apt-get install ruby apache2 git apt-cacher-ng python-vm-builder qemu-kvm qemu-utils
-    git clone https://github.com/pigeon-core/gitian.sigs.git
-    git clone https://github.com/pigeon-core/pigeon-detached-sigs.git
+    git clone https://github.com/pigeoncoin/gitian.sigs.git
+    git clone https://github.com/pigeoncoin/pigeon-detached-sigs.git
     git clone https://github.com/devrandom/gitian-builder.git
     pushd ./gitian-builder
     if [[ -n "$USE_LXC" ]]

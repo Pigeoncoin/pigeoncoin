@@ -1,5 +1,5 @@
 ---
-name: "pigeon-win-0.16"
+name: "pigeon-win-0.15"
 enable_cache: true
 suites:
 - "trusty"
@@ -22,7 +22,7 @@ packages:
 - "ca-certificates"
 - "python"
 remotes:
-- "url": "https://github.com/PigeonProject/Pigeoncoin.git"
+- "url": "https://github.com/pigeoncoin/pigeon.git"
   "dir": "pigeon"
 files: []
 script: |

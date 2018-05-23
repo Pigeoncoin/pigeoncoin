@@ -24,7 +24,7 @@ TMPFILE="hashes.tmp"
 
 SIGNATUREFILENAME="SHA256SUMS.asc"
 RCSUBDIR="test"
-HOST1="https://pigeoncoin.org"
+HOST1="https://pigeon.org"
 HOST2="https://pigeon.org"
 BASEDIR="/bin/"
 VERSIONPREFIX="pigeon-core-"

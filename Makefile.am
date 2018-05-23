@@ -40,9 +40,9 @@ OSX_PLIST=$(top_builddir)/share/qt/Info.plist #not installed
 OSX_QT_TRANSLATIONS = da,de,es,hu,ru,uk,zh_CN,zh_TW
 
 DIST_DOCS = $(wildcard doc/*.md) $(wildcard doc/release-notes/*.md)
-DIST_CONTRIB = $(top_srcdir)/contrib/pigeon-cli.bash-completion \
-	       $(top_srcdir)/contrib/pigeon-tx.bash-completion \
-	       $(top_srcdir)/contrib/pigeond.bash-completion \
+DIST_CONTRIB = $(top_srcdir)/contrib/bitcoin-cli.bash-completion \
+	       $(top_srcdir)/contrib/bitcoin-tx.bash-completion \
+	       $(top_srcdir)/contrib/bitcoind.bash-completion \
 	       $(top_srcdir)/contrib/init \
 	       $(top_srcdir)/contrib/rpm
 DIST_SHARE = \
@@ -220,8 +220,9 @@ dist_noinst_SCRIPTS = autogen.sh
 EXTRA_DIST = $(DIST_SHARE) test/functional/test_runner.py test/functional $(DIST_CONTRIB) $(DIST_DOCS) $(WINDOWS_PACKAGING) $(OSX_PACKAGING) $(BIN_CHECKS)
 
 EXTRA_DIST += \
+    src/crypto/md_helper.c \
     test/util/pigeon-util-test.py \
-    test/util/data/pigeon-util-test.json \
+    test/util/data/bitcoin-util-test.json \
     test/util/data/blanktxv1.hex \
     test/util/data/blanktxv1.json \
     test/util/data/blanktxv2.hex \

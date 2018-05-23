@@ -1,11 +1,11 @@
-# bash programmable completion for pigeon-cli(1)
+# bash programmable completion for bitcoin-cli(1)
 # Copyright (c) 2012-2016 The Bitcoin Core developers
 # Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-# call $pigeon-cli for RPC
-_pigeon_rpc() {
+# call $bitcoin-cli for RPC
+_bitcoin_rpc() {
     # determine already specified args necessary for RPC
     local rpcargs=()
     for i in ${COMP_LINE}; do
@@ -15,23 +15,23 @@ _pigeon_rpc() {
                 ;;
         esac
     done
-    $pigeon_cli "${rpcargs[@]}" "$@"
+    $bitcoin_cli "${rpcargs[@]}" "$@"
 }
 
 # Add wallet accounts to COMPREPLY
-_pigeon_accounts() {
+_bitcoin_accounts() {
     local accounts
-    accounts=$(_pigeon_rpc listaccounts | awk -F '"' '{ print $2 }')
+    accounts=$(_bitcoin_rpc listaccounts | awk -F '"' '{ print $2 }')
     COMPREPLY=( "${COMPREPLY[@]}" $( compgen -W "$accounts" -- "$cur" ) )
 }
 
-_pigeon_cli() {
+_bitcoin_cli() {
     local cur prev words=() cword
-    local pigeon_cli
+    local bitcoin_cli
 
-    # save and use original argument to invoke pigeon-cli for -help, help and RPC
-    # as pigeon-cli might not be in $PATH
-    pigeon_cli="$1"
+    # save and use original argument to invoke bitcoin-cli for -help, help and RPC
+    # as bitcoin-cli might not be in $PATH
+    bitcoin_cli="$1"
 
     COMPREPLY=()
     _get_comp_words_by_ref -n = cur prev words cword
@@ -61,7 +61,7 @@ _pigeon_cli() {
     if ((cword > 3)); then
         case ${words[cword-3]} in
             addmultisigaddress)
-                _pigeon_accounts
+                _bitcoin_accounts
                 return 0
                 ;;
             getbalance|gettxout|importaddress|importpubkey|importprivkey|listreceivedbyaccount|listreceivedbyaddress|listsinceblock)
@@ -86,7 +86,7 @@ _pigeon_cli() {
                 return 0
                 ;;
             move|setaccount)
-                _pigeon_accounts
+                _bitcoin_accounts
                 return 0
                 ;;
         esac
@@ -102,7 +102,7 @@ _pigeon_cli() {
             return 0
             ;;
         getaccountaddress|getaddressesbyaccount|getbalance|getnewaddress|getreceivedbyaccount|listtransactions|move|sendfrom|sendmany)
-            _pigeon_accounts
+            _bitcoin_accounts
             return 0
             ;;
     esac
@@ -126,12 +126,12 @@ _pigeon_cli() {
 
             # only parse -help if senseful
             if [[ -z "$cur" || "$cur" =~ ^- ]]; then
-                helpopts=$($pigeon_cli -help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }' )
+                helpopts=$($bitcoin_cli -help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }' )
             fi
 
             # only parse help if senseful
             if [[ -z "$cur" || "$cur" =~ ^[a-z] ]]; then
-                commands=$(_pigeon_rpc help 2>/dev/null | awk '$1 ~ /^[a-z]/ { print $1; }')
+                commands=$(_bitcoin_rpc help 2>/dev/null | awk '$1 ~ /^[a-z]/ { print $1; }')
             fi
 
             COMPREPLY=( $( compgen -W "$helpopts $commands" -- "$cur" ) )
@@ -144,7 +144,7 @@ _pigeon_cli() {
             ;;
     esac
 } &&
-complete -F _pigeon_cli pigeon-cli
+complete -F _bitcoin_cli bitcoin-cli
 
 # Local variables:
 # mode: shell-script
