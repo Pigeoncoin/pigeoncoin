@@ -24,9 +24,9 @@ static MacDockIconHandler *s_instance = nullptr;
 bool dockClickHandler(id self,SEL _cmd,...) {
     Q_UNUSED(self)
     Q_UNUSED(_cmd)
-    
+
     s_instance->handleDockIconClickEvent();
-    
+
     // Return NO (false) to suppress the default OS X actions
     return false;
 }
@@ -34,7 +34,7 @@ bool dockClickHandler(id self,SEL _cmd,...) {
 void setupDockClickHandler() {
     Class cls = objc_getClass("NSApplication");
     id appInst = objc_msgSend((id)cls, sel_registerName("sharedApplication"));
-    
+
     if (appInst != nullptr) {
         id delegate = objc_msgSend(appInst, sel_registerName("delegate"));
         Class delClass = (Class)objc_msgSend(delegate,  sel_registerName("class"));
@@ -86,7 +86,7 @@ void MacDockIconHandler::setIcon(const QIcon &icon)
         image = [[NSImage imageNamed:@"NSApplicationIcon"] retain];
     else {
         // generate NSImage from QIcon and use this as dock icon.
-        QSize size = icon.actualSize(QSize(128, 128));
+        QSize size = icon.actualSize(QSize(512, 512));
         QPixmap pixmap = icon.pixmap(size);
 
         // Write image into a R/W buffer from raw pixmap, then save the image.

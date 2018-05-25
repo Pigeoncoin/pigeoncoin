@@ -1,3 +1,4 @@
+*.dmg
 *.tar.gz
 
 *.exe
@@ -115,3 +116,4 @@ test/cache/*
 
 libpigeonconsensus.pc
 contrib/devtools/split-debug.sh
+
