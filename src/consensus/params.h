@@ -63,7 +63,24 @@ struct Params {
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
+    int64_t nPowTargetTimespanShort;
+    int nPowDifficultyRetargetHeight;
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
+    
+    //We need to return the correct values after we adjust the dificulty retarget
+    int64_t DifficultyAdjustmentIntervalAtHeight(unsigned nHeight) const { 
+        if(nHeight <= nPowDifficultyRetargetHeight) {
+            return nPowTargetTimespan / nPowTargetSpacing; 
+        }
+        return nPowTargetTimespanShort / nPowTargetSpacing; 
+    }
+
+    int64_t getPowTargetTimespan(unsigned nHeight) const {
+        if(nHeight <= nPowDifficultyRetargetHeight) {
+            return nPowTargetTimespan; 
+        }
+        return nPowTargetTimespanShort;
+    }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
     bool nSegwitEnabled;
