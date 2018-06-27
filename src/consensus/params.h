@@ -65,6 +65,7 @@ struct Params {
     int64_t nPowTargetTimespan;
     int64_t nPowTargetTimespanShort;
     int nPowDifficultyRetargetHeight;
+    int nPowMovingDiffHeight;
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     
     //We need to return the correct values after we adjust the dificulty retarget
