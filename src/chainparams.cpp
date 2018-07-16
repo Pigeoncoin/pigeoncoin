@@ -12,6 +12,7 @@
 #include "arith_uint256.h"
 
 #include <assert.h>
+#include <limits>
 
 #include "chainparamsseeds.h"
 
@@ -124,9 +125,18 @@ public:
         consensus.nSegwitEnabled = true;
         consensus.nCSVEnabled = true;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
+        // original difficulty method, every 2016 blocks
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
+        
+        // second difficulty method, every 360 blocks
         consensus.nPowDifficultyRetargetHeight = 87570; // blockheight to change at.
         consensus.nPowTargetTimespanShort = 360 * 60; //~6 hours
+        
+        // final difficulty method, zawy lwma
+        consensus.zawyLWMAHeight = 100; // TODO raise to 112345 for mainnet
+        consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
         consensus.nPowTargetSpacing = 1 * 60;
 		consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
@@ -268,9 +278,19 @@ public:
         consensus.nCSVEnabled = true;
 
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
+
+        // original difficulty method, every 2016 blocks
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
+        
+        // second difficulty method, every 360 blocks
         consensus.nPowDifficultyRetargetHeight = 2017; // blockheight to change at.
-        consensus.nPowTargetTimespanShort = 360 * 60; //1 day
+        consensus.nPowTargetTimespanShort = 360 * 60; //~6 hours
+        
+        // final difficulty method, zawy lwma
+        consensus.zawyLWMAHeight = 100; // TODO raise to 112345 for mainnet
+        consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
         consensus.nPowTargetSpacing = 1 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
@@ -362,6 +382,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999ULL;
+
+        // quick regnet paste, we never use regnet
+        consensus.zawyLWMAHeight = -1; // Activated on regnet
+        consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
