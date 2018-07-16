@@ -138,7 +138,7 @@ public:
 
         // Lawry's LWMA algorithm values
         // added for pre/post LWMA fork
-        consensus.zawyLWMAHeight = std::numeric_limits<int>::max(); // Not activated on mainnet
+        consensus.zawyLWMAHeight = 100;//std::numeric_limits<int>::max(); // Not activated on mainnet
         consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
 
