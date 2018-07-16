@@ -130,11 +130,11 @@ public:
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
         
         // second difficulty method, every 360 blocks
-        consensus.nPowDifficultyRetargetHeight = 87570; // blockheight to change at.
+        consensus.nPowDifficultyRetargetHeight = 10; // blockheight to change at. //TODO set back to 87570
         consensus.nPowTargetTimespanShort = 360 * 60; //~6 hours
         
         // final difficulty method, zawy lwma
-        consensus.zawyLWMAHeight = 100; // TODO raise to 112345 for mainnet
+        consensus.zawyLWMAHeight = 40; // TODO raise to 112345 for mainnet
         consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
         consensus.nPowTargetSpacing = 1 * 60;
