@@ -134,7 +134,7 @@ public:
         consensus.nPowTargetTimespanShort = 360 * 60; //~6 hours
         
         // final difficulty method, zawy lwma
-        consensus.zawyLWMAHeight = 40; // TODO raise to 112345 for mainnet
+        consensus.zawyLWMAHeight = 50; // TODO raise to 112345 for mainnet
         consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
         consensus.nPowTargetSpacing = 1 * 60;
