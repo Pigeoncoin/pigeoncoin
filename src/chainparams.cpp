@@ -12,10 +12,11 @@
 #include "arith_uint256.h"
 
 #include <assert.h>
+#include <limits>
 
 #include "chainparamsseeds.h"
 
-//TODO: Take these out
+//TODO: Take these out (??? left by Ravencoin team)
 extern double algoHashTotal[16];
 extern int algoHashHits[16];
 
@@ -124,9 +125,18 @@ public:
         consensus.nSegwitEnabled = true;
         consensus.nCSVEnabled = true;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
+        // original difficulty method, every 2016 blocks
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
-        consensus.nPowDifficultyRetargetHeight = 87570; // blockheight to change at.
+        
+        // second difficulty method, every 360 blocks
+        consensus.nPowDifficultyRetargetHeight = 87570; // blockheight to switch to 360 block retarget rules
         consensus.nPowTargetTimespanShort = 360 * 60; //~6 hours
+        
+        // final difficulty method, zawy lwma
+        consensus.zawyLWMAHeight = 111222; // blockheight to switch to LWMA retarget rules
+        consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
         consensus.nPowTargetSpacing = 1 * 60;
 		consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
@@ -138,7 +148,7 @@ public:
 
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000061e4199f0f97030");
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000061e4199f0f97030"); 
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x000000000023d0c447406c5f05c4f51c70ec3faa5fe3943c1b3136785ebd7cc0");
@@ -268,9 +278,19 @@ public:
         consensus.nCSVEnabled = true;
 
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
+
+        // original difficulty method, every 2016 blocks
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
-        consensus.nPowDifficultyRetargetHeight = 2017; // blockheight to change at.
-        consensus.nPowTargetTimespanShort = 360 * 60; //1 day
+        
+        // second difficulty method, every 360 blocks
+        consensus.nPowDifficultyRetargetHeight = 2017; // blockheight to switch to 360 block retarget rules
+        consensus.nPowTargetTimespanShort = 360 * 60; //~6 hours
+        
+        // final difficulty method, zawy lwma
+        consensus.zawyLWMAHeight = 2222; // blockheight to switch to LWMA retarget rules
+        consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
         consensus.nPowTargetSpacing = 1 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
@@ -362,6 +382,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999ULL;
+
+        // quick regnet paste, we never use regnet
+        consensus.zawyLWMAHeight = -1; // Activated on regnet
+        consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
