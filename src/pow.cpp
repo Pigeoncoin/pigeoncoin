@@ -135,7 +135,7 @@ unsigned int LwmaCalculateNextWorkRequired(const CBlockIndex* pindexLast, const 
         return pindexLast->nBits;
     }
 
-    const int N = 45;
+    const int N = 45; // NOTICE: lwma must start after 46 blocks
     const int k = 1377; //k=(N+1)/2*TargetSolvetime*0.998
     const int height = pindexLast->nHeight + 1;
     assert(height > N);

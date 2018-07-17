@@ -16,7 +16,7 @@
 
 #include "chainparamsseeds.h"
 
-//TODO: Take these out
+//TODO: Take these out (??? left by Ravencoin team)
 extern double algoHashTotal[16];
 extern int algoHashHits[16];
 
@@ -130,11 +130,11 @@ public:
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
         
         // second difficulty method, every 360 blocks
-        consensus.nPowDifficultyRetargetHeight = 2017; // blockheight to change at. //TODO set back to 87570
+        consensus.nPowDifficultyRetargetHeight = 87570; // blockheight to switch to 360 block retarget rules
         consensus.nPowTargetTimespanShort = 360 * 60; //~6 hours
         
         // final difficulty method, zawy lwma
-        consensus.zawyLWMAHeight = 2222; // TODO raise to 112345 for mainnet
+        consensus.zawyLWMAHeight = 111222; // blockheight to switch to LWMA retarget rules
         consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
         consensus.nPowTargetSpacing = 1 * 60;
@@ -148,12 +148,10 @@ public:
 
 
         // The best chain should have at least this much work.
-        // consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000061e4199f0f97030"); 
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000000000c00"); // TODO switch to above chainwork
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000061e4199f0f97030"); 
 
         // By default assume that the signatures in ancestors of this block are valid.
-        // consensus.defaultAssumeValid = uint256S("0x000000000023d0c447406c5f05c4f51c70ec3faa5fe3943c1b3136785ebd7cc0");
-        consensus.defaultAssumeValid = uint256S("0x00"); // TODO switch to above chainwork
+        consensus.defaultAssumeValid = uint256S("0x000000000023d0c447406c5f05c4f51c70ec3faa5fe3943c1b3136785ebd7cc0");
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -286,11 +284,11 @@ public:
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
         
         // second difficulty method, every 360 blocks
-        consensus.nPowDifficultyRetargetHeight = 2017; // blockheight to change at.
+        consensus.nPowDifficultyRetargetHeight = 2017; // blockheight to switch to 360 block retarget rules
         consensus.nPowTargetTimespanShort = 360 * 60; //~6 hours
         
         // final difficulty method, zawy lwma
-        consensus.zawyLWMAHeight = 100; // TODO raise to 112345 for mainnet
+        consensus.zawyLWMAHeight = 2222; // blockheight to switch to LWMA retarget rules
         consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
         consensus.nPowTargetSpacing = 1 * 60;
