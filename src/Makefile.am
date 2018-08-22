@@ -320,6 +320,7 @@ libpigeon_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(PIGEON_INCLUDES)
 libpigeon_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libpigeon_consensus_a_SOURCES = \
   amount.h \
+  FounderPayment.h \
   arith_uint256.cpp \
   arith_uint256.h \
   consensus/merkle.cpp \
@@ -356,6 +357,7 @@ libpigeon_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libpigeon_common_a_SOURCES = \
   base58.cpp \
   bech32.cpp \
+  FounderPayment.cpp \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \

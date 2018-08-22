@@ -49,7 +49,7 @@ static void DeserializeAndCheckBlockTest(benchmark::State& state)
         assert(stream.Rewind(sizeof(block_bench::block413567)));
 
         CValidationState validationState;
-        assert(CheckBlock(block, validationState, chainParams->GetConsensus()));
+        assert(CheckBlock(block, validationState, chainParams->GetConsensus(), 0)); // skip founder check for this test
     }
 }
 

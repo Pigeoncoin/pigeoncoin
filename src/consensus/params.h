@@ -10,6 +10,7 @@
 #include "uint256.h"
 #include <map>
 #include <string>
+#include "FounderPayment.h"
 
 namespace Consensus {
 
@@ -74,6 +75,7 @@ struct Params {
     int64_t nPowTargetTimespan;
     int64_t nPowTargetTimespanShort;
     int nPowDifficultyRetargetHeight;
+    FounderPayment nFounderPayment;
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     
     //We need to return the correct values after we adjust the dificulty retarget
@@ -90,6 +92,7 @@ struct Params {
         }
         return nPowTargetTimespanShort;
     }
+
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
     bool nSegwitEnabled;
