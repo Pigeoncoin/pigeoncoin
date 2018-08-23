@@ -18,13 +18,17 @@
 using namespace std;
 
 static const string DEFAULT_FOUNDER_ADDRESS = "XQfwRdDEsndtoYLPrYahi4sc1KgLztpgnJ";
+struct FounderRewardStrcuture {
+	int blockHeight;
+	int rewardPercentage;
+};
 
 class FounderPayment {
 public:
-	FounderPayment(int startBlock = 0, const string &address = DEFAULT_FOUNDER_ADDRESS, int rewardPercentage = 0.01) {
+	FounderPayment(vector<FounderRewardStrcuture> rewardStructures = {}, int startBlock = 0, const string &address = DEFAULT_FOUNDER_ADDRESS) {
 		this->founderAddress = address;
 		this->startBlock = startBlock;
-		this->rewardPercentage = rewardPercentage;
+		this->rewardStructures = rewardStructures;
 	}
 	~FounderPayment(){};
 	CAmount getFounderPaymentAmount(int blockHeight, CAmount blockReward);
@@ -34,7 +38,7 @@ public:
 private:
 	string founderAddress;
 	int startBlock;
-	int rewardPercentage;
+	vector<FounderRewardStrcuture> rewardStructures;
 };
 
 

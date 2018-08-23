@@ -20,7 +20,13 @@ CAmount FounderPayment::getFounderPaymentAmount(int blockHeight, CAmount blockRe
 	 if (blockHeight <= startBlock){
 		 return 0;
 	 }
-	 return blockReward * rewardPercentage / 100;
+	 for(int i = 0; i < rewardStructures.size(); i++) {
+		 FounderRewardStrcuture rewardStructure = rewardStructures[i];
+		 if(blockHeight <= rewardStructure.blockHeight) {
+			 return blockReward * rewardStructure.rewardPercentage / 100;
+		 }
+	 }
+	 return 0;
 }
 
 void FounderPayment::FillFounderPayment(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, CTxOut& txoutFounderRet) {
