@@ -1050,6 +1050,7 @@ bool IsInitialBlockDownload()
     // Once this function has returned false, it must remain false.
     static std::atomic<bool> latchToFalse{false};
     // Optimization: pre-test latch before taking the lock.
+   // std::cout <<  "Optimization: pre-test latch " << latchToFalse.load(std::memory_order_relaxed) << std::endl;
     if (latchToFalse.load(std::memory_order_relaxed))
         return false;
 
@@ -1073,6 +1074,10 @@ bool IsInitialBlockDownload()
     		LogPrintf("Work needed: %s", nMinimumChainWork.GetHex());*/
         return true;
     }
+  //  std::cout << "BlockTime(): " << chainActive.Tip()->GetBlockTime() << std::endl;
+	//LogPrintf(str.c_str());
+
+//	std::cout << "GetTime() minus nMaxTipAge: " << (GetTime() - nMaxTipAge) << std::endl;
     if (chainActive.Tip()->GetBlockTime() < (GetTime() - nMaxTipAge))
     {
         std::cout << "BlockTime(): " << chainActive.Tip()->GetBlockTime() << std::endl;
@@ -3020,9 +3025,14 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     CScript expect = CScript() << nHeight;
     auto scriptHeight = block.vtx[0]->vin[0].scriptSig.size();
 
-
+    LogPrintf("nBIP34Enabled coinbase vin script check scriptSig.size()=%d, expect size = %d", block.vtx[0]->vin[0].scriptSig.size(), expect.size());
+	LogPrintf(" expect script %s",  HexStr(expect.begin(), expect.end()));
+	LogPrintf(" vin script %s\n",  HexStr(block.vtx[0]->vin[0].scriptSig.begin(), block.vtx[0]->vin[0].scriptSig.end()));
     if (consensusParams.nBIP34Enabled)
     {
+    	LogPrintf("nBIP34Enabled coinbase vin script check scriptSig.size()=%d, expect size = %d", block.vtx[0]->vin[0].scriptSig.size(), expect.size());
+		LogPrintf(" expect script %s",  HexStr(expect.begin(), expect.end()));
+		LogPrintf(" vin script %s\n",  HexStr(block.vtx[0]->vin[0].scriptSig.begin(), block.vtx[0]->vin[0].scriptSig.end()));
 		if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
 			!std::equal(expect.begin(), expect.end(), block.vtx[0]->vin[0].scriptSig.begin())) {
 			return state.DoS(100, false, REJECT_INVALID, "bad-cb-height", false, "block height mismatch in coinbase");
