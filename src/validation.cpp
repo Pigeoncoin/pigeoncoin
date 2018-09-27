@@ -1058,33 +1058,33 @@ bool IsInitialBlockDownload()
         return false;
     if (fImporting || fReindex)
     {
-        LogPrintf("IsInitialBlockDownload (importing or reindex)");
+       // LogPrintf("IsInitialBlockDownload (importing or reindex)");
         return true;
     }
     if (chainActive.Tip() == nullptr)
     {
-        LogPrintf("IsInitialBlockDownload (tip is null)");
+       // LogPrintf("IsInitialBlockDownload (tip is null)");
         return true;
     }
     if (chainActive.Tip()->nChainWork < nMinimumChainWork)
     {
-    		LogPrintf("IsInitialBlockDownload (min chain work)");
-    		LogPrintf("Work found: %s", chainActive.Tip()->nChainWork.GetHex());
-    		LogPrintf("Work needed: %s", nMinimumChainWork.GetHex());
+    		//LogPrintf("IsInitialBlockDownload (min chain work)");
+    		//LogPrintf("Work found: %s", chainActive.Tip()->nChainWork.GetHex());
+    		//LogPrintf("Work needed: %s", nMinimumChainWork.GetHex());
         return true;
     }
     if (chainActive.Tip()->GetBlockTime() < (GetTime() - nMaxTipAge))
     {
-        std::cout << "BlockTime(): " << chainActive.Tip()->GetBlockTime() << std::endl;
+        //std::cout << "BlockTime(): " << chainActive.Tip()->GetBlockTime() << std::endl;
         //LogPrintf(str.c_str());
 
-        std::cout << "GetTime() minus nMaxTipAge: " << (GetTime() - nMaxTipAge) << std::endl;
+        //std::cout << "GetTime() minus nMaxTipAge: " << (GetTime() - nMaxTipAge) << std::endl;
         //LogPrintf(str2.c_str());
 
-        LogPrintf("IsInitialBlockDownload (tip age)\n");
+       // LogPrintf("IsInitialBlockDownload (tip age)\n");
         return true;
     }
-    LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
+    //LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
     latchToFalse.store(true, std::memory_order_relaxed);
     return false;
 }
@@ -2852,8 +2852,10 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
 
     // Check transactions
+    bool isPassedLastExploitedHeight = chainActive.Height() > 186803;
+    //LogPrintf("--------------isPassedLastExploitedHeight-----------%b----", isPassedLastExploitedHeight);
     for (const auto& tx : block.vtx)
-        if (!CheckTransaction(*tx, state, true))
+        if (!CheckTransaction(*tx, state, isPassedLastExploitedHeight))
             return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
                                  strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
 
