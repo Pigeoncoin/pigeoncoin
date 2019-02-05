@@ -1058,33 +1058,33 @@ bool IsInitialBlockDownload()
         return false;
     if (fImporting || fReindex)
     {
-        LogPrintf("IsInitialBlockDownload (importing or reindex)");
+       // LogPrintf("IsInitialBlockDownload (importing or reindex)");
         return true;
     }
     if (chainActive.Tip() == nullptr)
     {
-        LogPrintf("IsInitialBlockDownload (tip is null)");
+       // LogPrintf("IsInitialBlockDownload (tip is null)");
         return true;
     }
     if (chainActive.Tip()->nChainWork < nMinimumChainWork)
     {
-    		LogPrintf("IsInitialBlockDownload (min chain work)");
-    		LogPrintf("Work found: %s", chainActive.Tip()->nChainWork.GetHex());
-    		LogPrintf("Work needed: %s", nMinimumChainWork.GetHex());
+    		//LogPrintf("IsInitialBlockDownload (min chain work)");
+    		//LogPrintf("Work found: %s", chainActive.Tip()->nChainWork.GetHex());
+    		//LogPrintf("Work needed: %s", nMinimumChainWork.GetHex());
         return true;
     }
     if (chainActive.Tip()->GetBlockTime() < (GetTime() - nMaxTipAge))
     {
-        std::cout << "BlockTime(): " << chainActive.Tip()->GetBlockTime() << std::endl;
+        //std::cout << "BlockTime(): " << chainActive.Tip()->GetBlockTime() << std::endl;
         //LogPrintf(str.c_str());
 
-        std::cout << "GetTime() minus nMaxTipAge: " << (GetTime() - nMaxTipAge) << std::endl;
+        //std::cout << "GetTime() minus nMaxTipAge: " << (GetTime() - nMaxTipAge) << std::endl;
         //LogPrintf(str2.c_str());
 
-        LogPrintf("IsInitialBlockDownload (tip age)\n");
+       // LogPrintf("IsInitialBlockDownload (tip age)\n");
         return true;
     }
-    LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
+    //LogPrintf("Leaving InitialBlockDownload (latching to false)\n");
     latchToFalse.store(true, std::memory_order_relaxed);
     return false;
 }
@@ -2852,8 +2852,10 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
 
     // Check transactions
+    bool isPassedLastExploitedHeight = chainActive.Height() > 186803;
+    //LogPrintf("--------------isPassedLastExploitedHeight-----------%b----", isPassedLastExploitedHeight);
     for (const auto& tx : block.vtx)
-        if (!CheckTransaction(*tx, state, false))
+        if (!CheckTransaction(*tx, state, isPassedLastExploitedHeight))
             return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
                                  strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
 
@@ -2961,9 +2963,9 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     // Check timestamp against prev
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.Invalid(false, REJECT_INVALID, "time-too-old", "block's timestamp is too early");
-
+    int64_t futureTimeWindow = nHeight > params.getNewFutureWindowBlock() ? MAX_FUTURE_LWMA_TIME : MAX_FUTURE_BLOCK_TIME;
     // Check timestamp
-    if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
+    if (block.GetBlockTime() > nAdjustedTime + futureTimeWindow)
         return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:

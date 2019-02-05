@@ -89,6 +89,8 @@ public:
     bool BIP65();
     bool BIP66();
     bool CSVEnabled() const;
+    uint64_t getNewFutureWindowBlock() const {return this->newFutureWindowBlock;};
+
 protected:
     CChainParams() {}
 
@@ -108,6 +110,7 @@ protected:
     bool fMiningRequiresPeers;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
+    uint64_t newFutureWindowBlock;
 };
 
 /**
