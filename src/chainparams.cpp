@@ -145,7 +145,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
+        vector<FounderRewardStrcuture> rewardStructures = {  {1420000, 5}// 5% founder/dev fee for blocks between startFounder block and 500k block
 
+        																   };
+	    consensus.nFounderPayment = FounderPayment(rewardStructures, 420000, "rQG3D3nzy3jfFxugbmUoZ9LhjpeJ4vrYbR");
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000061e4199f0f97030"); 
@@ -214,9 +217,6 @@ public:
             // Mainnet --- nonce: 296277 time: 1390095618 hash: 000000bdd771b14e5a031806292305e563956ce2584278de414d9965f6ab54b0
         }
         std::cout << std::string("Finished calculating Mainnet Genesis Block:\n");
-
-
-
 */
 //////////////
 //////////////
@@ -300,8 +300,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
-
-
+        vector<FounderRewardStrcuture> rewardStructures = {  {500000, 5},
+															 {1000000, 2}
+																		   };
+		consensus.nFounderPayment = FounderPayment(rewardStructures, 150000, "P9nAM12qNj7qL8JKN3EnShwSYQKHinL9TG");
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
 
@@ -384,7 +386,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999ULL;
-
+        vector<FounderRewardStrcuture> rewardStructures = {  {500000, 5},
+															 {1000000, 2}
+																		   };
+		consensus.nFounderPayment = FounderPayment(rewardStructures, 150000, "P9nAM12qNj7qL8JKN3EnShwSYQKHinL9TG");
         // quick regnet paste, we never use regnet
         consensus.zawyLWMAHeight = -1; // Activated on regnet
         consensus.powLimitLegacy = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");

@@ -685,6 +685,19 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         result.push_back(Pair("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment.begin(), pblocktemplate->vchCoinbaseCommitment.end())));
     }
 
+    UniValue founderObj(UniValue::VOBJ);
+    FounderPayment founderPayment = Params().GetConsensus().nFounderPayment;
+	if(pblock->txoutFounder!= CTxOut()) {
+		CTxDestination address;
+		ExtractDestination(pblock->txoutFounder.scriptPubKey, address);
+		string addressString = EncodeDestination(address);
+		founderObj.push_back(Pair("payee", addressString.c_str()));
+		founderObj.push_back(Pair("script", HexStr(pblock->txoutFounder.scriptPubKey.begin(), pblock->txoutFounder.scriptPubKey.end())));
+		founderObj.push_back(Pair("amount", pblock->txoutFounder.nValue));
+	}
+	result.push_back(Pair("founder", founderObj));
+	result.push_back(Pair("founder_payments_started", pindexPrev->nHeight + 1 > founderPayment.getStartBlock()));
+
     return result;
 }
 
