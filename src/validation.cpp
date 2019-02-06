@@ -2862,19 +2862,16 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     CAmount founderReward = founderPayment.getFounderPaymentAmount(nHeight, blockReward);
     int founderStartHeight = founderPayment.getStartBlock();
     bool founderTransaction = founderReward == 0;// if founder reward is 0 no need to check
+    bool isPassedLastExploitedHeight = chainActive.Height() > 186803;
     for (const auto& tx : block.vtx) {
     	if(nHeight > founderStartHeight) {
-			if(!founderTransaction && founderPayment.IsBlockPayeeValid(*tx,nHeight,blockReward)) {
-				founderTransaction = true;
-			}
+		if(!founderTransaction && founderPayment.IsBlockPayeeValid(*tx,nHeight,blockReward)) {
+			founderTransaction = true;
+		}
 		} else {
 			founderTransaction = true;
 		}
-        if (!CheckTransaction(*tx, state, false)) {
-    bool isPassedLastExploitedHeight = chainActive.Height() > 186803;
-    //LogPrintf("--------------isPassedLastExploitedHeight-----------%b----", isPassedLastExploitedHeight);
-    for (const auto& tx : block.vtx)
-        if (!CheckTransaction(*tx, state, isPassedLastExploitedHeight))
+        if (!CheckTransaction(*tx, state, isPassedLastExploitedHeight)) {
             return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
                                  strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
         }
