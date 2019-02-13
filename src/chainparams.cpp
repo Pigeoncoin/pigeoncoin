@@ -226,10 +226,14 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0x000000f049bef9fec0179131874c54c76c0ff59f695db30a4f0da52072c99492"));
         assert(genesis.hashMerkleRoot == uint256S("0xf0cc5f92b11a6655a4939fc239e8bf960cd0453b87b5a0820ab36904279341a5"));
 
+	/// Official DNS Seeds
         vSeeds.emplace_back("seed.pigeoncoin.org", false);
         vSeeds.emplace_back("seed2.pigeoncoin.org", false);
         vSeeds.emplace_back("seed3.pigeoncoin.org", false);
         vSeeds.emplace_back("seed4.pigeoncoin.org", false);
+	    
+	/// Community DNS Seeds
+        vSeeds.emplace_back("seed.pigeoncoin.xyz", false);
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,55); // changed 60 to 55
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,122); // changed 122 to 123
