@@ -148,7 +148,7 @@ public:
         vector<FounderRewardStrcuture> rewardStructures = {  {1420000, 5}// 5% founder/dev fee for blocks between startFounder block and 500k block
 
         																   };
-	    consensus.nFounderPayment = FounderPayment(rewardStructures, 420000, "rQG3D3nzy3jfFxugbmUoZ9LhjpeJ4vrYbR");
+	    consensus.nFounderPayment = FounderPayment(rewardStructures, 2, "rQG3D3nzy3jfFxugbmUoZ9LhjpeJ4vrYbR");
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000061e4199f0f97030"); 
@@ -165,11 +165,11 @@ public:
         pchMessageStart[1] = 0x41;
         pchMessageStart[2] = 0x56;
         pchMessageStart[3] = 0x4e;
-        nDefaultPort = 8757;
+        nDefaultPort = 8857;
         nPruneAfterHeight = 100000;
         newFutureWindowBlock = 200000;
 
-        genesis = CreateGenesisBlock(1521661111, 17434278, 0x1e00ffff, 4, 5000 * COIN);
+        genesis = CreateGenesisBlock(1550292206, 13769368, 0x1e00ffff, 4, 5000 * COIN);
 
         //(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 
@@ -221,19 +221,19 @@ public:
 //////////////
 //////////////
 
+        vSeeds.emplace_back("47.154.7.140", false);
 
-
-        assert(consensus.hashGenesisBlock == uint256S("0x000000f049bef9fec0179131874c54c76c0ff59f695db30a4f0da52072c99492"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000000833ccf9f9d17d4eaebec9eb3a86588bec32513ae712ecf86ffcba4ade3"));
         assert(genesis.hashMerkleRoot == uint256S("0xf0cc5f92b11a6655a4939fc239e8bf960cd0453b87b5a0820ab36904279341a5"));
 
 	/// Official DNS Seeds
-        vSeeds.emplace_back("seed.pigeoncoin.org", false);
-        vSeeds.emplace_back("seed2.pigeoncoin.org", false);
-        vSeeds.emplace_back("seed3.pigeoncoin.org", false);
-        vSeeds.emplace_back("seed4.pigeoncoin.org", false);
+//        vSeeds.emplace_back("seed.pigeoncoin.org", false);
+//        vSeeds.emplace_back("seed2.pigeoncoin.org", false);
+//        vSeeds.emplace_back("seed3.pigeoncoin.org", false);
+//        vSeeds.emplace_back("seed4.pigeoncoin.org", false);
 	    
 	/// Community DNS Seeds
-        vSeeds.emplace_back("seed.pigeoncoin.xyz", false);
+//        vSeeds.emplace_back("seed.pigeoncoin.xyz", false);
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,55); // changed 60 to 55
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,122); // changed 122 to 123
@@ -243,12 +243,12 @@ public:
 
         bech32_hrp = "pc"; // changed from "rc" to "pc"
 
-        vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
+        vFixedSeeds = std::vector<SeedSpec6>(/*pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main)*/);
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
-        fMiningRequiresPeers = true;
+        fMiningRequiresPeers = false;
 
         checkpointData = (CCheckpointData) {
             {
@@ -258,7 +258,7 @@ public:
 
         chainTxData = ChainTxData{
             // Update as we know more about the contents of the Pigeon chain
-            1509572692, // * UNIX timestamp of last known number of transactions
+        	1550292206, // * UNIX timestamp of last known number of transactions
             1,          // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
             3.1         // * estimated number of transactions per second after that timestamp
