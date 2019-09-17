@@ -2,7 +2,7 @@
 # Set DISTNAME, BRANCH and MAKEOPTS to the desired settings
 DISTNAME=pigeoncoin-0.17.0
 MAKEOPTS="-j4"
-BRANCH=master
+BRANCH=0.17
 BUILD_DR=/mnt/development/workspace
 clear
 if [[ $EUID -ne 0 ]]; then
@@ -32,7 +32,7 @@ rm -rf $BUILD_DR/pigeoncoin $BUILD_DR/sign $BUILD_DR/release
 
 git clone https://github.com/Pigeoncoin/pigeoncoin
 cd $BUILD_DR/pigeoncoin
-git checkout $BRANCH
+git checkout $BRANCH -b origin/$BRANCH
 
 
 echo @@@
