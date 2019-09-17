@@ -249,19 +249,19 @@ public:
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
         fMiningRequiresPeers = true;
-
+        newProtocolBlock = 716334;
         checkpointData = (CCheckpointData) {
             {
-
+            	 { 699153, uint256S("0x00000000002ccebf8a0c2a66ae6b4e03ba0e0247b467fbf68b6fd13d93ebf84e")},
             }
         };
 
         chainTxData = ChainTxData{
             // Update as we know more about the contents of the Pigeon chain
-            1509572692, // * UNIX timestamp of last known number of transactions
-            1,          // * total number of transactions between genesis and that timestamp
+        	1568755000, // * UNIX timestamp of last known number of transactions
+			519492,          // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
-            3.1         // * estimated number of transactions per second after that timestamp
+            0.1         // * estimated number of transactions per second after that timestamp
         };
     }
 };
@@ -348,7 +348,7 @@ public:
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
         fMiningRequiresPeers = true;
-
+        newProtocolBlock = 716334;
         checkpointData = (CCheckpointData) {
             {
             }
@@ -469,6 +469,7 @@ std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
 void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
+    bNetwork.SetNetwork(network);
     globalChainParams = CreateChainParams(network);
 }
 

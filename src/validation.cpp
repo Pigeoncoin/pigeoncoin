@@ -3026,14 +3026,14 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     CScript expect = CScript() << nHeight;
     auto scriptHeight = block.vtx[0]->vin[0].scriptSig.size();
 
-    LogPrintf("nBIP34Enabled coinbase vin script check scriptSig.size()=%d, expect size = %d", block.vtx[0]->vin[0].scriptSig.size(), expect.size());
-	LogPrintf(" expect script %s",  HexStr(expect.begin(), expect.end()));
-	LogPrintf(" vin script %s\n",  HexStr(block.vtx[0]->vin[0].scriptSig.begin(), block.vtx[0]->vin[0].scriptSig.end()));
+    //LogPrintf("nBIP34Enabled coinbase vin script check scriptSig.size()=%d, expect size = %d", block.vtx[0]->vin[0].scriptSig.size(), expect.size());
+	//LogPrintf(" expect script %s",  HexStr(expect.begin(), expect.end()));
+	//LogPrintf(" vin script %s\n",  HexStr(block.vtx[0]->vin[0].scriptSig.begin(), block.vtx[0]->vin[0].scriptSig.end()));
     if (consensusParams.nBIP34Enabled)
     {
-    	LogPrintf("nBIP34Enabled coinbase vin script check scriptSig.size()=%d, expect size = %d", block.vtx[0]->vin[0].scriptSig.size(), expect.size());
-		LogPrintf(" expect script %s",  HexStr(expect.begin(), expect.end()));
-		LogPrintf(" vin script %s\n",  HexStr(block.vtx[0]->vin[0].scriptSig.begin(), block.vtx[0]->vin[0].scriptSig.end()));
+    	//LogPrintf("nBIP34Enabled coinbase vin script check scriptSig.size()=%d, expect size = %d", block.vtx[0]->vin[0].scriptSig.size(), expect.size());
+		//LogPrintf(" expect script %s",  HexStr(expect.begin(), expect.end()));
+		//LogPrintf(" vin script %s\n",  HexStr(block.vtx[0]->vin[0].scriptSig.begin(), block.vtx[0]->vin[0].scriptSig.end()));
 		if (block.vtx[0]->vin[0].scriptSig.size() < expect.size() ||
 			!std::equal(expect.begin(), expect.end(), block.vtx[0]->vin[0].scriptSig.begin())) {
 			return state.DoS(100, false, REJECT_INVALID, "bad-cb-height", false, "block height mismatch in coinbase");

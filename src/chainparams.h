@@ -90,6 +90,7 @@ public:
     bool BIP66();
     bool CSVEnabled() const;
     uint64_t getNewFutureWindowBlock() const {return this->newFutureWindowBlock;};
+    uint32_t getNewProtocolBlock() const {return this->newProtocolBlock;};
 
 protected:
     CChainParams() {}
@@ -111,6 +112,7 @@ protected:
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
     uint64_t newFutureWindowBlock;
+    uint32_t newProtocolBlock;
 };
 
 /**
