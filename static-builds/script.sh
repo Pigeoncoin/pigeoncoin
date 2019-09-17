@@ -32,7 +32,7 @@ rm -rf $BUILD_DR/pigeoncoin $BUILD_DR/sign $BUILD_DR/release
 
 git clone https://github.com/Pigeoncoin/pigeoncoin
 cd $BUILD_DR/pigeoncoin
-git checkout $BRANCH -b origin/$BRANCH
+git checkout -b $BRANCH origin/$BRANCH
 
 
 echo @@@
