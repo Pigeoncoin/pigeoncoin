@@ -28,9 +28,12 @@ apt install -y curl g++-aarch64-linux-gnu g++-7-aarch64-linux-gnu gcc-7-aarch64-
 cd $BUILD_DR/
 
 # Removes any existing builds and starts clean WARNING
-rm -rf $BUILD_DR/pigeoncoin $BUILD_DR/sign $BUILD_DR/release
+rm $BUILD_DR/sign $BUILD_DR/release
 
-git clone https://github.com/Pigeoncoin/pigeoncoin
+cd $BUILD_DR/pigeoncoin
+
+git fetch
+git pull
 cd $BUILD_DR/pigeoncoin
 git checkout -b $BRANCH origin/$BRANCH
 
@@ -73,11 +76,11 @@ export PATH=$PWD/depends/x86_64-linux-gnu/native/bin:$PATH
 ./autogen.sh
 CONFIG_SITE=$PWD/depends/x86_64-linux-gnu/share/config.site ./configure --prefix=/
 make dist
-SOURCEDIST=`echo raven-*.tar.gz`
+SOURCEDIST=`echo pigeoncoin-*.tar.gz`
 mkdir -p $BUILD_DR/pigeoncoin/temp
 cd $BUILD_DR/pigeoncoin/temp
 tar xf ../$SOURCEDIST
-find raven-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
+find pigeoncoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
 cd $BUILD_DR/pigeoncoin
 mv $SOURCEDIST $BUILD_DR/release
 rm -rf temp
@@ -211,7 +214,7 @@ make $MAKEOPTS
 make -C src check-security
 make deploy
 rename 's/-setup\.exe$/-setup-unsigned.exe/' *-setup.exe
-cp -f raven-*setup*.exe $BUILD_DR/release/unsigned/
+cp -f pigeoncoin-*setup*.exe $BUILD_DR/release/unsigned/
 mkdir -p $BUILD_DR/win64
 make install DESTDIR=$BUILD_DR/win64/$DISTNAME
 cd $BUILD_DR/win64
@@ -227,7 +230,7 @@ rm -rf win64
 cp -rf pigeoncoin/contrib/windeploy $BUILD_DR/sign/win64
 cd $BUILD_DR/sign/win64/windeploy
 mkdir -p unsigned
-mv $BUILD_DR/pigeoncoin/raven-*setup-unsigned.exe unsigned/
+mv $BUILD_DR/pigeoncoin/pigeoncoin-*setup-unsigned.exe unsigned/
 find . | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > $BUILD_DR/sign/$DISTNAME-win64-unsigned.tar.gz
 cd $BUILD_DR/sign
 rm -rf win64
@@ -254,7 +257,7 @@ make $MAKEOPTS
 make -C src check-security
 make deploy
 rename 's/-setup\.exe$/-setup-unsigned.exe/' *-setup.exe
-cp -f raven-*setup*.exe $BUILD_DR/release/unsigned/
+cp -f pigeoncoin-*setup*.exe $BUILD_DR/release/unsigned/
 mkdir -p $BUILD_DR/win32
 make install DESTDIR=$BUILD_DR/win32/$DISTNAME
 cd $BUILD_DR/win32
@@ -270,7 +273,7 @@ rm -rf win32
 cp -rf pigeoncoin/contrib/windeploy $BUILD_DR/sign/win32
 cd $BUILD_DR/sign/win32/windeploy
 mkdir -p unsigned
-mv $BUILD_DR/pigeoncoin/raven-*setup-unsigned.exe unsigned/
+mv $BUILD_DR/pigeoncoin/pigeoncoin-*setup-unsigned.exe unsigned/
 find . | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > $BUILD_DR/sign/$DISTNAME-win32-unsigned.tar.gz
 cd $BUILD_DR/sign
 rm -rf win32
@@ -311,7 +314,7 @@ cd unsigned-app-$DISTNAME
 find . | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > $BUILD_DR/sign/$DISTNAME-osx-unsigned.tar.gz
 cd $BUILD_DR/pigeoncoin
 make deploy
-$PWD/depends/x86_64-apple-darwin14/native/bin/dmg dmg "Raven-Core.dmg" $BUILD_DR/release/unsigned/$DISTNAME-osx-unsigned.dmg
+$PWD/depends/x86_64-apple-darwin14/native/bin/dmg dmg "pigeoncoin-Core.dmg" $BUILD_DR/release/unsigned/$DISTNAME-osx-unsigned.dmg
 rm -rf unsigned-app-$DISTNAME dist osx_volname dpi36.background.tiff dpi72.background.tiff
 cd $BUILD_DR/OSX
 find . -name "lib*.la" -delete
