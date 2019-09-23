@@ -148,7 +148,8 @@ public:
         vector<FounderRewardStrcuture> rewardStructures = {  {1420000, 5}// 5% founder/dev fee for blocks between startFounder block and 500k block
 
         																   };
-	    consensus.nFounderPayment = FounderPayment(rewardStructures, 420000, "rQG3D3nzy3jfFxugbmUoZ9LhjpeJ4vrYbR");
+	    consensus.nFounderPayment = FounderPayment(rewardStructures, 420000, "rQG3D3nzy3jfFxugbmUoZ9LhjpeJ4vrYbR",
+	    											"rLzD7RxVS1QMZ5yYrmoUvfnTNuzgUqJVVK", 738178);
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000061e4199f0f97030"); 
@@ -249,7 +250,7 @@ public:
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
         fMiningRequiresPeers = true;
-        newProtocolBlock = 716334;
+        newProtocolBlock = 738178;
         checkpointData = (CCheckpointData) {
             {
             	 { 699153, uint256S("0x00000000002ccebf8a0c2a66ae6b4e03ba0e0247b467fbf68b6fd13d93ebf84e")},
@@ -305,7 +306,8 @@ public:
         vector<FounderRewardStrcuture> rewardStructures = {  {500000, 5},
 															 {1000000, 2}
 																		   };
-		consensus.nFounderPayment = FounderPayment(rewardStructures, 150000, "P9nAM12qNj7qL8JKN3EnShwSYQKHinL9TG");
+		consensus.nFounderPayment = FounderPayment(rewardStructures, 150000, "P9nAM12qNj7qL8JKN3EnShwSYQKHinL9TG",
+													"nLphepxwA1bNxLDuwB3SLYPXjed6jMwFw4", 174208);
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
 

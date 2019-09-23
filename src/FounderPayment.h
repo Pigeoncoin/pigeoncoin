@@ -25,18 +25,25 @@ struct FounderRewardStrcuture {
 
 class FounderPayment {
 public:
-	FounderPayment(vector<FounderRewardStrcuture> rewardStructures = {}, int startBlock = 0, const string &address = DEFAULT_FOUNDER_ADDRESS) {
+	FounderPayment(vector<FounderRewardStrcuture> rewardStructures = {}, int startBlock = 0,
+			const string &address = DEFAULT_FOUNDER_ADDRESS, const string &address2 = DEFAULT_FOUNDER_ADDRESS,
+			int founder2StartBlock = 0) {
 		this->founderAddress = address;
 		this->startBlock = startBlock;
 		this->rewardStructures = rewardStructures;
+		this->founderAddress2 = address2;
+		this->address2StartBlock = founder2StartBlock;
 	}
 	~FounderPayment(){};
 	CAmount getFounderPaymentAmount(int blockHeight, CAmount blockReward);
 	void FillFounderPayment(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, CTxOut& txoutFounderRet);
 	bool IsBlockPayeeValid(const CTransaction& txNew, const int height, const CAmount blockReward);
-	int getStartBlock() {return this->startBlock;}
+	int getStartBlock() {return this->startBlock;};
+	int getAddress2StartBlock() {return this->address2StartBlock;};
 private:
 	string founderAddress;
+	string founderAddress2;
+	int address2StartBlock;
 	int startBlock;
 	vector<FounderRewardStrcuture> rewardStructures;
 };
