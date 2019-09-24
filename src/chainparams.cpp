@@ -307,8 +307,8 @@ public:
         vector<FounderRewardStrcuture> rewardStructures = {  {500000, 5},
 															 {1000000, 2}
 																		   };
-		consensus.nFounderPayment = FounderPayment(rewardStructures, 150000, "n6yjcgyB6VUJipV9p361QTSCDs3gf8izEh",
-													"nLphepxwA1bNxLDuwB3SLYPXjed6jMwFw4", 1000);
+		consensus.nFounderPayment = FounderPayment(rewardStructures, 3000, "n6yjcgyB6VUJipV9p361QTSCDs3gf8izEh",
+													"nLphepxwA1bNxLDuwB3SLYPXjed6jMwFw4", 4000);
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
 
