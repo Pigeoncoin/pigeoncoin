@@ -175,7 +175,7 @@ public:
         //(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        //std::cout << "Genesis: "<< consensus.hashGenesisBlock.GetHex() << "\n"; //
+        //std::cout << "Mainnet Genesis: "<< consensus.hashGenesisBlock.GetHex() << "\n"; //
         //std::cout << "Merkle: " << genesis.hashMerkleRoot.GetHex() << "\n"; //
 
 //////////////
@@ -273,7 +273,7 @@ public:
  */
 class CTestNetParams : public CChainParams {
 public:
-    CTestNetParams() {
+    CTestNetParams(bool skipGenesisCheck = false) : CChainParams(){
         strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 2100000;  //~ 4 yrs at 1 min block time
         consensus.nBIP34Enabled = true;
@@ -326,11 +326,13 @@ public:
 
         genesis = CreateGenesisBlock(1569289438, 6681907, 0x1e00ffff, 4, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-
+        //std::cout << "testnet Genesis: "<< consensus.hashGenesisBlock.GetHex() << "\n"; //
+		//std::cout << "Merkle: " << genesis.hashMerkleRoot.GetHex() << "\n"; //
         //Test MerkleRoot and GenesisBlock
-        assert(consensus.hashGenesisBlock == uint256S("0x000000a4d5d20f09a4cd9d47cae7e1bb056d46a1ba841ea19267341109f7b3a1"));
-        assert(genesis.hashMerkleRoot == uint256S("0xf0cc5f92b11a6655a4939fc239e8bf960cd0453b87b5a0820ab36904279341a5"));
-
+		if(!skipGenesisCheck) {
+			assert(consensus.hashGenesisBlock == uint256S("0x000000a4d5d20f09a4cd9d47cae7e1bb056d46a1ba841ea19267341109f7b3a1"));
+			assert(genesis.hashMerkleRoot == uint256S("0xf0cc5f92b11a6655a4939fc239e8bf960cd0453b87b5a0820ab36904279341a5"));
+		}
         vFixedSeeds.clear();
         vSeeds.clear();
 
@@ -458,12 +460,12 @@ const CChainParams &Params() {
     return *globalChainParams;
 }
 
-std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
+std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain, bool skipGenesisCheck)
 {
     if (chain == CBaseChainParams::MAIN)
         return std::unique_ptr<CChainParams>(new CMainParams());
     else if (chain == CBaseChainParams::TESTNET)
-        return std::unique_ptr<CChainParams>(new CTestNetParams());
+        return std::unique_ptr<CChainParams>(new CTestNetParams(skipGenesisCheck));
     else if (chain == CBaseChainParams::REGTEST)
         return std::unique_ptr<CChainParams>(new CRegTestParams());
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
@@ -471,6 +473,7 @@ std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
 
 void SelectParams(const std::string& network)
 {
+	printf("SelectParams %s\n", network.c_str());
     SelectBaseParams(network);
     bNetwork.SetNetwork(network);
     globalChainParams = CreateChainParams(network);
