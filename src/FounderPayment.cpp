@@ -34,20 +34,29 @@ void FounderPayment::FillFounderPayment(CMutableTransaction& txNew, int nBlockHe
 	txoutFounderRet = CTxOut();
     CScript payee;
     // fill payee with the founder address
-    payee = GetScriptForDestination(DecodeDestination(founderAddress));
+    if(nBlockHeight >= address2StartBlock) {
+    	payee = GetScriptForDestination(DecodeDestination(founderAddress2));
+    } else {
+    	payee = GetScriptForDestination(DecodeDestination(founderAddress));
+    }
     // GET FOUNDER PAYMENT VARIABLES SETUP
     CAmount founderPayment = getFounderPaymentAmount(nBlockHeight, blockReward);
     // split reward between miner ...
     txNew.vout[0].nValue -= founderPayment;
     txoutFounderRet = CTxOut(founderPayment, payee);
     txNew.vout.push_back(txoutFounderRet);
-    LogPrintf("FounderPayment::FillFounderPayment -- Founder payment %lld to %s\n", founderPayment, founderAddress.c_str());
+    LogPrintf("FounderPayment::FillFounderPayment -- Founder payment %lld to %s\n", founderPayment,
+    		nBlockHeight >= address2StartBlock ? founderAddress2.c_str() : founderAddress.c_str());
 }
 
 bool FounderPayment::IsBlockPayeeValid(const CTransaction& txNew, const int height, const CAmount blockReward) {
 	CScript payee;
 	// fill payee with the founder address
-	payee = GetScriptForDestination(DecodeDestination(founderAddress));
+	if(height >= address2StartBlock) {
+		payee = GetScriptForDestination(DecodeDestination(founderAddress2));
+	} else {
+		payee = GetScriptForDestination(DecodeDestination(founderAddress));
+	}
 	const CAmount founderReward = getFounderPaymentAmount(height, blockReward);
 	BOOST_FOREACH(const CTxOut& out, txNew.vout) {
 		if(out.scriptPubKey == payee && out.nValue >= founderReward) {

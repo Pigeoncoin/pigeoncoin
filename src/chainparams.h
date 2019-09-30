@@ -90,6 +90,7 @@ public:
     bool BIP66();
     bool CSVEnabled() const;
     uint64_t getNewFutureWindowBlock() const {return this->newFutureWindowBlock;};
+    uint32_t getNewProtocolBlock() const {return this->newProtocolBlock;};
 
 protected:
     CChainParams() {}
@@ -111,6 +112,7 @@ protected:
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
     uint64_t newFutureWindowBlock;
+    uint32_t newProtocolBlock;
 };
 
 /**
@@ -118,7 +120,7 @@ protected:
  * @returns a CChainParams* of the chosen chain.
  * @throws a std::runtime_error if the chain is not supported.
  */
-std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain);
+std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain, bool skipGenesisCheck = false);
 
 /**
  * Return the currently selected parameters. This won't change after app

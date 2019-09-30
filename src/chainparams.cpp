@@ -148,7 +148,8 @@ public:
         vector<FounderRewardStrcuture> rewardStructures = {  {1420000, 5}// 5% founder/dev fee for blocks between startFounder block and 500k block
 
         																   };
-	    consensus.nFounderPayment = FounderPayment(rewardStructures, 420000, "rQG3D3nzy3jfFxugbmUoZ9LhjpeJ4vrYbR");
+	    consensus.nFounderPayment = FounderPayment(rewardStructures, 420000, "rQG3D3nzy3jfFxugbmUoZ9LhjpeJ4vrYbR",
+	    											"rLzD7RxVS1QMZ5yYrmoUvfnTNuzgUqJVVK", 738178);
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000061e4199f0f97030"); 
@@ -174,7 +175,7 @@ public:
         //(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        //std::cout << "Genesis: "<< consensus.hashGenesisBlock.GetHex() << "\n"; //
+        //std::cout << "Mainnet Genesis: "<< consensus.hashGenesisBlock.GetHex() << "\n"; //
         //std::cout << "Merkle: " << genesis.hashMerkleRoot.GetHex() << "\n"; //
 
 //////////////
@@ -231,7 +232,8 @@ public:
         vSeeds.emplace_back("seed2.pigeoncoin.org", false);
         vSeeds.emplace_back("seed3.pigeoncoin.org", false);
         vSeeds.emplace_back("seed4.pigeoncoin.org", false);
-	    
+        vSeeds.emplace_back("157.230.41.76", false);
+
 	/// Community DNS Seeds
         vSeeds.emplace_back("seed.pigeoncoin.xyz", false);
 
@@ -249,19 +251,19 @@ public:
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
         fMiningRequiresPeers = true;
-
+        newProtocolBlock = 738178;
         checkpointData = (CCheckpointData) {
             {
-
+            	 { 699153, uint256S("0x00000000002ccebf8a0c2a66ae6b4e03ba0e0247b467fbf68b6fd13d93ebf84e")},
             }
         };
 
         chainTxData = ChainTxData{
             // Update as we know more about the contents of the Pigeon chain
-            1509572692, // * UNIX timestamp of last known number of transactions
-            1,          // * total number of transactions between genesis and that timestamp
+        	1568755000, // * UNIX timestamp of last known number of transactions
+			519492,          // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
-            3.1         // * estimated number of transactions per second after that timestamp
+            0.1         // * estimated number of transactions per second after that timestamp
         };
     }
 };
@@ -271,7 +273,7 @@ public:
  */
 class CTestNetParams : public CChainParams {
 public:
-    CTestNetParams() {
+    CTestNetParams(bool skipGenesisCheck = false) : CChainParams(){
         strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 2100000;  //~ 4 yrs at 1 min block time
         consensus.nBIP34Enabled = true;
@@ -305,7 +307,8 @@ public:
         vector<FounderRewardStrcuture> rewardStructures = {  {500000, 5},
 															 {1000000, 2}
 																		   };
-		consensus.nFounderPayment = FounderPayment(rewardStructures, 150000, "P9nAM12qNj7qL8JKN3EnShwSYQKHinL9TG");
+		consensus.nFounderPayment = FounderPayment(rewardStructures, 3000, "n6yjcgyB6VUJipV9p361QTSCDs3gf8izEh",
+													"nLphepxwA1bNxLDuwB3SLYPXjed6jMwFw4", 4000);
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
 
@@ -321,13 +324,15 @@ public:
         nPruneAfterHeight = 1000;
         newFutureWindowBlock = 1;
 
-        genesis = CreateGenesisBlock(1521662222, 32516807, 0x1e00ffff, 4, 5000 * COIN);
+        genesis = CreateGenesisBlock(1569289438, 6681907, 0x1e00ffff, 4, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-
+        //std::cout << "testnet Genesis: "<< consensus.hashGenesisBlock.GetHex() << "\n"; //
+		//std::cout << "Merkle: " << genesis.hashMerkleRoot.GetHex() << "\n"; //
         //Test MerkleRoot and GenesisBlock
-        assert(consensus.hashGenesisBlock == uint256S("0x000000c256f01af5da46131c1da1ca67907bac5c6bf2ea231126a1a79c787294"));
-        assert(genesis.hashMerkleRoot == uint256S("0xf0cc5f92b11a6655a4939fc239e8bf960cd0453b87b5a0820ab36904279341a5"));
-
+		if(!skipGenesisCheck) {
+			assert(consensus.hashGenesisBlock == uint256S("0x000000a4d5d20f09a4cd9d47cae7e1bb056d46a1ba841ea19267341109f7b3a1"));
+			assert(genesis.hashMerkleRoot == uint256S("0xf0cc5f92b11a6655a4939fc239e8bf960cd0453b87b5a0820ab36904279341a5"));
+		}
         vFixedSeeds.clear();
         vSeeds.clear();
 
@@ -348,7 +353,7 @@ public:
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
         fMiningRequiresPeers = true;
-
+        newProtocolBlock = 716334;
         checkpointData = (CCheckpointData) {
             {
             }
@@ -356,7 +361,7 @@ public:
 
         chainTxData = ChainTxData{
             // Update as we know more about the contents of the Pigeon chain
-            1513705170, // * UNIX timestamp of last known number of transactions
+        	1569289438, // * UNIX timestamp of last known number of transactions
             1,          // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
             3.1         // * estimated number of transactions per second after that timestamp
@@ -455,12 +460,12 @@ const CChainParams &Params() {
     return *globalChainParams;
 }
 
-std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
+std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain, bool skipGenesisCheck)
 {
     if (chain == CBaseChainParams::MAIN)
         return std::unique_ptr<CChainParams>(new CMainParams());
     else if (chain == CBaseChainParams::TESTNET)
-        return std::unique_ptr<CChainParams>(new CTestNetParams());
+        return std::unique_ptr<CChainParams>(new CTestNetParams(skipGenesisCheck));
     else if (chain == CBaseChainParams::REGTEST)
         return std::unique_ptr<CChainParams>(new CRegTestParams());
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
@@ -468,7 +473,9 @@ std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
 
 void SelectParams(const std::string& network)
 {
+	printf("SelectParams %s\n", network.c_str());
     SelectBaseParams(network);
+    bNetwork.SetNetwork(network);
     globalChainParams = CreateChainParams(network);
 }
 

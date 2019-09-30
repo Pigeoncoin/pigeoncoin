@@ -7,12 +7,44 @@
 #include "primitives/block.h"
 
 #include "hash.h"
+#include "algo/hashx21s.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
 #include "crypto/common.h"
 
+static const uint32_t MAINNET_X21SACTIVATIONTIME = 1571097600;//10-15-2019 00:00:00GMT
+static const uint32_t TESTNET_X21SACTIVATIONTIME = 1568851200;//09-19-2019 00:00:00GMT
+static const uint32_t REGTEST_X21SACTIVATIONTIME = 1568951200;
+
+
+BlockNetwork bNetwork = BlockNetwork();
+
+BlockNetwork::BlockNetwork()
+{
+    fOnTestnet = false;
+    fOnRegtest = false;
+}
+
+void BlockNetwork::SetNetwork(const std::string& net)
+{
+    if (net == "test") {
+        fOnTestnet = true;
+    } else if (net == "regtest") {
+        fOnRegtest = true;
+    }
+}
+
 uint256 CBlockHeader::GetHash() const
 {
+	 uint32_t nTimeToUse = MAINNET_X21SACTIVATIONTIME;
+	if (bNetwork.fOnTestnet) {
+		nTimeToUse = TESTNET_X21SACTIVATIONTIME;
+	} else if (bNetwork.fOnRegtest) {
+		nTimeToUse = REGTEST_X21SACTIVATIONTIME;
+	}
+	if (nTime >= nTimeToUse) {
+		return HashX21S(BEGIN(nVersion), END(nNonce), hashPrevBlock);
+	}
     return HashX16R(BEGIN(nVersion), END(nNonce), hashPrevBlock);
 }
 
