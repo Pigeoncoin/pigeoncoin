@@ -1,21 +1,23 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/pigeon-config.h"
+#include "config/dash-config.h"
 #endif
 
 #include "addressbookpage.h"
 #include "ui_addressbookpage.h"
 
 #include "addresstablemodel.h"
-#include "pigeongui.h"
+#include "bitcoingui.h"
 #include "csvmodelwriter.h"
 #include "editaddressdialog.h"
 #include "guiutil.h"
+#include "optionsmodel.h"
 #include "platformstyle.h"
+#include "qrdialog.h"
 
 #include <QIcon>
 #include <QMenu>
@@ -29,19 +31,20 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
     mode(_mode),
     tab(_tab)
 {
+    QString theme = GUIUtil::getThemeName();
     ui->setupUi(this);
-
     if (!platformStyle->getImagesOnButtons()) {
         ui->newAddress->setIcon(QIcon());
         ui->copyAddress->setIcon(QIcon());
         ui->deleteAddress->setIcon(QIcon());
         ui->exportButton->setIcon(QIcon());
     } else {
-        ui->newAddress->setIcon(platformStyle->SingleColorIcon(":/icons/add"));
-        ui->copyAddress->setIcon(platformStyle->SingleColorIcon(":/icons/editcopy"));
-        ui->deleteAddress->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
-        ui->exportButton->setIcon(platformStyle->SingleColorIcon(":/icons/export"));
+        ui->newAddress->setIcon(QIcon(":/icons/" + theme + "/add"));
+        ui->copyAddress->setIcon(QIcon(":/icons/" + theme + "/editcopy"));
+        ui->deleteAddress->setIcon(QIcon(":/icons/" + theme + "/remove"));
+        ui->exportButton->setIcon(QIcon(":/icons/" + theme + "/export"));
     }
+    ui->showAddressQRCode->setIcon(QIcon());
 
     switch(mode)
     {
@@ -68,11 +71,11 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
     switch(tab)
     {
     case SendingTab:
-        ui->labelExplanation->setText(tr("These are your Pigeon addresses for sending payments. Always check the amount and the receiving address before sending coins."));
+        ui->labelExplanation->setText(tr("These are your Dash addresses for sending payments. Always check the amount and the receiving address before sending coins."));
         ui->deleteAddress->setVisible(true);
         break;
     case ReceivingTab:
-        ui->labelExplanation->setText(tr("These are your Pigeon addresses for receiving payments. It is recommended to use a new receiving address for each transaction."));
+        ui->labelExplanation->setText(tr("These are your Dash addresses for receiving payments. It is recommended to use a new receiving address for each transaction."));
         ui->deleteAddress->setVisible(false);
         break;
     }
@@ -81,6 +84,7 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
     QAction *copyAddressAction = new QAction(tr("&Copy Address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy &Label"), this);
     QAction *editAction = new QAction(tr("&Edit"), this);
+    QAction *showAddressQRCodeAction = new QAction(tr("&Show address QR code"), this);
     deleteAction = new QAction(ui->deleteAddress->text(), this);
 
     // Build context menu
@@ -91,12 +95,14 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
     if(tab == SendingTab)
         contextMenu->addAction(deleteAction);
     contextMenu->addSeparator();
+    contextMenu->addAction(showAddressQRCodeAction);
 
     // Connect signals for context menu actions
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(on_copyAddress_clicked()));
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(onCopyLabelAction()));
     connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
     connect(deleteAction, SIGNAL(triggered()), this, SLOT(on_deleteAddress_clicked()));
+    connect(showAddressQRCodeAction, SIGNAL(triggered()), this, SLOT(on_showAddressQRCode_clicked()));
 
     connect(ui->tableView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
 
@@ -213,6 +219,23 @@ void AddressBookPage::on_deleteAddress_clicked()
     }
 }
 
+void AddressBookPage::on_showAddressQRCode_clicked()
+{
+    QList<QModelIndex> entries = GUIUtil::getEntryData(ui->tableView, AddressTableModel::Address);
+    if (entries.empty()) {
+        return;
+    }
+
+    QString strAddress = entries.at(0).data(Qt::EditRole).toString();
+    QRDialog* dialog = new QRDialog(this);
+    OptionsModel *model = new OptionsModel(NULL, false);
+
+    dialog->setModel(model);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setInfo(tr("QR code"), "dash:"+strAddress, "", strAddress);
+    dialog->show();
+}
+
 void AddressBookPage::selectionChanged()
 {
     // Set button states based on selected tab and selection
@@ -238,11 +261,13 @@ void AddressBookPage::selectionChanged()
             break;
         }
         ui->copyAddress->setEnabled(true);
+        ui->showAddressQRCode->setEnabled(true);
     }
     else
     {
         ui->deleteAddress->setEnabled(false);
         ui->copyAddress->setEnabled(false);
+        ui->showAddressQRCode->setEnabled(false);
     }
 }
 
@@ -255,7 +280,7 @@ void AddressBookPage::done(int retval)
     // Figure out which address was selected, and return it
     QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
 
-    for (const QModelIndex& index : indexes) {
+    Q_FOREACH (const QModelIndex& index, indexes) {
         QVariant address = table->model()->data(index);
         returnValue = address.toString();
     }
@@ -274,7 +299,7 @@ void AddressBookPage::on_exportButton_clicked()
     // CSV is currently the only supported format
     QString filename = GUIUtil::getSaveFileName(this,
         tr("Export Address List"), QString(),
-        tr("Comma separated file (*.csv)"), nullptr);
+        tr("Comma separated file (*.csv)"), NULL);
 
     if (filename.isNull())
         return;

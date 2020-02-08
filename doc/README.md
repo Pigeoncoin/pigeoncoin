@@ -1,43 +1,40 @@
-Pigeon Core
-=============
+Dash Core 0.14.0
+=====================
 
-Setup
----------------------
-Pigeon Core is the original Pigeon client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Pigeon transactions (which is currently more than 100 GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
-
-To download Pigeon Core, visit [pigeoncore.org](https://pigeoncoin.org/en/releases/).
+This is the official reference wallet for Dash digital currency and comprises the backbone of the Dash peer-to-peer network. You can [download Dash Core](https://www.dash.org/downloads/) or [build it yourself](#building) using the guides below.
 
 Running
 ---------------------
-The following are some helpful notes on how to run Pigeon on your native platform.
+The following are some helpful notes on how to run Dash on your native platform.
 
 ### Unix
 
 Unpack the files into a directory and run:
 
-- `bin/pigeon-qt` (GUI) or
-- `bin/pigeond` (headless)
+- `bin/dash-qt` (GUI) or
+- `bin/dashd` (headless)
 
 ### Windows
 
-Unpack the files into a directory, and then run pigeon-qt.exe.
+Unpack the files into a directory, and then run dash-qt.exe.
 
 ### OS X
 
-Drag Pigeon-Core to your applications folder, and then run Pigeon-Core.
+Drag Dash-Qt to your applications folder, and then run Dash-Qt.
 
 ### Need Help?
 
-* See the documentation at the [Pigeon Wiki](https://en.pigeon.it/wiki/Main_Page)
+* See the [Dash documentation](https://docs.dash.org)
 for help and more information.
-* Ask for help on [#pigeon](http://webchat.freenode.net?channels=pigeon) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=pigeon).
-* Ask for help on the [PigeonTalk](https://pigeontalk.org/) forums, in the [Technical Support board](https://pigeontalk.org/index.php?board=4.0).
+* See the [Dash Developer Documentation](https://dash-docs.github.io/) 
+for technical specifications and implementation details.
+* Ask for help on [Dash Nation Discord](http://dashchat.org)
+* Ask for help on the [Dash Forum](https://dash.org/forum)
 
 Building
 ---------------------
-The following are developer notes on how to build Pigeon on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
+The following are developer notes on how to build Dash Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
-- [Dependencies](dependencies.md)
 - [OS X Build Notes](build-osx.md)
 - [Unix Build Notes](build-unix.md)
 - [Windows Build Notes](build-windows.md)
@@ -46,12 +43,12 @@ The following are developer notes on how to build Pigeon on your native platform
 
 Development
 ---------------------
-The Pigeon repo's [root README](/README.md) contains relevant information on the development process and automated testing.
+The Dash Core repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
 - [Release Notes](release-notes.md)
 - [Release Process](release-process.md)
-- [Source Code Documentation (External Link)](https://dev.visucore.com/pigeon/doxygen/)
+- Source Code Documentation ***TODO***
 - [Translation Process](translation_process.md)
 - [Translation Strings Policy](translation_strings_policy.md)
 - [Travis CI](travis-ci.md)
@@ -62,14 +59,12 @@ The Pigeon repo's [root README](/README.md) contains relevant information on the
 - [Benchmarking](benchmarking.md)
 
 ### Resources
-* Discuss on the [PigeonTalk](https://pigeontalk.org/) forums, in the [Development & Technical Discussion board](https://pigeontalk.org/index.php?board=6.0).
-* Discuss project-specific development on #pigeon-core-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=pigeon-core-dev).
-* Discuss general Pigeon development on #pigeon-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=pigeon-dev).
+* Discuss on the [Dash Forum](https://dash.org/forum), in the Development & Technical Discussion board.
+* Discuss on [Dash Nation Discord](http://dashchat.org)
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
 - [Files](files.md)
-- [Fuzz-testing](fuzzing.md)
 - [Reduce Traffic](reduce-traffic.md)
 - [Tor Support](tor.md)
 - [Init Scripts (systemd/upstart/openrc)](init.md)

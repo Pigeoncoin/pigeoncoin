@@ -1,5 +1,4 @@
 // Copyright (c) 2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,16 +8,13 @@
 #include "wallet/db.h"
 #include "wallet/wallet.h"
 
-CWallet *pwalletMain;
-
 WalletTestingSetup::WalletTestingSetup(const std::string& chainName):
     TestingSetup(chainName)
 {
     bitdb.MakeMock();
 
     bool fFirstRun;
-    std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, "wallet_test.dat"));
-    pwalletMain = new CWallet(std::move(dbw));
+    pwalletMain = new CWallet("wallet_test.dat");
     pwalletMain->LoadWallet(fFirstRun);
     RegisterValidationInterface(pwalletMain);
 
@@ -29,7 +25,7 @@ WalletTestingSetup::~WalletTestingSetup()
 {
     UnregisterValidationInterface(pwalletMain);
     delete pwalletMain;
-    pwalletMain = nullptr;
+    pwalletMain = NULL;
 
     bitdb.Flush(true);
     bitdb.Reset();

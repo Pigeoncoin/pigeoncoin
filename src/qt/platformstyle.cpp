@@ -1,5 +1,4 @@
-// Copyright (c) 2015-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,7 +25,7 @@ static const struct {
     {"macosx", false, false, true},
     {"windows", true, false, false},
     /* Other: linux, unix, ... */
-    {"other", true, true, false}
+    {"other", true, false, false}
 };
 static const unsigned platform_styles_count = sizeof(platform_styles)/sizeof(*platform_styles);
 
@@ -49,7 +48,8 @@ void MakeSingleColorImage(QImage& img, const QColor& colorbase)
 QIcon ColorizeIcon(const QIcon& ico, const QColor& colorbase)
 {
     QIcon new_ico;
-    for (const QSize sz : ico.availableSizes())
+    QSize sz;
+    Q_FOREACH(sz, ico.availableSizes())
     {
         QImage img(ico.pixmap(sz).toImage());
         MakeSingleColorImage(img, colorbase);

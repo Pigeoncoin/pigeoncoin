@@ -1,10 +1,9 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_QT_TRANSACTIONRECORD_H
-#define PIGEON_QT_TRANSACTIONRECORD_H
+#ifndef BITCOIN_QT_TRANSACTIONRECORD_H
+#define BITCOIN_QT_TRANSACTIONRECORD_H
 
 #include "amount.h"
 #include "uint256.h"
@@ -21,8 +20,9 @@ class TransactionStatus
 {
 public:
     TransactionStatus():
-        countsForBalance(false), sortKey(""),
-        matures_in(0), status(Offline), depth(0), open_for(0), cur_num_blocks(-1)
+        countsForBalance(false), lockedByInstantSend(false), sortKey(""),
+        matures_in(0), status(Offline), depth(0), open_for(0), cur_num_blocks(-1),
+        cachedNumISLocks(-1), cachedChainLockHeight(-1)
     { }
 
     enum Status {
@@ -43,6 +43,8 @@ public:
 
     /// Transaction counts towards available balance
     bool countsForBalance;
+    /// Transaction was locked via InstantSend
+    bool lockedByInstantSend;
     /// Sorting key based on status
     std::string sortKey;
 
@@ -63,7 +65,10 @@ public:
     /** Current number of blocks (to know whether cached status is still valid) */
     int cur_num_blocks;
 
-    bool needsUpdate;
+    //** Know when to update transaction for IS-locks **/
+    int cachedNumISLocks;
+    //** Know when to update transaction for chainlocks **/
+    int cachedChainLockHeight;
 };
 
 /** UI model for a transaction. A core transaction can be represented by multiple UI transactions if it has
@@ -80,7 +85,13 @@ public:
         SendToOther,
         RecvWithAddress,
         RecvFromOther,
-        SendToSelf
+        SendToSelf,
+        RecvWithPrivateSend,
+        PrivateSendDenominate,
+        PrivateSendCollateralPayment,
+        PrivateSendMakeCollaterals,
+        PrivateSendCreateDenominations,
+        PrivateSend
     };
 
     /** Number of confirmation recommended for accepting a transaction */
@@ -137,11 +148,11 @@ public:
 
     /** Update status from core wallet tx.
      */
-    void updateStatus(const CWalletTx &wtx);
+    void updateStatus(const CWalletTx &wtx, int numISLocks, int chainLockHeight);
 
     /** Return whether a status update is needed.
      */
-    bool statusUpdateNeeded() const;
+    bool statusUpdateNeeded(int numISLocks, int chainLockHeight);
 };
 
-#endif // PIGEON_QT_TRANSACTIONRECORD_H
+#endif // BITCOIN_QT_TRANSACTIONRECORD_H

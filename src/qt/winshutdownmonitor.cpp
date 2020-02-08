@@ -1,5 +1,4 @@
-// Copyright (c) 2014-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -58,7 +57,7 @@ void WinShutdownMonitor::registerShutdownBlockReason(const QString& strReason, c
 {
     typedef BOOL (WINAPI *PSHUTDOWNBRCREATE)(HWND, LPCWSTR);
     PSHUTDOWNBRCREATE shutdownBRCreate = (PSHUTDOWNBRCREATE)GetProcAddress(GetModuleHandleA("User32.dll"), "ShutdownBlockReasonCreate");
-    if (shutdownBRCreate == nullptr) {
+    if (shutdownBRCreate == NULL) {
         qWarning() << "registerShutdownBlockReason: GetProcAddress for ShutdownBlockReasonCreate failed";
         return;
     }

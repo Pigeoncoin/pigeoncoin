@@ -1,10 +1,9 @@
 // Copyright (c) 2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "compat/byteswap.h"
-#include "test/test_pigeon.h"
+#include "test/test_dash.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -12,7 +11,7 @@ BOOST_FIXTURE_TEST_SUITE(bswap_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(bswap_tests)
 {
-	// Sibling in pigeon/src/qt/test/compattests.cpp
+	// Sibling in bitcoin/src/qt/test/compattests.cpp
 	uint16_t u1 = 0x1234;
 	uint32_t u2 = 0x56789abc;
 	uint64_t u3 = 0xdef0123456789abc;

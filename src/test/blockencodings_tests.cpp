@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +7,7 @@
 #include "chainparams.h"
 #include "random.h"
 
-#include "test/test_pigeon.h"
+#include "test/test_dash.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -31,16 +30,16 @@ static CBlock BuildBlockTestCase() {
     block.vtx.resize(3);
     block.vtx[0] = MakeTransactionRef(tx);
     block.nVersion = 42;
-    block.hashPrevBlock = InsecureRand256();
+    block.hashPrevBlock = GetRandHash();
     block.nBits = 0x207fffff;
 
-    tx.vin[0].prevout.hash = InsecureRand256();
+    tx.vin[0].prevout.hash = GetRandHash();
     tx.vin[0].prevout.n = 0;
     block.vtx[1] = MakeTransactionRef(tx);
 
     tx.vin.resize(10);
     for (size_t i = 0; i < tx.vin.size(); i++) {
-        tx.vin[i].prevout.hash = InsecureRand256();
+        tx.vin[i].prevout.hash = GetRandHash();
         tx.vin[i].prevout.n = 0;
     }
     block.vtx[2] = MakeTransactionRef(tx);
@@ -52,7 +51,7 @@ static CBlock BuildBlockTestCase() {
     return block;
 }
 
-// Number of shared use_counts we expect for a tx we haven't touched
+// Number of shared use_counts we expect for a tx we havent touched
 // == 2 (mempool + our copy from the GetSharedTx call)
 #define SHARED_TX_OFFSET 2
 
@@ -67,7 +66,7 @@ BOOST_AUTO_TEST_CASE(SimpleRoundTripTest)
 
     // Do a simple ShortTxIDs RT
     {
-        CBlockHeaderAndShortTxIDs shortIDs(block, true);
+        CBlockHeaderAndShortTxIDs shortIDs(block);
 
         CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
         stream << shortIDs;
@@ -119,13 +118,13 @@ public:
     std::vector<uint64_t> shorttxids;
     std::vector<PrefilledTransaction> prefilledtxn;
 
-    explicit TestHeaderAndShortIDs(const CBlockHeaderAndShortTxIDs& orig) {
+    TestHeaderAndShortIDs(const CBlockHeaderAndShortTxIDs& orig) {
         CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
         stream << orig;
         stream >> *this;
     }
-    explicit TestHeaderAndShortIDs(const CBlock& block) :
-        TestHeaderAndShortIDs(CBlockHeaderAndShortTxIDs(block, true)) {}
+    TestHeaderAndShortIDs(const CBlock& block) :
+        TestHeaderAndShortIDs(CBlockHeaderAndShortTxIDs(block)) {}
 
     uint64_t GetShortID(const uint256& txhash) const {
         CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
@@ -284,7 +283,7 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
     block.vtx.resize(1);
     block.vtx[0] = MakeTransactionRef(std::move(coinbase));
     block.nVersion = 42;
-    block.hashPrevBlock = InsecureRand256();
+    block.hashPrevBlock = GetRandHash();
     block.nBits = 0x207fffff;
 
     bool mutated;
@@ -294,7 +293,7 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
 
     // Test simple header round-trip with only coinbase
     {
-        CBlockHeaderAndShortTxIDs shortIDs(block, false);
+        CBlockHeaderAndShortTxIDs shortIDs(block);
 
         CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
         stream << shortIDs;
@@ -317,7 +316,7 @@ BOOST_AUTO_TEST_CASE(EmptyBlockRoundTripTest)
 
 BOOST_AUTO_TEST_CASE(TransactionsRequestSerializationTest) {
     BlockTransactionsRequest req1;
-    req1.blockhash = InsecureRand256();
+    req1.blockhash = GetRandHash();
     req1.indexes.resize(4);
     req1.indexes[0] = 0;
     req1.indexes[1] = 1;

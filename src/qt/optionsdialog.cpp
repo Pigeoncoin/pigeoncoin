@@ -1,16 +1,15 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/pigeon-config.h"
+#include "config/dash-config.h"
 #endif
 
 #include "optionsdialog.h"
 #include "ui_optionsdialog.h"
 
-#include "pigeonunits.h"
+#include "bitcoinunits.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
 
@@ -18,12 +17,24 @@
 #include "netbase.h"
 #include "txdb.h" // for -dbcache defaults
 
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h" // for CWallet::GetRequiredFee()
+
+#include "privatesend-client.h"
+#endif // ENABLE_WALLET
+
+#include <boost/thread.hpp>
+
 #include <QDataWidgetMapper>
 #include <QDir>
 #include <QIntValidator>
 #include <QLocale>
 #include <QMessageBox>
 #include <QTimer>
+
+#ifdef ENABLE_WALLET
+extern CWallet* pwalletMain;
+#endif // ENABLE_WALLET
 
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),
@@ -72,16 +83,32 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     }
 
     /* Display elements init */
+    
+    /* Number of displayed decimal digits selector */
+    QString digits;
+    for(int index = 2; index <=8; index++){
+        digits.setNum(index);
+        ui->digits->addItem(digits, digits);
+    }
+    
+    /* Theme selector */
+    ui->theme->addItem(QString("Light"), QVariant("light"));
+    ui->theme->addItem(QString("Light-HiRes"), QVariant("light-hires"));
+    ui->theme->addItem(QString("Light-Retro"), QVariant("light-retro"));
+    ui->theme->addItem(QString("Light-HiRes-Retro"), QVariant("light-hires-retro"));
+    ui->theme->addItem(QString("Blue"), QVariant("drkblue"));
+    ui->theme->addItem(QString("Crownium"), QVariant("crownium"));
+    ui->theme->addItem(QString("Traditional"), QVariant("trad"));
+
+    /* Language selector */
     QDir translations(":translations");
 
-    ui->pigeonAtStartup->setToolTip(ui->pigeonAtStartup->toolTip().arg(tr(PACKAGE_NAME)));
-    ui->pigeonAtStartup->setText(ui->pigeonAtStartup->text().arg(tr(PACKAGE_NAME)));
-
-    ui->openPigeonConfButton->setToolTip(ui->openPigeonConfButton->toolTip().arg(tr(PACKAGE_NAME)));
+    ui->bitcoinAtStartup->setToolTip(ui->bitcoinAtStartup->toolTip().arg(tr(PACKAGE_NAME)));
+    ui->bitcoinAtStartup->setText(ui->bitcoinAtStartup->text().arg(tr(PACKAGE_NAME)));
 
     ui->lang->setToolTip(ui->lang->toolTip().arg(tr(PACKAGE_NAME)));
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
-    for (const QString &langStr : translations.entryList())
+    Q_FOREACH(const QString &langStr, translations.entryList())
     {
         QLocale locale(langStr);
 
@@ -111,7 +138,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->thirdPartyTxUrls->setPlaceholderText("https://example.com/tx/%s");
 #endif
 
-    ui->unit->setModel(new PigeonUnits(this));
+    ui->unit->setModel(new BitcoinUnits(this));
 
     /* Widget-to-option mapper */
     mapper = new QDataWidgetMapper(this);
@@ -160,12 +187,15 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->databaseCache, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
     connect(ui->threadsScriptVerif, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
     /* Wallet */
+    connect(ui->showMasternodesTab, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->spendZeroConfChange, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Network */
     connect(ui->allowIncoming, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->connectSocksTor, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Display */
+    connect(ui->digits, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
+    connect(ui->theme, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->thirdPartyTxUrls, SIGNAL(textChanged(const QString &)), this, SLOT(showRestartWarning()));
 }
@@ -173,13 +203,20 @@ void OptionsDialog::setModel(OptionsModel *_model)
 void OptionsDialog::setMapper()
 {
     /* Main */
-    mapper->addMapping(ui->pigeonAtStartup, OptionsModel::StartAtStartup);
+    mapper->addMapping(ui->bitcoinAtStartup, OptionsModel::StartAtStartup);
     mapper->addMapping(ui->threadsScriptVerif, OptionsModel::ThreadsScriptVerif);
     mapper->addMapping(ui->databaseCache, OptionsModel::DatabaseCache);
 
     /* Wallet */
-    mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
     mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
+    mapper->addMapping(ui->showMasternodesTab, OptionsModel::ShowMasternodesTab);
+    mapper->addMapping(ui->showAdvancedPSUI, OptionsModel::ShowAdvancedPSUI);
+    mapper->addMapping(ui->showPrivateSendPopups, OptionsModel::ShowPrivateSendPopups);
+    mapper->addMapping(ui->lowKeysWarning, OptionsModel::LowKeysWarning);
+    mapper->addMapping(ui->privateSendMultiSession, OptionsModel::PrivateSendMultiSession);
+    mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
+    mapper->addMapping(ui->privateSendRounds, OptionsModel::PrivateSendRounds);
+    mapper->addMapping(ui->privateSendAmount, OptionsModel::PrivateSendAmount);
 
     /* Network */
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
@@ -201,9 +238,12 @@ void OptionsDialog::setMapper()
 #endif
 
     /* Display */
+    mapper->addMapping(ui->digits, OptionsModel::Digits);
+    mapper->addMapping(ui->theme, OptionsModel::Theme);
     mapper->addMapping(ui->lang, OptionsModel::Language);
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->thirdPartyTxUrls, OptionsModel::ThirdPartyTxUrls);
+
 }
 
 void OptionsDialog::setOkButtonState(bool fState)
@@ -229,21 +269,14 @@ void OptionsDialog::on_resetButton_clicked()
     }
 }
 
-void OptionsDialog::on_openPigeonConfButton_clicked()
-{
-    /* explain the purpose of the config file */
-    QMessageBox::information(this, tr("Configuration options"),
-        tr("The configuration file is used to specify advanced user options which override GUI settings. "
-           "Additionally, any command-line options will override this configuration file."));
-
-    /* show an error if there was some problem opening the file */
-    if (!GUIUtil::openPigeonConf())
-        QMessageBox::critical(this, tr("Error"), tr("The configuration file could not be opened."));
-}
-
 void OptionsDialog::on_okButton_clicked()
 {
     mapper->submit();
+#ifdef ENABLE_WALLET
+    privateSendClient.nCachedNumBlocks = std::numeric_limits<int>::max();
+    if(pwalletMain)
+        pwalletMain->MarkDirty();
+#endif // ENABLE_WALLET
     accept();
     updateDefaultProxyNets();
 }

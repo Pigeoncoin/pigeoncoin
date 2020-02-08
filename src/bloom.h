@@ -1,18 +1,19 @@
-// Copyright (c) 2012-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2012-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_BLOOM_H
-#define PIGEON_BLOOM_H
+#ifndef BITCOIN_BLOOM_H
+#define BITCOIN_BLOOM_H
 
 #include "serialize.h"
 
 #include <vector>
 
 class COutPoint;
+class CScript;
 class CTransaction;
 class uint256;
+class uint160;
 
 //! 20,000 items with fp rate < 0.1% or 10,000 items and <0.0001%
 static const unsigned int MAX_BLOOM_FILTER_SIZE = 36000; // bytes
@@ -55,9 +56,13 @@ private:
     unsigned int Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const;
 
     // Private constructor for CRollingBloomFilter, no restrictions on size
-    CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweak);
+    CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweak);
     friend class CRollingBloomFilter;
 
+    // Check matches for arbitrary script data elements
+    bool CheckScript(const CScript& script) const;
+    // Check additional matches for special transactions
+    bool CheckSpecialTransactionMatchesAndUpdate(const CTransaction& tx);
 public:
     /**
      * Creates a new bloom filter which will provide the given fp rate when filled with the given number of elements
@@ -68,7 +73,7 @@ public:
      * It should generally always be a random value (and is largely only exposed for unit testing)
      * nFlags should be one of the BLOOM_UPDATE_* enums (not _MASK)
      */
-    CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweak, unsigned char nFlagsIn);
+    CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweak, unsigned char nFlagsIn);
     CBloomFilter() : isFull(true), isEmpty(false), nHashFuncs(0), nTweak(0), nFlags(0) {}
 
     ADD_SERIALIZE_METHODS;
@@ -88,9 +93,10 @@ public:
     bool contains(const std::vector<unsigned char>& vKey) const;
     bool contains(const COutPoint& outpoint) const;
     bool contains(const uint256& hash) const;
+    bool contains(const uint160& hash) const;
 
     void clear();
-    void reset(const unsigned int nNewTweak);
+    void reset(unsigned int nNewTweak);
 
     //! True if the size is <= MAX_BLOOM_FILTER_SIZE and the number of hash functions is <= MAX_HASH_FUNCS
     //! (catch a filter which was just deserialized which was too big)
@@ -123,7 +129,7 @@ public:
     // A random bloom filter calls GetRand() at creation time.
     // Don't create global CRollingBloomFilter objects, as they may be
     // constructed before the randomizer is properly initialized.
-    CRollingBloomFilter(const unsigned int nElements, const double nFPRate);
+    CRollingBloomFilter(unsigned int nElements, double nFPRate);
 
     void insert(const std::vector<unsigned char>& vKey);
     void insert(const uint256& hash);
@@ -141,4 +147,4 @@ private:
     int nHashFuncs;
 };
 
-#endif // PIGEON_BLOOM_H
+#endif // BITCOIN_BLOOM_H

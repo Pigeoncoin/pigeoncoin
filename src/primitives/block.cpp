@@ -1,51 +1,22 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "primitives/block.h"
 
 #include "hash.h"
-#include "algo/hashx21s.h"
+#include "streams.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
 #include "crypto/common.h"
 
-static const uint32_t MAINNET_X21SACTIVATIONTIME = 1571097600;//10-15-2019 00:00:00GMT
-static const uint32_t TESTNET_X21SACTIVATIONTIME = 1568851200;//09-19-2019 00:00:00GMT
-static const uint32_t REGTEST_X21SACTIVATIONTIME = 1568951200;
-
-
-BlockNetwork bNetwork = BlockNetwork();
-
-BlockNetwork::BlockNetwork()
-{
-    fOnTestnet = false;
-    fOnRegtest = false;
-}
-
-void BlockNetwork::SetNetwork(const std::string& net)
-{
-    if (net == "test") {
-        fOnTestnet = true;
-    } else if (net == "regtest") {
-        fOnRegtest = true;
-    }
-}
-
 uint256 CBlockHeader::GetHash() const
 {
-	 uint32_t nTimeToUse = MAINNET_X21SACTIVATIONTIME;
-	if (bNetwork.fOnTestnet) {
-		nTimeToUse = TESTNET_X21SACTIVATIONTIME;
-	} else if (bNetwork.fOnRegtest) {
-		nTimeToUse = REGTEST_X21SACTIVATIONTIME;
-	}
-	if (nTime >= nTimeToUse) {
-		return HashX21S(BEGIN(nVersion), END(nNonce), hashPrevBlock);
-	}
-    return HashX16R(BEGIN(nVersion), END(nNonce), hashPrevBlock);
+    std::vector<unsigned char> vch(80);
+    CVectorWriter ss(SER_NETWORK, PROTOCOL_VERSION, vch, 0);
+    ss << *this;
+    return HashX11((const char *)vch.data(), (const char *)vch.data() + vch.size());
 }
 
 std::string CBlock::ToString() const
@@ -58,8 +29,9 @@ std::string CBlock::ToString() const
         hashMerkleRoot.ToString(),
         nTime, nBits, nNonce,
         vtx.size());
-    for (const auto& tx : vtx) {
-        s << "  " << tx->ToString() << "\n";
+    for (unsigned int i = 0; i < vtx.size(); i++)
+    {
+        s << "  " << vtx[i]->ToString() << "\n";
     }
     return s.str();
 }

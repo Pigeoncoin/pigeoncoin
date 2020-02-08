@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -34,10 +33,6 @@ bool NodeLessThan::operator()(const CNodeCombinedStats &left, const CNodeCombine
         return pLeft->cleanSubVer.compare(pRight->cleanSubVer) < 0;
     case PeerTableModel::Ping:
         return pLeft->dMinPing < pRight->dMinPing;
-    case PeerTableModel::Sent:
-        return pLeft->nSendBytes < pRight->nSendBytes;
-    case PeerTableModel::Received:
-        return pLeft->nRecvBytes < pRight->nRecvBytes;
     }
 
     return false;
@@ -67,7 +62,7 @@ public:
 #if QT_VERSION >= 0x040700
             cachedNodeStats.reserve(vstats.size());
 #endif
-            for (const CNodeStats& nodestats : vstats)
+            Q_FOREACH (const CNodeStats& nodestats, vstats)
             {
                 CNodeCombinedStats stats;
                 stats.nodeStateStats.nMisbehavior = 0;
@@ -84,7 +79,7 @@ public:
             TRY_LOCK(cs_main, lockMain);
             if (lockMain)
             {
-                for (CNodeCombinedStats &stats : cachedNodeStats)
+                BOOST_FOREACH(CNodeCombinedStats &stats, cachedNodeStats)
                     stats.fNodeStateStatsAvailable = GetNodeStateStats(stats.nodeStats.nodeid, stats.nodeStateStats);
             }
         }
@@ -96,7 +91,7 @@ public:
         // build index map
         mapNodeRows.clear();
         int row = 0;
-        for (const CNodeCombinedStats& stats : cachedNodeStats)
+        Q_FOREACH (const CNodeCombinedStats& stats, cachedNodeStats)
             mapNodeRows.insert(std::pair<NodeId, int>(stats.nodeStats.nodeid, row++));
     }
 
@@ -119,7 +114,7 @@ PeerTableModel::PeerTableModel(ClientModel *parent) :
     clientModel(parent),
     timer(0)
 {
-    columns << tr("NodeId") << tr("Node/Service") << tr("Ping") << tr("Sent") << tr("Received") << tr("User Agent");
+    columns << tr("NodeId") << tr("Node/Service") << tr("User Agent") << tr("Ping");
     priv.reset(new PeerTablePriv());
     // default to unsorted
     priv->sortColumn = -1;
@@ -178,20 +173,10 @@ QVariant PeerTableModel::data(const QModelIndex &index, int role) const
             return QString::fromStdString(rec->nodeStats.cleanSubVer);
         case Ping:
             return GUIUtil::formatPingTime(rec->nodeStats.dMinPing);
-        case Sent:
-            return GUIUtil::formatBytes(rec->nodeStats.nSendBytes);
-        case Received:
-            return GUIUtil::formatBytes(rec->nodeStats.nRecvBytes);
         }
     } else if (role == Qt::TextAlignmentRole) {
-        switch (index.column()) {
-            case Ping:
-            case Sent:
-            case Received:
-                return QVariant(Qt::AlignRight | Qt::AlignVCenter);
-            default:
-                return QVariant();
-        }
+        if (index.column() == Ping)
+            return (QVariant)(Qt::AlignRight | Qt::AlignVCenter);
     }
 
     return QVariant();

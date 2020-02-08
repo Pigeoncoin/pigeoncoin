@@ -1,19 +1,22 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2019 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/pigeon-config.h"
+#include "config/dash-config.h"
 #endif
 
 #include "util.h"
 
+#include "support/allocators/secure.h"
 #include "chainparamsbase.h"
-#include "fs.h"
+#include "ctpl.h"
 #include "random.h"
 #include "serialize.h"
+#include "stacktraces.h"
+#include "sync.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
 
@@ -23,6 +26,7 @@
 #include <pthread.h>
 #include <pthread_np.h>
 #endif
+
 
 #ifndef WIN32
 // for posix_fallocate
@@ -78,51 +82,85 @@
 #endif
 
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
+#include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/foreach.hpp>
 #include <boost/program_options/detail/config_file.hpp>
+#include <boost/program_options/parsers.hpp>
 #include <boost/thread.hpp>
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 #include <openssl/conf.h>
 
-// Application startup time (used for uptime calculation)
-const int64_t nStartupTime = GetTime();
+// Work around clang compilation problem in Boost 1.46:
+// /usr/include/boost/program_options/detail/config_file.hpp:163:17: error: call to function 'to_internal' that is neither visible in the template definition nor found by argument-dependent lookup
+// See also: http://stackoverflow.com/questions/10020179/compilation-fail-in-boost-librairies-program-options
+//           http://clang.debian.net/status.php?version=3.0&key=CANNOT_FIND_FUNCTION
+namespace boost {
 
-const char * const PIGEON_CONF_FILENAME = "pigeon.conf";
-const char * const PIGEON_PID_FILENAME = "pigeond.pid";
+    namespace program_options {
+        std::string to_internal(const std::string&);
+    }
 
-ArgsManager gArgs;
+} // namespace boost
+
+
+
+//Dash only features
+bool fMasternodeMode = false;
+bool fLiteMode = false;
+/**
+    nWalletBackups:
+        1..10   - number of automatic backups to keep
+        0       - disabled by command-line
+        -1      - disabled because of some error during run-time
+        -2      - disabled because wallet was locked and we were not able to replenish keypool
+*/
+int nWalletBackups = 10;
+
+const char * const BITCOIN_CONF_FILENAME = "dash.conf";
+const char * const BITCOIN_PID_FILENAME = "dashd.pid";
+
+CCriticalSection cs_args;
+std::unordered_map<std::string, std::string> mapArgs;
+static std::unordered_map<std::string, std::vector<std::string> > _mapMultiArgs;
+const std::unordered_map<std::string, std::vector<std::string> >& mapMultiArgs = _mapMultiArgs;
+bool fDebug = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugLog = true;
 
 bool fLogTimestamps = DEFAULT_LOGTIMESTAMPS;
 bool fLogTimeMicros = DEFAULT_LOGTIMEMICROS;
+bool fLogThreadNames = DEFAULT_LOGTHREADNAMES;
 bool fLogIPs = DEFAULT_LOGIPS;
 std::atomic<bool> fReopenDebugLog(false);
 CTranslationInterface translationInterface;
 
-/** Log categories bitfield. */
-std::atomic<uint32_t> logCategories(0);
-
 /** Init OpenSSL library multithreading support */
-static std::unique_ptr<CCriticalSection[]> ppmutexOpenSSL;
+static CCriticalSection** ppmutexOpenSSL;
 void locking_callback(int mode, int i, const char* file, int line) NO_THREAD_SAFETY_ANALYSIS
 {
     if (mode & CRYPTO_LOCK) {
-        ENTER_CRITICAL_SECTION(ppmutexOpenSSL[i]);
+        ENTER_CRITICAL_SECTION(*ppmutexOpenSSL[i]);
     } else {
-        LEAVE_CRITICAL_SECTION(ppmutexOpenSSL[i]);
+        LEAVE_CRITICAL_SECTION(*ppmutexOpenSSL[i]);
     }
 }
 
-// Singleton for wrapping OpenSSL setup/teardown.
+// Init
 class CInit
 {
 public:
     CInit()
     {
         // Init OpenSSL library multithreading support
-        ppmutexOpenSSL.reset(new CCriticalSection[CRYPTO_num_locks()]);
+        ppmutexOpenSSL = (CCriticalSection**)OPENSSL_malloc(CRYPTO_num_locks() * sizeof(CCriticalSection*));
+        for (int i = 0; i < CRYPTO_num_locks(); i++)
+            ppmutexOpenSSL[i] = new CCriticalSection();
         CRYPTO_set_locking_callback(locking_callback);
 
         // OpenSSL can optionally load a config file which lists optional loadable modules and engines.
@@ -145,9 +183,10 @@ public:
         // Securely erase the memory used by the PRNG
         RAND_cleanup();
         // Shutdown OpenSSL library multithreading support
-        CRYPTO_set_locking_callback(nullptr);
-        // Clear the set of locks now to maintain symmetry with the constructor.
-        ppmutexOpenSSL.reset();
+        CRYPTO_set_locking_callback(NULL);
+        for (int i = 0; i < CRYPTO_num_locks(); i++)
+            delete ppmutexOpenSSL[i];
+        OPENSSL_free(ppmutexOpenSSL);
     }
 }
 instance_of_cinit;
@@ -174,9 +213,10 @@ static boost::once_flag debugPrintInitFlag = BOOST_ONCE_INIT;
  * the OS/libc. When the shutdown sequence is fully audited and
  * tested, explicit destruction of these objects can be implemented.
  */
-static FILE* fileout = nullptr;
-static boost::mutex* mutexDebugLog = nullptr;
+static FILE* fileout = NULL;
+static boost::mutex* mutexDebugLog = NULL;
 static std::list<std::string>* vMsgsBeforeOpenLog;
+static std::atomic<int> logAcceptCategoryCacheCounter(0);
 
 static int FileWriteStr(const std::string &str, FILE *fp)
 {
@@ -185,7 +225,7 @@ static int FileWriteStr(const std::string &str, FILE *fp)
 
 static void DebugPrintInit()
 {
-    assert(mutexDebugLog == nullptr);
+    assert(mutexDebugLog == NULL);
     mutexDebugLog = new boost::mutex();
     vMsgsBeforeOpenLog = new std::list<std::string>;
 }
@@ -195,12 +235,12 @@ void OpenDebugLog()
     boost::call_once(&DebugPrintInit, debugPrintInitFlag);
     boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
 
-    assert(fileout == nullptr);
+    assert(fileout == NULL);
     assert(vMsgsBeforeOpenLog);
-    fs::path pathDebug = GetDataDir() / "debug.log";
-    fileout = fsbridge::fopen(pathDebug, "a");
+    boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
+    fileout = fopen(pathDebug.string().c_str(), "a");
     if (fileout) {
-        setbuf(fileout, nullptr); // unbuffered
+        setbuf(fileout, NULL); // unbuffered
         // dump buffered messages from before we opened the log
         while (!vMsgsBeforeOpenLog->empty()) {
             FileWriteStr(vMsgsBeforeOpenLog->front(), fileout);
@@ -209,94 +249,80 @@ void OpenDebugLog()
     }
 
     delete vMsgsBeforeOpenLog;
-    vMsgsBeforeOpenLog = nullptr;
+    vMsgsBeforeOpenLog = NULL;
 }
 
-struct CLogCategoryDesc
+bool LogAcceptCategory(const char* category)
 {
-    uint32_t flag;
-    std::string category;
-};
+    if (category != NULL)
+    {
+        // Give each thread quick access to -debug settings.
+        // This helps prevent issues debugging global destructors,
+        // where mapMultiArgs might be deleted before another
+        // global destructor calls LogPrint()
+        static boost::thread_specific_ptr<std::set<std::string> > ptrCategory;
+        static boost::thread_specific_ptr<int> cacheCounter;
 
-const CLogCategoryDesc LogCategories[] =
-{
-    {BCLog::NONE, "0"},
-    {BCLog::NET, "net"},
-    {BCLog::TOR, "tor"},
-    {BCLog::MEMPOOL, "mempool"},
-    {BCLog::HTTP, "http"},
-    {BCLog::BENCH, "bench"},
-    {BCLog::ZMQ, "zmq"},
-    {BCLog::DB, "db"},
-    {BCLog::RPC, "rpc"},
-    {BCLog::ESTIMATEFEE, "estimatefee"},
-    {BCLog::ADDRMAN, "addrman"},
-    {BCLog::SELECTCOINS, "selectcoins"},
-    {BCLog::REINDEX, "reindex"},
-    {BCLog::CMPCTBLOCK, "cmpctblock"},
-    {BCLog::RAND, "rand"},
-    {BCLog::PRUNE, "prune"},
-    {BCLog::PROXY, "proxy"},
-    {BCLog::MEMPOOLREJ, "mempoolrej"},
-    {BCLog::LIBEVENT, "libevent"},
-    {BCLog::COINDB, "coindb"},
-    {BCLog::QT, "qt"},
-    {BCLog::LEVELDB, "leveldb"},
-    {BCLog::ALL, "1"},
-    {BCLog::ALL, "all"},
-};
-
-bool GetLogCategory(uint32_t *f, const std::string *str)
-{
-    if (f && str) {
-        if (*str == "") {
-            *f = BCLog::ALL;
-            return true;
+        if (!fDebug) {
+            if (ptrCategory.get() != NULL) {
+                LogPrintf("debug turned off: thread %s\n", GetThreadName());
+                ptrCategory.release();
+            }
+            return false;
         }
-        for (unsigned int i = 0; i < ARRAYLEN(LogCategories); i++) {
-            if (LogCategories[i].category == *str) {
-                *f = LogCategories[i].flag;
-                return true;
+
+        if (ptrCategory.get() == NULL || *cacheCounter != logAcceptCategoryCacheCounter.load())
+        {
+            cacheCounter.reset(new int(logAcceptCategoryCacheCounter.load()));
+
+            LOCK(cs_args);
+            if (mapMultiArgs.count("-debug")) {
+                std::string strThreadName = GetThreadName();
+                LogPrintf("debug turned on:\n");
+                for (int i = 0; i < (int)mapMultiArgs.at("-debug").size(); ++i)
+                    LogPrintf("  thread %s category %s\n", strThreadName, mapMultiArgs.at("-debug")[i]);
+                const std::vector<std::string>& categories = mapMultiArgs.at("-debug");
+                ptrCategory.reset(new std::set<std::string>(categories.begin(), categories.end()));
+                // thread_specific_ptr automatically deletes the set when the thread ends.
+                // "dash" is a composite category enabling all Dash-related debug output
+                if(ptrCategory->count(std::string("dash"))) {
+                    ptrCategory->insert(std::string("chainlocks"));
+                    ptrCategory->insert(std::string("gobject"));
+                    ptrCategory->insert(std::string("instantsend"));
+                    ptrCategory->insert(std::string("keepass"));
+                    ptrCategory->insert(std::string("llmq"));
+                    ptrCategory->insert(std::string("llmq-dkg"));
+                    ptrCategory->insert(std::string("llmq-sigs"));
+                    ptrCategory->insert(std::string("masternode"));
+                    ptrCategory->insert(std::string("mnpayments"));
+                    ptrCategory->insert(std::string("mnsync"));
+                    ptrCategory->insert(std::string("spork"));
+                    ptrCategory->insert(std::string("privatesend"));
+                }
+            } else {
+                ptrCategory.reset(new std::set<std::string>());
             }
         }
+        const std::set<std::string>& setCategories = *ptrCategory;
+
+        // if not debugging everything and not debugging specific category, LogPrint does nothing.
+        if (setCategories.count(std::string("")) == 0 &&
+            setCategories.count(std::string("1")) == 0 &&
+            setCategories.count(std::string(category)) == 0)
+            return false;
     }
-    return false;
+    return true;
 }
 
-std::string ListLogCategories()
+void ResetLogAcceptCategoryCache()
 {
-    std::string ret;
-    int outcount = 0;
-    for (unsigned int i = 0; i < ARRAYLEN(LogCategories); i++) {
-        // Omit the special cases.
-        if (LogCategories[i].flag != BCLog::NONE && LogCategories[i].flag != BCLog::ALL) {
-            if (outcount != 0) ret += ", ";
-            ret += LogCategories[i].category;
-            outcount++;
-        }
-    }
-    return ret;
-}
-
-std::vector<CLogCategoryActive> ListActiveLogCategories()
-{
-    std::vector<CLogCategoryActive> ret;
-    for (unsigned int i = 0; i < ARRAYLEN(LogCategories); i++) {
-        // Omit the special cases.
-        if (LogCategories[i].flag != BCLog::NONE && LogCategories[i].flag != BCLog::ALL) {
-            CLogCategoryActive catActive;
-            catActive.category = LogCategories[i].category;
-            catActive.active = LogAcceptCategory(LogCategories[i].flag);
-            ret.push_back(catActive);
-        }
-    }
-    return ret;
+    logAcceptCategoryCacheCounter++;
 }
 
 /**
  * fStartedNewLine is a state variable held by the calling context that will
  * suppress printing of the timestamp when multiple calls are made that don't
- * end in a newline. Initialize it to true, and hold it, in the calling context.
+ * end in a newline. Initialize it to true, and hold/manage it, in the calling context.
  */
 static std::string LogTimestampStr(const std::string &str, std::atomic_bool *fStartedNewLine)
 {
@@ -306,24 +332,41 @@ static std::string LogTimestampStr(const std::string &str, std::atomic_bool *fSt
         return str;
 
     if (*fStartedNewLine) {
-        int64_t nTimeMicros = GetTimeMicros();
-        strStamped = DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTimeMicros/1000000);
+        if (IsMockTime()) {
+            int64_t nRealTimeMicros = GetTimeMicros();
+            strStamped = DateTimeStrFormat("(real %Y-%m-%d %H:%M:%S) ", nRealTimeMicros/1000000);
+        }
+        int64_t nTimeMicros = GetLogTimeMicros();
+        strStamped += DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTimeMicros/1000000);
         if (fLogTimeMicros)
             strStamped += strprintf(".%06d", nTimeMicros%1000000);
-        int64_t mocktime = GetMockTime();
-        if (mocktime) {
-            strStamped += " (mocktime: " + DateTimeStrFormat("%Y-%m-%d %H:%M:%S", mocktime) + ")";
-        }
         strStamped += ' ' + str;
     } else
         strStamped = str;
 
-    if (!str.empty() && str[str.size()-1] == '\n')
-        *fStartedNewLine = true;
-    else
-        *fStartedNewLine = false;
-
     return strStamped;
+}
+
+/**
+ * fStartedNewLine is a state variable held by the calling context that will
+ * suppress printing of the thread name when multiple calls are made that don't
+ * end in a newline. Initialize it to true, and hold/manage it, in the calling context.
+ */
+static std::string LogThreadNameStr(const std::string &str, std::atomic_bool *fStartedNewLine)
+{
+    std::string strThreadLogged;
+
+    if (!fLogThreadNames)
+        return str;
+
+    std::string strThreadName = GetThreadName();
+
+    if (*fStartedNewLine)
+        strThreadLogged = strprintf("%16s | %s", strThreadName.c_str(), str.c_str());
+    else
+        strThreadLogged = str;
+
+    return strThreadLogged;
 }
 
 int LogPrintStr(const std::string &str)
@@ -331,7 +374,13 @@ int LogPrintStr(const std::string &str)
     int ret = 0; // Returns total number of characters written
     static std::atomic_bool fStartedNewLine(true);
 
-    std::string strTimestamped = LogTimestampStr(str, &fStartedNewLine);
+    std::string strThreadLogged = LogThreadNameStr(str, &fStartedNewLine);
+    std::string strTimestamped = LogTimestampStr(strThreadLogged, &fStartedNewLine);
+
+    if (!str.empty() && str[str.size()-1] == '\n')
+        fStartedNewLine = true;
+    else
+        fStartedNewLine = false;
 
     if (fPrintToConsole)
     {
@@ -345,7 +394,7 @@ int LogPrintStr(const std::string &str)
         boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
 
         // buffer if we haven't opened the log yet
-        if (fileout == nullptr) {
+        if (fileout == NULL) {
             assert(vMsgsBeforeOpenLog);
             ret = strTimestamped.length();
             vMsgsBeforeOpenLog->push_back(strTimestamped);
@@ -355,9 +404,9 @@ int LogPrintStr(const std::string &str)
             // reopen the log file, if requested
             if (fReopenDebugLog) {
                 fReopenDebugLog = false;
-                fs::path pathDebug = GetDataDir() / "debug.log";
-                if (fsbridge::freopen(pathDebug,"a",fileout) != nullptr)
-                    setbuf(fileout, nullptr); // unbuffered
+                boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
+                if (freopen(pathDebug.string().c_str(),"a",fileout) != NULL)
+                    setbuf(fileout, NULL); // unbuffered
             }
 
             ret = FileWriteStr(strTimestamped, fileout);
@@ -384,11 +433,11 @@ static void InterpretNegativeSetting(std::string& strKey, std::string& strValue)
     }
 }
 
-void ArgsManager::ParseParameters(int argc, const char* const argv[])
+void ParseParameters(int argc, const char* const argv[])
 {
     LOCK(cs_args);
     mapArgs.clear();
-    mapMultiArgs.clear();
+    _mapMultiArgs.clear();
 
     for (int i = 1; i < argc; i++)
     {
@@ -416,57 +465,50 @@ void ArgsManager::ParseParameters(int argc, const char* const argv[])
         InterpretNegativeSetting(str, strValue);
 
         mapArgs[str] = strValue;
-        mapMultiArgs[str].push_back(strValue);
+        _mapMultiArgs[str].push_back(strValue);
     }
 }
 
-std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
-{
-    LOCK(cs_args);
-    auto it = mapMultiArgs.find(strArg);
-    if (it != mapMultiArgs.end()) return it->second;
-    return {};
-}
-
-bool ArgsManager::IsArgSet(const std::string& strArg) const
+bool IsArgSet(const std::string& strArg)
 {
     LOCK(cs_args);
     return mapArgs.count(strArg);
 }
 
-std::string ArgsManager::GetArg(const std::string& strArg, const std::string& strDefault) const
+std::string GetArg(const std::string& strArg, const std::string& strDefault)
 {
     LOCK(cs_args);
-    auto it = mapArgs.find(strArg);
-    if (it != mapArgs.end()) return it->second;
+    if (mapArgs.count(strArg))
+        return mapArgs[strArg];
     return strDefault;
 }
 
-int64_t ArgsManager::GetArg(const std::string& strArg, int64_t nDefault) const
+int64_t GetArg(const std::string& strArg, int64_t nDefault)
 {
     LOCK(cs_args);
-    auto it = mapArgs.find(strArg);
-    if (it != mapArgs.end()) return atoi64(it->second);
+    if (mapArgs.count(strArg))
+        return atoi64(mapArgs[strArg]);
     return nDefault;
 }
 
-bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault) const
+bool GetBoolArg(const std::string& strArg, bool fDefault)
 {
     LOCK(cs_args);
-    auto it = mapArgs.find(strArg);
-    if (it != mapArgs.end()) return InterpretBool(it->second);
+    if (mapArgs.count(strArg))
+        return InterpretBool(mapArgs[strArg]);
     return fDefault;
 }
 
-bool ArgsManager::SoftSetArg(const std::string& strArg, const std::string& strValue)
+bool SoftSetArg(const std::string& strArg, const std::string& strValue)
 {
     LOCK(cs_args);
-    if (IsArgSet(strArg)) return false;
-    ForceSetArg(strArg, strValue);
+    if (mapArgs.count(strArg))
+        return false;
+    mapArgs[strArg] = strValue;
     return true;
 }
 
-bool ArgsManager::SoftSetBoolArg(const std::string& strArg, bool fValue)
+bool SoftSetBoolArg(const std::string& strArg, bool fValue)
 {
     if (fValue)
         return SoftSetArg(strArg, std::string("1"));
@@ -474,14 +516,24 @@ bool ArgsManager::SoftSetBoolArg(const std::string& strArg, bool fValue)
         return SoftSetArg(strArg, std::string("0"));
 }
 
-void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strValue)
+void ForceSetArg(const std::string& strArg, const std::string& strValue)
 {
     LOCK(cs_args);
     mapArgs[strArg] = strValue;
-    mapMultiArgs[strArg] = {strValue};
 }
 
+void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values)
+{
+    LOCK(cs_args);
+    _mapMultiArgs[strArg] = values;
+}
 
+void ForceRemoveArg(const std::string& strArg)
+{
+    LOCK(cs_args);
+    mapArgs.erase(strArg);
+    _mapMultiArgs.erase(strArg);
+}
 
 static const int screenWidth = 79;
 static const int optIndent = 2;
@@ -498,61 +550,52 @@ std::string HelpMessageOpt(const std::string &option, const std::string &message
            std::string("\n\n");
 }
 
-static std::string FormatException(const std::exception* pex, const char* pszThread)
+static std::string FormatException(const std::exception_ptr pex, const char* pszThread)
 {
-#ifdef WIN32
-    char pszModule[MAX_PATH] = "";
-    GetModuleFileNameA(nullptr, pszModule, sizeof(pszModule));
-#else
-    const char* pszModule = "pigeon";
-#endif
-    if (pex)
-        return strprintf(
-            "EXCEPTION: %s       \n%s       \n%s in %s       \n", typeid(*pex).name(), pex->what(), pszModule, pszThread);
-    else
-        return strprintf(
-            "UNKNOWN EXCEPTION       \n%s in %s       \n", pszModule, pszThread);
+    return strprintf("EXCEPTION: %s", GetPrettyExceptionStr(pex));
 }
 
-void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
+void PrintExceptionContinue(const std::exception_ptr pex, const char* pszThread)
 {
     std::string message = FormatException(pex, pszThread);
     LogPrintf("\n\n************************\n%s\n", message);
     fprintf(stderr, "\n\n************************\n%s\n", message.c_str());
 }
 
-fs::path GetDefaultDataDir()
+boost::filesystem::path GetDefaultDataDir()
 {
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Pigeon
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Pigeon
-    // Mac: ~/Library/Application Support/Pigeon
-    // Unix: ~/.pigeon
+    namespace fs = boost::filesystem;
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\DashCore
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\DashCore
+    // Mac: ~/Library/Application Support/DashCore
+    // Unix: ~/.dashcore
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Pigeon";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "DashCore";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
-    if (pszHome == nullptr || strlen(pszHome) == 0)
+    if (pszHome == NULL || strlen(pszHome) == 0)
         pathRet = fs::path("/");
     else
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    return pathRet / "Library/Application Support/Pigeon";
+    return pathRet / "Library/Application Support/DashCore";
 #else
     // Unix
-    return pathRet / ".pigeon";
+    return pathRet / ".dashcore";
 #endif
 #endif
 }
 
-static fs::path pathCached;
-static fs::path pathCachedNetSpecific;
+static boost::filesystem::path pathCached;
+static boost::filesystem::path pathCachedNetSpecific;
 static CCriticalSection csPathCached;
 
-const fs::path &GetDataDir(bool fNetSpecific)
+const boost::filesystem::path &GetDataDir(bool fNetSpecific)
 {
+    namespace fs = boost::filesystem;
 
     LOCK(csPathCached);
 
@@ -563,8 +606,8 @@ const fs::path &GetDataDir(bool fNetSpecific)
     if (!path.empty())
         return path;
 
-    if (gArgs.IsArgSet("-datadir")) {
-        path = fs::system_complete(gArgs.GetArg("-datadir", ""));
+    if (IsArgSet("-datadir")) {
+        path = fs::system_complete(GetArg("-datadir", ""));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -580,28 +623,43 @@ const fs::path &GetDataDir(bool fNetSpecific)
     return path;
 }
 
+boost::filesystem::path GetBackupsDir()
+{
+    namespace fs = boost::filesystem;
+
+    if (!IsArgSet("-walletbackupsdir"))
+        return GetDataDir() / "backups";
+
+    return fs::absolute(GetArg("-walletbackupsdir", ""));
+}
+
 void ClearDatadirCache()
 {
     LOCK(csPathCached);
 
-    pathCached = fs::path();
-    pathCachedNetSpecific = fs::path();
+    pathCached = boost::filesystem::path();
+    pathCachedNetSpecific = boost::filesystem::path();
 }
 
-fs::path GetConfigFile(const std::string& confPath)
+boost::filesystem::path GetConfigFile(const std::string& confPath)
 {
-    fs::path pathConfigFile(confPath);
+    boost::filesystem::path pathConfigFile(confPath);
     if (!pathConfigFile.is_complete())
         pathConfigFile = GetDataDir(false) / pathConfigFile;
 
     return pathConfigFile;
 }
 
-void ArgsManager::ReadConfigFile(const std::string& confPath)
+void ReadConfigFile(const std::string& confPath)
 {
-    fs::ifstream streamConfig(GetConfigFile(confPath));
-    if (!streamConfig.good())
-        return; // No pigeon.conf file is OK
+    boost::filesystem::ifstream streamConfig(GetConfigFile(confPath));
+    if (!streamConfig.good()){
+        // Create empty dash.conf if it does not excist
+        FILE* configFile = fopen(GetConfigFile(confPath).string().c_str(), "a");
+        if (configFile != NULL)
+            fclose(configFile);
+        return; // Nothing to read, so just return
+    }
 
     {
         LOCK(cs_args);
@@ -610,13 +668,13 @@ void ArgsManager::ReadConfigFile(const std::string& confPath)
 
         for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
         {
-            // Don't overwrite existing settings so command line settings override pigeon.conf
+            // Don't overwrite existing settings so command line settings override dash.conf
             std::string strKey = std::string("-") + it->string_key;
             std::string strValue = it->value[0];
             InterpretNegativeSetting(strKey, strValue);
             if (mapArgs.count(strKey) == 0)
                 mapArgs[strKey] = strValue;
-            mapMultiArgs[strKey].push_back(strValue);
+            _mapMultiArgs[strKey].push_back(strValue);
         }
     }
     // If datadir is changed in .conf file:
@@ -624,16 +682,16 @@ void ArgsManager::ReadConfigFile(const std::string& confPath)
 }
 
 #ifndef WIN32
-fs::path GetPidFile()
+boost::filesystem::path GetPidFile()
 {
-    fs::path pathPidFile(gArgs.GetArg("-pid", PIGEON_PID_FILENAME));
+    boost::filesystem::path pathPidFile(GetArg("-pid", BITCOIN_PID_FILENAME));
     if (!pathPidFile.is_complete()) pathPidFile = GetDataDir() / pathPidFile;
     return pathPidFile;
 }
 
-void CreatePidFile(const fs::path &path, pid_t pid)
+void CreatePidFile(const boost::filesystem::path &path, pid_t pid)
 {
-    FILE* file = fsbridge::fopen(path, "w");
+    FILE* file = fopen(path.string().c_str(), "w");
     if (file)
     {
         fprintf(file, "%d\n", pid);
@@ -642,7 +700,7 @@ void CreatePidFile(const fs::path &path, pid_t pid)
 }
 #endif
 
-bool RenameOver(fs::path src, fs::path dest)
+bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest)
 {
 #ifdef WIN32
     return MoveFileExA(src.string().c_str(), dest.string().c_str(),
@@ -654,21 +712,21 @@ bool RenameOver(fs::path src, fs::path dest)
 }
 
 /**
- * Ignores exceptions thrown by Boost's create_directories if the requested directory exists.
+ * Ignores exceptions thrown by Boost's create_directory if the requested directory exists.
  * Specifically handles case where path p exists, but it wasn't possible for the user to
  * write to the parent directory.
  */
-bool TryCreateDirectories(const fs::path& p)
+bool TryCreateDirectory(const boost::filesystem::path& p)
 {
     try
     {
-        return fs::create_directories(p);
-    } catch (const fs::filesystem_error&) {
-        if (!fs::exists(p) || !fs::is_directory(p))
+        return boost::filesystem::create_directory(p);
+    } catch (const boost::filesystem::filesystem_error&) {
+        if (!boost::filesystem::exists(p) || !boost::filesystem::is_directory(p))
             throw;
     }
 
-    // create_directories didn't create the directory, it had to have existed already
+    // create_directory didn't create the directory, it had to have existed already
     return false;
 }
 
@@ -771,11 +829,11 @@ void ShrinkDebugFile()
     // Amount of debug.log to save at end when shrinking (must fit in memory)
     constexpr size_t RECENT_DEBUG_HISTORY_SIZE = 10 * 1000000;
     // Scroll debug.log if it's getting too big
-    fs::path pathLog = GetDataDir() / "debug.log";
-    FILE* file = fsbridge::fopen(pathLog, "r");
+    boost::filesystem::path pathLog = GetDataDir() / "debug.log";
+    FILE* file = fopen(pathLog.string().c_str(), "r");
     // If debug.log file is more than 10% bigger the RECENT_DEBUG_HISTORY_SIZE
     // trim it down by saving only the last RECENT_DEBUG_HISTORY_SIZE bytes
-    if (file && fs::file_size(pathLog) > 11 * (RECENT_DEBUG_HISTORY_SIZE / 10))
+    if (file && boost::filesystem::file_size(pathLog) > 11 * (RECENT_DEBUG_HISTORY_SIZE / 10))
     {
         // Restart the file with some of the end
         std::vector<char> vch(RECENT_DEBUG_HISTORY_SIZE, 0);
@@ -783,23 +841,25 @@ void ShrinkDebugFile()
         int nBytes = fread(vch.data(), 1, vch.size(), file);
         fclose(file);
 
-        file = fsbridge::fopen(pathLog, "w");
+        file = fopen(pathLog.string().c_str(), "w");
         if (file)
         {
             fwrite(vch.data(), 1, nBytes, file);
             fclose(file);
         }
     }
-    else if (file != nullptr)
+    else if (file != NULL)
         fclose(file);
 }
 
 #ifdef WIN32
-fs::path GetSpecialFolderPath(int nFolder, bool fCreate)
+boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate)
 {
+    namespace fs = boost::filesystem;
+
     char pszPath[MAX_PATH] = "";
 
-    if(SHGetSpecialFolderPathA(nullptr, pszPath, nFolder, fCreate))
+    if(SHGetSpecialFolderPathA(NULL, pszPath, nFolder, fCreate))
     {
         return fs::path(pszPath);
     }
@@ -811,7 +871,6 @@ fs::path GetSpecialFolderPath(int nFolder, bool fCreate)
 
 void runCommand(const std::string& strCommand)
 {
-    if (strCommand.empty()) return;
     int nErr = ::system(strCommand.c_str());
     if (nErr)
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
@@ -831,6 +890,60 @@ void RenameThread(const char* name)
     // Prevent warnings for unused parameters...
     (void)name;
 #endif
+    LogPrintf("%s: thread new name %s\n", __func__, name);
+}
+
+std::string GetThreadName()
+{
+    char name[16];
+#if defined(PR_GET_NAME)
+    // Only the first 15 characters are used (16 - NUL terminator)
+    ::prctl(PR_GET_NAME, name, 0, 0, 0);
+#elif defined(MAC_OSX)
+    pthread_getname_np(pthread_self(), name, 16);
+// #elif (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
+// #else
+    // no get_name here
+#endif
+    return std::string(name);
+}
+
+void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName)
+{
+    auto cond = std::make_shared<std::condition_variable>();
+    auto mutex = std::make_shared<std::mutex>();
+    std::atomic<int> doneCnt(0);
+    std::map<int, std::future<void> > futures;
+
+    for (int i = 0; i < tp.size(); i++) {
+        futures[i] = tp.push([baseName, i, cond, mutex, &doneCnt](int threadId) {
+            RenameThread(strprintf("%s-%d", baseName, i).c_str());
+            std::unique_lock<std::mutex> l(*mutex);
+            doneCnt++;
+            cond->wait(l);
+        });
+    }
+
+    do {
+        // Always sleep to let all threads acquire locks
+        MilliSleep(10);
+        // `doneCnt` should be at least `futures.size()` if tp size was increased (for whatever reason),
+        // or at least `tp.size()` if tp size was decreased and queue was cleared
+        // (which can happen on `stop()` if we were not fast enough to get all jobs to their threads).
+    } while (doneCnt < futures.size() && doneCnt < tp.size());
+
+    cond->notify_all();
+
+    // Make sure no one is left behind, just in case
+    for (auto& pair : futures) {
+        auto& f = pair.second;
+        if (f.valid() && f.wait_for(std::chrono::milliseconds(2000)) == std::future_status::timeout) {
+            LogPrintf("%s: %s-%d timed out\n", __func__, baseName, pair.first);
+            // Notify everyone again
+            cond->notify_all();
+            break;
+        }
+    }
 }
 
 void SetupEnvironment()
@@ -857,9 +970,9 @@ void SetupEnvironment()
     // The path locale is lazy initialized and to avoid deinitialization errors
     // in multithreading environments, it is set explicitly by the main thread.
     // A dummy locale is used to extract the internal default locale, used by
-    // fs::path, which is then used to explicitly imbue the path.
-    std::locale loc = fs::path::imbue(std::locale::classic());
-    fs::path::imbue(loc);
+    // boost::filesystem::path, which is then used to explicitly imbue the path.
+    std::locale loc = boost::filesystem::path::imbue(std::locale::classic());
+    boost::filesystem::path::imbue(loc);
 }
 
 bool SetupNetworking()
@@ -883,32 +996,62 @@ int GetNumCores()
 #endif
 }
 
-std::string CopyrightHolders(const std::string& strPrefix)
+std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear)
 {
-    std::string strCopyrightHolders = strPrefix + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
+    std::string strCopyrightHolders = strPrefix + strprintf(" %u-%u ", nStartYear, nEndYear) + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
 
-    // Check for untranslated substitution to make sure Pigeon Core copyright is not removed by accident
-    if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Pigeon Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + "The Pigeon Core developers";
+    // Check for untranslated substitution to make sure Bitcoin Core copyright is not removed by accident
+    if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Bitcoin Core") == std::string::npos) {
+        strCopyrightHolders += "\n" + strPrefix + strprintf(" %u-%u ", 2009, nEndYear) + "The Bitcoin Core developers";
     }
     return strCopyrightHolders;
 }
 
-// Obtain the application startup time (used for uptime calculation)
-int64_t GetStartupTime()
+uint32_t StringVersionToInt(const std::string& strVersion)
 {
-    return nStartupTime;
+    std::vector<std::string> tokens;
+    boost::split(tokens, strVersion, boost::is_any_of("."));
+    if(tokens.size() != 3)
+        throw std::bad_cast();
+    uint32_t nVersion = 0;
+    for(unsigned idx = 0; idx < 3; idx++)
+    {
+        if(tokens[idx].length() == 0)
+            throw std::bad_cast();
+        uint32_t value = boost::lexical_cast<uint32_t>(tokens[idx]);
+        if(value > 255)
+            throw std::bad_cast();
+        nVersion <<= 8;
+        nVersion |= value;
+    }
+    return nVersion;
 }
 
-void SetThreadPriority(int nPriority)
+std::string IntVersionToString(uint32_t nVersion)
 {
-#ifdef WIN32
-    SetThreadPriority(GetCurrentThread(), nPriority);
-#else // WIN32
-#ifdef PRIO_THREAD
-    setpriority(PRIO_THREAD, 0, nPriority);
-#else // PRIO_THREAD
-    setpriority(PRIO_PROCESS, 0, nPriority);
-#endif // PRIO_THREAD
-#endif // WIN32
+    if((nVersion >> 24) > 0) // MSB is always 0
+        throw std::bad_cast();
+    if(nVersion == 0)
+        throw std::bad_cast();
+    std::array<std::string, 3> tokens;
+    for(unsigned idx = 0; idx < 3; idx++)
+    {
+        unsigned shift = (2 - idx) * 8;
+        uint32_t byteValue = (nVersion >> shift) & 0xff;
+        tokens[idx] = boost::lexical_cast<std::string>(byteValue);
+    }
+    return boost::join(tokens, ".");
 }
+
+std::string SafeIntVersionToString(uint32_t nVersion)
+{
+    try
+    {
+        return IntVersionToString(nVersion);
+    }
+    catch(const std::bad_cast&)
+    {
+        return "invalid_version";
+    }
+}
+

@@ -1,24 +1,24 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_SYNC_H
-#define PIGEON_SYNC_H
+#ifndef BITCOIN_SYNC_H
+#define BITCOIN_SYNC_H
 
 #include "threadsafety.h"
 
 #include <boost/thread/condition_variable.hpp>
+#include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 
 
-////////////////////////////////////////////////
-//                                            //
+/////////////////////////////////////////////////
+//                                             //
 // THE SIMPLE DEFINITION, EXCLUDING DEBUG CODE //
-//                                            //
-////////////////////////////////////////////////
+//                                             //
+/////////////////////////////////////////////////
 
 /*
 CCriticalSection mutex;
@@ -76,14 +76,17 @@ void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs
 void LeaveCritical();
 std::string LocksHeld();
 void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs);
+void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs);
 void DeleteLock(void* cs);
 #else
 void static inline EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false) {}
 void static inline LeaveCritical() {}
 void static inline AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs) {}
+void static inline AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs) {}
 void static inline DeleteLock(void* cs) {}
 #endif
 #define AssertLockHeld(cs) AssertLockHeldInternal(#cs, __FILE__, __LINE__, &cs)
+#define AssertLockNotHeld(cs) AssertLockNotHeldInternal(#cs, __FILE__, __LINE__, &cs)
 
 /**
  * Wrapped boost mutex: supports recursive locking, but no waiting
@@ -97,6 +100,7 @@ public:
     }
 };
 
+typedef CCriticalSection CDynamicCriticalSection;
 /** Wrapped boost mutex: supports waiting but not recursive locking */
 typedef AnnotatedMixin<boost::mutex> CWaitableCriticalSection;
 
@@ -197,7 +201,7 @@ private:
     int value;
 
 public:
-    explicit CSemaphore(int init) : value(init) {}
+    CSemaphore(int init) : value(init) {}
 
     void wait()
     {
@@ -266,9 +270,9 @@ public:
         fHaveGrant = false;
     }
 
-    CSemaphoreGrant() : sem(nullptr), fHaveGrant(false) {}
+    CSemaphoreGrant() : sem(NULL), fHaveGrant(false) {}
 
-    explicit CSemaphoreGrant(CSemaphore& sema, bool fTry = false) : sem(&sema), fHaveGrant(false)
+    CSemaphoreGrant(CSemaphore& sema, bool fTry = false) : sem(&sema), fHaveGrant(false)
     {
         if (fTry)
             TryAcquire();
@@ -281,10 +285,10 @@ public:
         Release();
     }
 
-    operator bool() const
+    operator bool()
     {
         return fHaveGrant;
     }
 };
 
-#endif // PIGEON_SYNC_H
+#endif // BITCOIN_SYNC_H

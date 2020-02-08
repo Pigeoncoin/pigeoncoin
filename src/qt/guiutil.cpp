@@ -1,16 +1,15 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2019 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "guiutil.h"
 
-#include "pigeonaddressvalidator.h"
-#include "pigeonunits.h"
+#include "bitcoinaddressvalidator.h"
+#include "bitcoinunits.h"
 #include "qvalidatedlineedit.h"
 #include "walletmodel.h"
 
-#include "fs.h"
 #include "primitives/transaction.h"
 #include "init.h"
 #include "policy/policy.h"
@@ -37,6 +36,9 @@
 #include "shlwapi.h"
 #endif
 
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
 #include <boost/scoped_array.hpp>
 
 #include <QAbstractItemView>
@@ -64,7 +66,7 @@
 #include <QFontDatabase>
 #endif
 
-static fs::detail::utf8_codecvt_facet utf8;
+static boost::filesystem::detail::utf8_codecvt_facet utf8;
 
 #if defined(Q_OS_MAC)
 extern double NSAppKitVersionNumber;
@@ -113,9 +115,8 @@ static std::string DummyAddress(const CChainParams &params)
     sourcedata.insert(sourcedata.end(), dummydata, dummydata + sizeof(dummydata));
     for(int i=0; i<256; ++i) { // Try every trailing byte
         std::string s = EncodeBase58(sourcedata.data(), sourcedata.data() + sourcedata.size());
-        if (!IsValidDestinationString(s)) {
+        if (!CBitcoinAddress(s).IsValid())
             return s;
-        }
         sourcedata[sourcedata.size()-1] += 1;
     }
     return "";
@@ -129,11 +130,11 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
 #if QT_VERSION >= 0x040700
     // We don't want translators to use own addresses in translations
     // and this is the only place, where this address is supplied.
-    widget->setPlaceholderText(QObject::tr("Enter a Pigeon address (e.g. %1)").arg(
+    widget->setPlaceholderText(QObject::tr("Enter a Dash address (e.g. %1)").arg(
         QString::fromStdString(DummyAddress(Params()))));
 #endif
-    widget->setValidator(new PigeonAddressEntryValidator(parent));
-    widget->setCheckValidator(new PigeonAddressCheckValidator(parent));
+    widget->setValidator(new BitcoinAddressEntryValidator(parent));
+    widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
 }
 
 void setupAmountWidget(QLineEdit *widget, QWidget *parent)
@@ -145,10 +146,10 @@ void setupAmountWidget(QLineEdit *widget, QWidget *parent)
     widget->setAlignment(Qt::AlignRight|Qt::AlignVCenter);
 }
 
-bool parsePigeonURI(const QUrl &uri, SendCoinsRecipient *out)
+bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 {
-    // return if URI is not valid or is no pigeon: URI
-    if(!uri.isValid() || uri.scheme() != QString("pigeon"))
+    // return if URI is not valid or is no dash: URI
+    if(!uri.isValid() || uri.scheme() != QString("dash"))
         return false;
 
     SendCoinsRecipient rv;
@@ -165,6 +166,8 @@ bool parsePigeonURI(const QUrl &uri, SendCoinsRecipient *out)
     QUrlQuery uriQuery(uri);
     QList<QPair<QString, QString> > items = uriQuery.queryItems();
 #endif
+    
+    rv.fUseInstantSend = false;
     for (QList<QPair<QString, QString> >::iterator i = items.begin(); i != items.end(); i++)
     {
         bool fShouldReturnFalse = false;
@@ -179,6 +182,13 @@ bool parsePigeonURI(const QUrl &uri, SendCoinsRecipient *out)
             rv.label = i->second;
             fShouldReturnFalse = false;
         }
+        if (i->first == "IS")
+        {
+            if(i->second.compare(QString("1")) == 0)
+                rv.fUseInstantSend = true;
+
+            fShouldReturnFalse = false;
+        }
         if (i->first == "message")
         {
             rv.message = i->second;
@@ -188,7 +198,7 @@ bool parsePigeonURI(const QUrl &uri, SendCoinsRecipient *out)
         {
             if(!i->second.isEmpty())
             {
-                if(!PigeonUnits::parse(PigeonUnits::PGN, i->second, &rv.amount))
+                if(!BitcoinUnits::parse(BitcoinUnits::DASH, i->second, &rv.amount))
                 {
                     return false;
                 }
@@ -206,28 +216,28 @@ bool parsePigeonURI(const QUrl &uri, SendCoinsRecipient *out)
     return true;
 }
 
-bool parsePigeonURI(QString uri, SendCoinsRecipient *out)
+bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
 {
-    // Convert pigeon:// to pigeon:
+    // Convert dash:// to dash:
     //
-    //    Cannot handle this later, because pigeon:// will cause Qt to see the part after // as host,
+    //    Cannot handle this later, because dash:// will cause Qt to see the part after // as host,
     //    which will lower-case it (and thus invalidate the address).
-    if(uri.startsWith("pigeon://", Qt::CaseInsensitive))
+    if(uri.startsWith("dash://", Qt::CaseInsensitive))
     {
-        uri.replace(0, 10, "pigeon:");
+        uri.replace(0, 7, "dash:");
     }
     QUrl uriInstance(uri);
-    return parsePigeonURI(uriInstance, out);
+    return parseBitcoinURI(uriInstance, out);
 }
 
-QString formatPigeonURI(const SendCoinsRecipient &info)
+QString formatBitcoinURI(const SendCoinsRecipient &info)
 {
-    QString ret = QString("pigeon:%1").arg(info.address);
+    QString ret = QString("dash:%1").arg(info.address);
     int paramCount = 0;
 
     if (info.amount)
     {
-        ret += QString("?amount=%1").arg(PigeonUnits::format(PigeonUnits::PGN, info.amount, false, PigeonUnits::separatorNever));
+        ret += QString("?amount=%1").arg(BitcoinUnits::format(BitcoinUnits::DASH, info.amount, false, BitcoinUnits::separatorNever));
         paramCount++;
     }
 
@@ -244,16 +254,22 @@ QString formatPigeonURI(const SendCoinsRecipient &info)
         ret += QString("%1message=%2").arg(paramCount == 0 ? "?" : "&").arg(msg);
         paramCount++;
     }
+    
+    if(info.fUseInstantSend)
+    {
+        ret += QString("%1IS=1").arg(paramCount == 0 ? "?" : "&");
+        paramCount++;
+    }
 
     return ret;
 }
 
 bool isDust(const QString& address, const CAmount& amount)
 {
-    CTxDestination dest = DecodeDestination(address.toStdString());
+    CTxDestination dest = CBitcoinAddress(address.toStdString()).Get();
     CScript script = GetScriptForDestination(dest);
     CTxOut txOut(amount, script);
-    return IsDust(txOut, ::dustRelayFee);
+    return txOut.IsDust(dustRelayFee);
 }
 
 QString HtmlEscape(const QString& str, bool fMultiLine)
@@ -263,6 +279,7 @@ QString HtmlEscape(const QString& str, bool fMultiLine)
 #else
     QString escaped = str.toHtmlEscaped();
 #endif
+    escaped = escaped.replace(" ", "&nbsp;");
     if(fMultiLine)
     {
         escaped = escaped.replace("\n", "<br>\n");
@@ -410,27 +427,29 @@ bool isObscured(QWidget *w)
 
 void openDebugLogfile()
 {
-    fs::path pathDebug = GetDataDir() / "debug.log";
+    boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
 
     /* Open debug.log with the associated application */
-    if (fs::exists(pathDebug))
+    if (boost::filesystem::exists(pathDebug))
         QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathDebug)));
 }
 
-bool openPigeonConf()
+void openConfigfile()
 {
-    boost::filesystem::path pathConfig = GetConfigFile(PIGEON_CONF_FILENAME);
+    boost::filesystem::path pathConfig = GetConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME));
 
-    /* Create the file */
-    boost::filesystem::ofstream configFile(pathConfig, std::ios_base::app);
-    
-    if (!configFile.good())
-        return false;
-    
-    configFile.close();
-    
-    /* Open pigeon.conf with the associated application */
-    return QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
+    /* Open dash.conf with the associated application */
+    if (boost::filesystem::exists(pathConfig))
+        QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
+}
+
+void showBackups()
+{
+    boost::filesystem::path backupsDir = GetBackupsDir();
+
+    /* Open folder with default browser */
+    if (boost::filesystem::exists(backupsDir))
+        QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(backupsDir)));
 }
 
 void SubstituteFonts(const QString& language)
@@ -459,7 +478,7 @@ void SubstituteFonts(const QString& language)
             /* 10.10 or later system */
             if (language == "zh_CN" || language == "zh_TW" || language == "zh_HK") // traditional or simplified Chinese
               QFont::insertSubstitution(".Helvetica Neue DeskInterface", "Heiti SC");
-            else if (language == "ja") // Japanese
+            else if (language == "ja") // Japanesee
               QFont::insertSubstitution(".Helvetica Neue DeskInterface", "Songti SC");
             else
               QFont::insertSubstitution(".Helvetica Neue DeskInterface", "Lucida Grande");
@@ -482,11 +501,14 @@ bool ToolTipToRichTextFilter::eventFilter(QObject *obj, QEvent *evt)
     {
         QWidget *widget = static_cast<QWidget*>(obj);
         QString tooltip = widget->toolTip();
-        if(tooltip.size() > size_threshold && !tooltip.startsWith("<qt") && !Qt::mightBeRichText(tooltip))
+        if(tooltip.size() > size_threshold && !tooltip.startsWith("<qt"))
         {
-            // Envelop with <qt></qt> to make sure Qt detects this as rich text
-            // Escape the current message as HTML and replace \n by <br>
-            tooltip = "<qt>" + HtmlEscape(tooltip, true) + "</qt>";
+            // Escape the current message as HTML and replace \n by <br> if it's not rich text
+            if(!Qt::mightBeRichText(tooltip))
+                tooltip = HtmlEscape(tooltip, true);
+            // Envelop with <qt></qt> to make sure Qt detects every tooltip as rich text
+            // and style='white-space:pre' to preserve line composition
+            tooltip = "<qt style='white-space:pre'>" + tooltip + "</qt>";
             widget->setToolTip(tooltip);
             return true;
         }
@@ -613,34 +635,34 @@ TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* t
 }
 
 #ifdef WIN32
-fs::path static StartupShortcutPath()
+boost::filesystem::path static StartupShortcutPath()
 {
     std::string chain = ChainNameFromCommandLine();
     if (chain == CBaseChainParams::MAIN)
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "Pigeon.lnk";
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "Dash Core.lnk";
     if (chain == CBaseChainParams::TESTNET) // Remove this special case when CBaseChainParams::TESTNET = "testnet4"
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "Pigeon (testnet).lnk";
-    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Pigeon (%s).lnk", chain);
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "Dash Core (testnet).lnk";
+    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Dash Core (%s).lnk", chain);
 }
 
 bool GetStartOnSystemStartup()
 {
-    // check for Pigeon*.lnk
-    return fs::exists(StartupShortcutPath());
+    // check for "Dash Core*.lnk"
+    return boost::filesystem::exists(StartupShortcutPath());
 }
 
 bool SetStartOnSystemStartup(bool fAutoStart)
 {
     // If the shortcut exists already, remove it for updating
-    fs::remove(StartupShortcutPath());
+    boost::filesystem::remove(StartupShortcutPath());
 
     if (fAutoStart)
     {
-        CoInitialize(nullptr);
+        CoInitialize(NULL);
 
         // Get a pointer to the IShellLink interface.
-        IShellLink* psl = nullptr;
-        HRESULT hres = CoCreateInstance(CLSID_ShellLink, nullptr,
+        IShellLink* psl = NULL;
+        HRESULT hres = CoCreateInstance(CLSID_ShellLink, NULL,
             CLSCTX_INPROC_SERVER, IID_IShellLink,
             reinterpret_cast<void**>(&psl));
 
@@ -648,12 +670,12 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         {
             // Get the current executable path
             TCHAR pszExePath[MAX_PATH];
-            GetModuleFileName(nullptr, pszExePath, sizeof(pszExePath));
+            GetModuleFileName(NULL, pszExePath, sizeof(pszExePath));
 
             // Start client minimized
             QString strArgs = "-min";
             // Set -testnet /-regtest options
-            strArgs += QString::fromStdString(strprintf(" -testnet=%d -regtest=%d", gArgs.GetBoolArg("-testnet", false), gArgs.GetBoolArg("-regtest", false)));
+            strArgs += QString::fromStdString(strprintf(" -testnet=%d -regtest=%d", GetBoolArg("-testnet", false), GetBoolArg("-regtest", false)));
 
 #ifdef UNICODE
             boost::scoped_array<TCHAR> args(new TCHAR[strArgs.length() + 1]);
@@ -676,7 +698,7 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 
             // Query IShellLink for the IPersistFile interface for
             // saving the shortcut in persistent storage.
-            IPersistFile* ppf = nullptr;
+            IPersistFile* ppf = NULL;
             hres = psl->QueryInterface(IID_IPersistFile, reinterpret_cast<void**>(&ppf));
             if (SUCCEEDED(hres))
             {
@@ -702,8 +724,10 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 // Follow the Desktop Application Autostart Spec:
 // http://standards.freedesktop.org/autostart-spec/autostart-spec-latest.html
 
-fs::path static GetAutostartDir()
+boost::filesystem::path static GetAutostartDir()
 {
+    namespace fs = boost::filesystem;
+
     char* pszConfigHome = getenv("XDG_CONFIG_HOME");
     if (pszConfigHome) return fs::path(pszConfigHome) / "autostart";
     char* pszHome = getenv("HOME");
@@ -711,17 +735,17 @@ fs::path static GetAutostartDir()
     return fs::path();
 }
 
-fs::path static GetAutostartFilePath()
+boost::filesystem::path static GetAutostartFilePath()
 {
     std::string chain = ChainNameFromCommandLine();
     if (chain == CBaseChainParams::MAIN)
-        return GetAutostartDir() / "pigeon.desktop";
-    return GetAutostartDir() / strprintf("pigeon-%s.lnk", chain);
+        return GetAutostartDir() / "dashcore.desktop";
+    return GetAutostartDir() / strprintf("dashcore-%s.lnk", chain);
 }
 
 bool GetStartOnSystemStartup()
 {
-    fs::ifstream optionFile(GetAutostartFilePath());
+    boost::filesystem::ifstream optionFile(GetAutostartFilePath());
     if (!optionFile.good())
         return false;
     // Scan through file for "Hidden=true":
@@ -741,29 +765,28 @@ bool GetStartOnSystemStartup()
 bool SetStartOnSystemStartup(bool fAutoStart)
 {
     if (!fAutoStart)
-        fs::remove(GetAutostartFilePath());
+        boost::filesystem::remove(GetAutostartFilePath());
     else
     {
         char pszExePath[MAX_PATH+1];
-        ssize_t r = readlink("/proc/self/exe", pszExePath, sizeof(pszExePath) - 1);
-        if (r == -1)
+        memset(pszExePath, 0, sizeof(pszExePath));
+        if (readlink("/proc/self/exe", pszExePath, sizeof(pszExePath)-1) == -1)
             return false;
-        pszExePath[r] = '\0';
 
-        fs::create_directories(GetAutostartDir());
+        boost::filesystem::create_directories(GetAutostartDir());
 
-        fs::ofstream optionFile(GetAutostartFilePath(), std::ios_base::out|std::ios_base::trunc);
+        boost::filesystem::ofstream optionFile(GetAutostartFilePath(), std::ios_base::out|std::ios_base::trunc);
         if (!optionFile.good())
             return false;
         std::string chain = ChainNameFromCommandLine();
-        // Write a pigeon.desktop file to the autostart directory:
+        // Write a dashcore.desktop file to the autostart directory:
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
         if (chain == CBaseChainParams::MAIN)
-            optionFile << "Name=Pigeon\n";
+            optionFile << "Name=Dash Core\n";
         else
-            optionFile << strprintf("Name=Pigeon (%s)\n", chain);
-        optionFile << "Exec=" << pszExePath << strprintf(" -min -testnet=%d -regtest=%d\n", gArgs.GetBoolArg("-testnet", false), gArgs.GetBoolArg("-regtest", false));
+            optionFile << strprintf("Name=Dash Core (%s)\n", chain);
+        optionFile << "Exec=" << pszExePath << strprintf(" -min -testnet=%d -regtest=%d\n", GetBoolArg("-testnet", false), GetBoolArg("-regtest", false));
         optionFile << "Terminal=false\n";
         optionFile << "Hidden=false\n";
         optionFile.close();
@@ -783,77 +806,58 @@ bool SetStartOnSystemStartup(bool fAutoStart)
 LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef findUrl);
 LSSharedFileListItemRef findStartupItemInList(LSSharedFileListRef list, CFURLRef findUrl)
 {
-    CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(list, nullptr);
-    if (listSnapshot == nullptr) {
-        return nullptr;
-    }
-    
-    // loop through the list of startup items and try to find the pigeon app
+    // loop through the list of startup items and try to find the Dash Core app
+    CFArrayRef listSnapshot = LSSharedFileListCopySnapshot(list, NULL);
     for(int i = 0; i < CFArrayGetCount(listSnapshot); i++) {
         LSSharedFileListItemRef item = (LSSharedFileListItemRef)CFArrayGetValueAtIndex(listSnapshot, i);
         UInt32 resolutionFlags = kLSSharedFileListNoUserInteraction | kLSSharedFileListDoNotMountVolumes;
-        CFURLRef currentItemURL = nullptr;
+        CFURLRef currentItemURL = NULL;
 
 #if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED >= 10100
-        if(&LSSharedFileListItemCopyResolvedURL)
-            currentItemURL = LSSharedFileListItemCopyResolvedURL(item, resolutionFlags, nullptr);
+    if(&LSSharedFileListItemCopyResolvedURL)
+        currentItemURL = LSSharedFileListItemCopyResolvedURL(item, resolutionFlags, NULL);
 #if defined(MAC_OS_X_VERSION_MIN_REQUIRED) && MAC_OS_X_VERSION_MIN_REQUIRED < 10100
-        else
-            LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, nullptr);
+    else
+        LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, NULL);
 #endif
 #else
-        LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, nullptr);
+    LSSharedFileListItemResolve(item, resolutionFlags, &currentItemURL, NULL);
 #endif
 
+        if(currentItemURL && CFEqual(currentItemURL, findUrl)) {
+            // found
+            CFRelease(currentItemURL);
+            return item;
+        }
         if(currentItemURL) {
-            if (CFEqual(currentItemURL, findUrl)) {
-                // found
-                CFRelease(listSnapshot);
-                CFRelease(currentItemURL);
-                return item;
-            }
             CFRelease(currentItemURL);
         }
     }
-    
-    CFRelease(listSnapshot);
-    return nullptr;
+    return NULL;
 }
 
 bool GetStartOnSystemStartup()
 {
-    CFURLRef pigeonAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-    if (pigeonAppUrl == nullptr) {
-        return false;
-    }
-    
-    LSSharedFileListRef loginItems = LSSharedFileListCreate(nullptr, kLSSharedFileListSessionLoginItems, nullptr);
-    LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, pigeonAppUrl);
-
-    CFRelease(pigeonAppUrl);
+    CFURLRef bitcoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    LSSharedFileListRef loginItems = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
+    LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, bitcoinAppUrl);
     return !!foundItem; // return boolified object
 }
 
 bool SetStartOnSystemStartup(bool fAutoStart)
 {
-    CFURLRef pigeonAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-    if (pigeonAppUrl == nullptr) {
-        return false;
-    }
-    
-    LSSharedFileListRef loginItems = LSSharedFileListCreate(nullptr, kLSSharedFileListSessionLoginItems, nullptr);
-    LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, pigeonAppUrl);
+    CFURLRef bitcoinAppUrl = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    LSSharedFileListRef loginItems = LSSharedFileListCreate(NULL, kLSSharedFileListSessionLoginItems, NULL);
+    LSSharedFileListItemRef foundItem = findStartupItemInList(loginItems, bitcoinAppUrl);
 
     if(fAutoStart && !foundItem) {
-        // add pigeon app to startup item list
-        LSSharedFileListInsertItemURL(loginItems, kLSSharedFileListItemBeforeFirst, nullptr, nullptr, pigeonAppUrl, nullptr, nullptr);
+        // add Dash Core app to startup item list
+        LSSharedFileListInsertItemURL(loginItems, kLSSharedFileListItemBeforeFirst, NULL, NULL, bitcoinAppUrl, NULL, NULL);
     }
     else if(!fAutoStart && foundItem) {
         // remove item
         LSSharedFileListItemRemove(loginItems, foundItem);
     }
-    
-    CFRelease(pigeonAppUrl);
     return true;
 }
 #pragma GCC diagnostic pop
@@ -864,18 +868,92 @@ bool SetStartOnSystemStartup(bool fAutoStart) { return false; }
 
 #endif
 
+void migrateQtSettings()
+{
+    // Migration (12.1)
+    QSettings settings;
+    if(!settings.value("fMigrationDone121", false).toBool()) {
+        settings.remove("theme");
+        settings.remove("nWindowPos");
+        settings.remove("nWindowSize");
+        settings.setValue("fMigrationDone121", true);
+    }
+}
+
+void saveWindowGeometry(const QString& strSetting, QWidget *parent)
+{
+    QSettings settings;
+    settings.setValue(strSetting + "Pos", parent->pos());
+    settings.setValue(strSetting + "Size", parent->size());
+}
+
+void restoreWindowGeometry(const QString& strSetting, const QSize& defaultSize, QWidget *parent)
+{
+    QSettings settings;
+    QPoint pos = settings.value(strSetting + "Pos").toPoint();
+    QSize size = settings.value(strSetting + "Size", defaultSize).toSize();
+
+    parent->resize(size);
+    parent->move(pos);
+
+    if ((!pos.x() && !pos.y()) || (QApplication::desktop()->screenNumber(parent) == -1))
+    {
+        QRect screen = QApplication::desktop()->screenGeometry();
+        QPoint defaultPos = screen.center() -
+            QPoint(defaultSize.width() / 2, defaultSize.height() / 2);
+        parent->resize(defaultSize);
+        parent->move(defaultPos);
+    }
+}
+
+// Return name of current UI-theme or default theme if no theme was found
+QString getThemeName()
+{
+    QSettings settings;
+    QString theme = settings.value("theme", "").toString();
+
+    if(!theme.isEmpty()){
+        return theme;
+    }
+    return QString("light");  
+}
+
+// Open CSS when configured
+QString loadStyleSheet()
+{
+    QString styleSheet;
+    QSettings settings;
+    QString cssName;
+    QString theme = settings.value("theme", "").toString();
+
+    if(!theme.isEmpty()){
+        cssName = QString(":/css/") + theme; 
+    }
+    else {
+        cssName = QString(":/css/light");  
+        settings.setValue("theme", "light");
+    }
+    
+    QFile qFile(cssName);      
+    if (qFile.open(QFile::ReadOnly)) {
+        styleSheet = QLatin1String(qFile.readAll());
+    }
+        
+    return styleSheet;
+}
+
 void setClipboard(const QString& str)
 {
     QApplication::clipboard()->setText(str, QClipboard::Clipboard);
     QApplication::clipboard()->setText(str, QClipboard::Selection);
 }
 
-fs::path qstringToBoostPath(const QString &path)
+boost::filesystem::path qstringToBoostPath(const QString &path)
 {
-    return fs::path(path.toStdString(), utf8);
+    return boost::filesystem::path(path.toStdString(), utf8);
 }
 
-QString boostPathToQString(const fs::path &path)
+QString boostPathToQString(const boost::filesystem::path &path)
 {
     return QString::fromStdString(path.string(utf8));
 }
@@ -919,9 +997,6 @@ QString formatServicesStr(quint64 mask)
                 break;
             case NODE_BLOOM:
                 strList.append("BLOOM");
-                break;
-            case NODE_WITNESS:
-                strList.append("WITNESS");
                 break;
             case NODE_XTHIN:
                 strList.append("XTHIN");
@@ -983,18 +1058,6 @@ QString formatNiceTimeOffset(qint64 secs)
         timeBehindText = QObject::tr("%1 and %2").arg(QObject::tr("%n year(s)", "", years)).arg(QObject::tr("%n week(s)","", remainder/WEEK_IN_SECONDS));
     }
     return timeBehindText;
-}
-
-QString formatBytes(uint64_t bytes)
-{
-    if(bytes < 1024)
-        return QString(QObject::tr("%1 B")).arg(bytes);
-    if(bytes < 1024 * 1024)
-        return QString(QObject::tr("%1 KB")).arg(bytes / 1024);
-    if(bytes < 1024 * 1024 * 1024)
-        return QString(QObject::tr("%1 MB")).arg(bytes / 1024 / 1024);
-
-    return QString(QObject::tr("%1 GB")).arg(bytes / 1024 / 1024 / 1024);
 }
 
 void ClickableLabel::mouseReleaseEvent(QMouseEvent *event)

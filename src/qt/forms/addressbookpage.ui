@@ -59,10 +59,6 @@
        <property name="text">
         <string>&amp;New</string>
        </property>
-       <property name="icon">
-        <iconset resource="../pigeon.qrc">
-         <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
-       </property>
        <property name="autoDefault">
         <bool>false</bool>
        </property>
@@ -76,9 +72,18 @@
        <property name="text">
         <string>&amp;Copy</string>
        </property>
-       <property name="icon">
-        <iconset resource="../pigeon.qrc">
-         <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="showAddressQRCode">
+       <property name="toolTip">
+        <string>Show QR code for the currently selected address</string>
+       </property>
+       <property name="text">
+        <string>&amp;Show QR code</string>
        </property>
        <property name="autoDefault">
         <bool>false</bool>
@@ -92,10 +97,6 @@
        </property>
        <property name="text">
         <string>&amp;Delete</string>
-       </property>
-       <property name="icon">
-        <iconset resource="../pigeon.qrc">
-         <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
        </property>
        <property name="autoDefault">
         <bool>false</bool>
@@ -123,10 +124,6 @@
        <property name="text">
         <string>&amp;Export</string>
        </property>
-       <property name="icon">
-        <iconset resource="../pigeon.qrc">
-         <normaloff>:/icons/export</normaloff>:/icons/export</iconset>
-       </property>
        <property name="autoDefault">
         <bool>false</bool>
        </property>
@@ -153,7 +150,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../pigeon.qrc"/>
+  <include location="../dash.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -1,37 +1,33 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_WALLET_COINCONTROL_H
-#define PIGEON_WALLET_COINCONTROL_H
+#ifndef BITCOIN_WALLET_COINCONTROL_H
+#define BITCOIN_WALLET_COINCONTROL_H
 
-#include "policy/feerate.h"
-#include "policy/fees.h"
 #include "primitives/transaction.h"
-#include "wallet/wallet.h"
-
-#include <boost/optional.hpp>
 
 /** Coin Control Features. */
 class CCoinControl
 {
 public:
     CTxDestination destChange;
-    //! If false, allows unselected inputs, but requires all selected inputs be used
+    bool fUsePrivateSend;
+    bool fUseInstantSend;
+    //! If false, allows unselected inputs, but requires all selected inputs be used if fAllowOtherInputs is true (default)
     bool fAllowOtherInputs;
+    //! If false, only include as many inputs as necessary to fulfill a coin selection request. Only usable together with fAllowOtherInputs
+    bool fRequireAllInputs;
     //! Includes watch only addresses which match the ISMINE_WATCH_SOLVABLE criteria
     bool fAllowWatchOnly;
-    //! Override automatic min/max checks on fee, m_feerate must be set if true
+    //! Minimum absolute fee (not per kilobyte)
+    CAmount nMinimumTotalFee;
+    //! Override estimated feerate
     bool fOverrideFeeRate;
-    //! Override the default payTxFee if set
-    boost::optional<CFeeRate> m_feerate;
-    //! Override the default confirmation target if set
-    boost::optional<unsigned int> m_confirm_target;
-    //! Signal BIP-125 replace by fee.
-    bool signalRbf;
-    //! Fee estimation mode to control arguments to estimateSmartFee
-    FeeEstimateMode m_fee_mode;
+    //! Feerate to use if overrideFeeRate is true
+    CFeeRate nFeeRate;
+    //! Override the default confirmation target, 0 = use default
+    int nConfirmTarget;
 
     CCoinControl()
     {
@@ -42,13 +38,15 @@ public:
     {
         destChange = CNoDestination();
         fAllowOtherInputs = false;
+        fRequireAllInputs = true;
         fAllowWatchOnly = false;
         setSelected.clear();
-        m_feerate.reset();
+        fUseInstantSend = false;
+        fUsePrivateSend = true;
+        nMinimumTotalFee = 0;
+        nFeeRate = CFeeRate(0);
         fOverrideFeeRate = false;
-        m_confirm_target.reset();
-        signalRbf = fWalletRbf;
-        m_fee_mode = FeeEstimateMode::UNSET;
+        nConfirmTarget = 0;
     }
 
     bool HasSelected() const
@@ -85,4 +83,4 @@ private:
     std::set<COutPoint> setSelected;
 };
 
-#endif // PIGEON_WALLET_COINCONTROL_H
+#endif // BITCOIN_WALLET_COINCONTROL_H

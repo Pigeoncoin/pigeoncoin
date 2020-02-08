@@ -1,11 +1,11 @@
-// Copyright (c) 2012-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2012-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "bench.h"
 #include "wallet/wallet.h"
 
+#include <boost/foreach.hpp>
 #include <set>
 
 static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<COutput>& vCoins)
@@ -30,7 +30,7 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<CO
 // the hardest, as you need a wider selection of scenarios, just testing the
 // same one over and over isn't too useful. Generating random isn't useful
 // either for measurements."
-// (https://github.com/PigeonProject/Pigeoncoin/issues/7883#issuecomment-224807484)
+// (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
 static void CoinSelection(benchmark::State& state)
 {
     const CWallet wallet;
@@ -39,7 +39,7 @@ static void CoinSelection(benchmark::State& state)
 
     while (state.KeepRunning()) {
         // Empty wallet.
-        for (COutput output : vCoins)
+        BOOST_FOREACH (COutput output, vCoins)
             delete output.tx;
         vCoins.clear();
 
@@ -48,7 +48,7 @@ static void CoinSelection(benchmark::State& state)
             addCoin(1000 * COIN, wallet, vCoins);
         addCoin(3 * COIN, wallet, vCoins);
 
-        std::set<CInputCoin> setCoinsRet;
+        std::set<std::pair<const CWalletTx*, unsigned int> > setCoinsRet;
         CAmount nValueRet;
         bool success = wallet.SelectCoinsMinConf(1003 * COIN, 1, 6, 0, vCoins, setCoinsRet, nValueRet);
         assert(success);

@@ -1,5 +1,4 @@
 // Copyright (c) 2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,7 +12,7 @@
 
 #include "support/events.h"
 
-#include "test/test_pigeon.h"
+#include "test/test_dash.h"
 
 #include <vector>
 
@@ -43,7 +42,7 @@ BOOST_AUTO_TEST_CASE(raii_event_creation)
 {
     event_set_mem_functions(tag_malloc, realloc, tag_free);
     
-    void* base_ptr = nullptr;
+    void* base_ptr = NULL;
     {
         auto base = obtain_event_base();
         base_ptr = (void*)base.get();
@@ -51,10 +50,10 @@ BOOST_AUTO_TEST_CASE(raii_event_creation)
     }
     BOOST_CHECK(tags[base_ptr] == 0);
     
-    void* event_ptr = nullptr;
+    void* event_ptr = NULL;
     {
         auto base = obtain_event_base();
-        auto event = obtain_event(base.get(), -1, 0, nullptr, nullptr);
+        auto event = obtain_event(base.get(), -1, 0, NULL, NULL);
 
         base_ptr = (void*)base.get();
         event_ptr = (void*)event.get();
@@ -72,11 +71,11 @@ BOOST_AUTO_TEST_CASE(raii_event_order)
 {
     event_set_mem_functions(tag_malloc, realloc, tag_free);
     
-    void* base_ptr = nullptr;
-    void* event_ptr = nullptr;
+    void* base_ptr = NULL;
+    void* event_ptr = NULL;
     {
         auto base = obtain_event_base();
-        auto event = obtain_event(base.get(), -1, 0, nullptr, nullptr);
+        auto event = obtain_event(base.get(), -1, 0, NULL, NULL);
 
         base_ptr = (void*)base.get();
         event_ptr = (void*)event.get();

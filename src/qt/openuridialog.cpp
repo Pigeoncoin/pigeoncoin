@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2014-2016 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,7 +17,7 @@ OpenURIDialog::OpenURIDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 #if QT_VERSION >= 0x040700
-    ui->uriEdit->setPlaceholderText("pigeon:");
+    ui->uriEdit->setPlaceholderText("dash:");
 #endif
 }
 
@@ -34,7 +34,7 @@ QString OpenURIDialog::getURI()
 void OpenURIDialog::accept()
 {
     SendCoinsRecipient rcp;
-    if(GUIUtil::parsePigeonURI(getURI(), &rcp))
+    if(GUIUtil::parseBitcoinURI(getURI(), &rcp))
     {
         /* Only accept value URIs */
         QDialog::accept();
@@ -45,9 +45,9 @@ void OpenURIDialog::accept()
 
 void OpenURIDialog::on_selectFileButton_clicked()
 {
-    QString filename = GUIUtil::getOpenFileName(this, tr("Select payment request file to open"), "", "", nullptr);
+    QString filename = GUIUtil::getOpenFileName(this, tr("Select payment request file to open"), "", "", NULL);
     if(filename.isEmpty())
         return;
     QUrl fileUri = QUrl::fromLocalFile(filename);
-    ui->uriEdit->setText("pigeon:?r=" + QUrl::toPercentEncoding(fileUri.toString()));
+    ui->uriEdit->setText("dash:?r=" + QUrl::toPercentEncoding(fileUri.toString()));
 }

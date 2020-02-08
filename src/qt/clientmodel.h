@@ -1,20 +1,26 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_QT_CLIENTMODEL_H
-#define PIGEON_QT_CLIENTMODEL_H
+#ifndef BITCOIN_QT_CLIENTMODEL_H
+#define BITCOIN_QT_CLIENTMODEL_H
+
+#include "evo/deterministicmns.h"
+#include "sync.h"
 
 #include <QObject>
 #include <QDateTime>
 
 #include <atomic>
 
+class AddressTableModel;
 class BanTableModel;
 class OptionsModel;
 class PeerTableModel;
+class TransactionTableModel;
 
+class CWallet;
 class CBlockIndex;
 
 QT_BEGIN_NAMESPACE
@@ -35,7 +41,7 @@ enum NumConnections {
     CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
 
-/** Model for Pigeon network client. */
+/** Model for Dash network client. */
 class ClientModel : public QObject
 {
     Q_OBJECT
@@ -57,6 +63,12 @@ public:
     long getMempoolSize() const;
     //! Return the dynamic memory usage of the mempool
     size_t getMempoolDynamicUsage() const;
+    //! Return number of ISLOCKs
+    size_t getInstantSentLockCount() const;
+
+    void setMasternodeList(const CDeterministicMNList& mnList);
+    CDeterministicMNList getMasternodeList() const;
+    void refreshMasternodeList();
     
     quint64 getTotalBytesRecv() const;
     quint64 getTotalBytesSent() const;
@@ -92,13 +104,22 @@ private:
 
     QTimer *pollTimer;
 
+    // The cache for mn list is not technically needed because CDeterministicMNManager
+    // caches it internally for recent blocks but it's not enough to get consistent
+    // representation of the list in UI during initial sync/reindex, so we cache it here too.
+    mutable CCriticalSection cs_mnlinst; // protects mnListCached
+    CDeterministicMNList mnListCached;
+
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
 
 Q_SIGNALS:
     void numConnectionsChanged(int count);
+    void masternodeListChanged() const;
     void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, bool header);
+    void additionalDataSyncProgressChanged(double nSyncProgress);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
+    void islockCountChanged(size_t count);
     void networkActiveChanged(bool networkActive);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
@@ -113,8 +134,8 @@ public Q_SLOTS:
     void updateTimer();
     void updateNumConnections(int numConnections);
     void updateNetworkActive(bool networkActive);
-    void updateAlert();
+    void updateAlert(const QString &hash, int status);
     void updateBanlist();
 };
 
-#endif // PIGEON_QT_CLIENTMODEL_H
+#endif // BITCOIN_QT_CLIENTMODEL_H

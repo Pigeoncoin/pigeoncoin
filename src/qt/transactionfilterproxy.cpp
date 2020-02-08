@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,8 +21,9 @@ TransactionFilterProxy::TransactionFilterProxy(QObject *parent) :
     dateFrom(MIN_DATE),
     dateTo(MAX_DATE),
     addrPrefix(),
-    typeFilter(ALL_TYPES),
+    typeFilter(COMMON_TYPES),
     watchOnlyFilter(WatchOnlyFilter_All),
+    instantsendFilter(InstantSendFilter_All),
     minAmount(0),
     limitRows(-1),
     showInactive(true)
@@ -37,6 +37,7 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
     int type = index.data(TransactionTableModel::TypeRole).toInt();
     QDateTime datetime = index.data(TransactionTableModel::DateRole).toDateTime();
     bool involvesWatchAddress = index.data(TransactionTableModel::WatchonlyRole).toBool();
+    bool lockedByInstantSend = index.data(TransactionTableModel::InstantSendRole).toBool();
     QString address = index.data(TransactionTableModel::AddressRole).toString();
     QString label = index.data(TransactionTableModel::LabelRole).toString();
     qint64 amount = llabs(index.data(TransactionTableModel::AmountRole).toLongLong());
@@ -49,6 +50,10 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
     if (involvesWatchAddress && watchOnlyFilter == WatchOnlyFilter_No)
         return false;
     if (!involvesWatchAddress && watchOnlyFilter == WatchOnlyFilter_Yes)
+        return false;
+    if (lockedByInstantSend && instantsendFilter == InstantSendFilter_No)
+        return false;
+    if (!lockedByInstantSend && instantsendFilter == InstantSendFilter_Yes)
         return false;
     if(datetime < dateFrom || datetime > dateTo)
         return false;
@@ -88,6 +93,12 @@ void TransactionFilterProxy::setMinAmount(const CAmount& minimum)
 void TransactionFilterProxy::setWatchOnlyFilter(WatchOnlyFilter filter)
 {
     this->watchOnlyFilter = filter;
+    invalidateFilter();
+}
+
+void TransactionFilterProxy::setInstantSendFilter(InstantSendFilter filter)
+{
+    this->instantsendFilter = filter;
     invalidateFilter();
 }
 

@@ -1,11 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifdef HAVE_CONFIG_H
-#include "config/pigeon-config.h"
+#include "config/dash-config.h"
 #endif
 
 #include "netbase.h"
@@ -26,7 +25,7 @@
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
 
-#if !defined(HAVE_MSG_NOSIGNAL)
+#if !defined(HAVE_MSG_NOSIGNAL) && !defined(MSG_NOSIGNAL)
 #define MSG_NOSIGNAL 0
 #endif
 
@@ -59,6 +58,25 @@ std::string GetNetworkName(enum Network net) {
     }
 }
 
+void SplitHostPort(std::string in, int &portOut, std::string &hostOut) {
+    size_t colon = in.find_last_of(':');
+    // if a : is found, and it either follows a [...], or no other : is in the string, treat it as port separator
+    bool fHaveColon = colon != in.npos;
+    bool fBracketed = fHaveColon && (in[0]=='[' && in[colon-1]==']'); // if there is a colon, and in[0]=='[', colon is not 0, so in[colon-1] is safe
+    bool fMultiColon = fHaveColon && (in.find_last_of(':',colon-1) != in.npos);
+    if (fHaveColon && (colon==0 || fBracketed || !fMultiColon)) {
+        int32_t n;
+        if (ParseInt32(in.substr(colon + 1), &n) && n > 0 && n < 0x10000) {
+            in = in.substr(0, colon);
+            portOut = n;
+        }
+    }
+    if (in.size()>0 && in[0] == '[' && in[in.size()-1] == ']')
+        hostOut = in.substr(1, in.size()-2);
+    else
+        hostOut = in;
+}
+
 bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
 {
     vIP.clear();
@@ -82,30 +100,25 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
 #else
     aiHint.ai_flags = fAllowLookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
 #endif
-    struct addrinfo *aiRes = nullptr;
-    int nErr = getaddrinfo(pszName, nullptr, &aiHint, &aiRes);
+    struct addrinfo *aiRes = NULL;
+    int nErr = getaddrinfo(pszName, NULL, &aiHint, &aiRes);
     if (nErr)
         return false;
 
     struct addrinfo *aiTrav = aiRes;
-    while (aiTrav != nullptr && (nMaxSolutions == 0 || vIP.size() < nMaxSolutions))
+    while (aiTrav != NULL && (nMaxSolutions == 0 || vIP.size() < nMaxSolutions))
     {
-        CNetAddr resolved;
         if (aiTrav->ai_family == AF_INET)
         {
             assert(aiTrav->ai_addrlen >= sizeof(sockaddr_in));
-            resolved = CNetAddr(((struct sockaddr_in*)(aiTrav->ai_addr))->sin_addr);
+            vIP.push_back(CNetAddr(((struct sockaddr_in*)(aiTrav->ai_addr))->sin_addr));
         }
 
         if (aiTrav->ai_family == AF_INET6)
         {
             assert(aiTrav->ai_addrlen >= sizeof(sockaddr_in6));
             struct sockaddr_in6* s6 = (struct sockaddr_in6*) aiTrav->ai_addr;
-            resolved = CNetAddr(s6->sin6_addr, s6->sin6_scope_id);
-        }
-        /* Never allow resolving to an internal address. Consider any such result invalid */
-        if (!resolved.IsInternal()) {
-            vIP.push_back(resolved);
+            vIP.push_back(CNetAddr(s6->sin6_addr, s6->sin6_scope_id));
         }
 
         aiTrav = aiTrav->ai_next;
@@ -246,7 +259,7 @@ enum class IntrRecvError {
  *
  * @note This function requires that hSocket is in non-blocking mode.
  */
-static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, const SOCKET& hSocket)
+static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, SOCKET& hSocket)
 {
     int64_t curTime = GetTimeMillis();
     int64_t endTime = curTime + timeout;
@@ -270,7 +283,7 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, c
                 fd_set fdset;
                 FD_ZERO(&fdset);
                 FD_SET(hSocket, &fdset);
-                int nRet = select(hSocket + 1, &fdset, nullptr, nullptr, &tval);
+                int nRet = select(hSocket + 1, &fdset, NULL, NULL, &tval);
                 if (nRet == SOCKET_ERROR) {
                     return IntrRecvError::NetworkError;
                 }
@@ -292,7 +305,7 @@ struct ProxyCredentials
     std::string password;
 };
 
-/** Convert SOCKS5 reply to an error message */
+/** Convert SOCKS5 reply to a an error message */
 std::string Socks5ErrorString(uint8_t err)
 {
     switch(err) {
@@ -321,7 +334,7 @@ std::string Socks5ErrorString(uint8_t err)
 static bool Socks5(const std::string& strDest, int port, const ProxyCredentials *auth, SOCKET& hSocket)
 {
     IntrRecvError recvr;
-    LogPrint(BCLog::NET, "SOCKS5 connecting %s\n", strDest);
+    LogPrint("net", "SOCKS5 connecting %s\n", strDest);
     if (strDest.size() > 255) {
         CloseSocket(hSocket);
         return error("Hostname too long");
@@ -367,7 +380,7 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
             CloseSocket(hSocket);
             return error("Error sending authentication to proxy");
         }
-        LogPrint(BCLog::PROXY, "SOCKS5 sending proxy authentication %s:%s\n", auth->username, auth->password);
+        LogPrint("proxy", "SOCKS5 sending proxy authentication %s:%s\n", auth->username, auth->password);
         uint8_t pchRetA[2];
         if ((recvr = InterruptibleRecv(pchRetA, 2, SOCKS5_RECV_TIMEOUT, hSocket)) != IntrRecvError::OK) {
             CloseSocket(hSocket);
@@ -449,11 +462,11 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
         CloseSocket(hSocket);
         return error("Error reading from proxy");
     }
-    LogPrint(BCLog::NET, "SOCKS5 connected %s\n", strDest);
+    LogPrint("net", "SOCKS5 connected %s\n", strDest);
     return true;
 }
 
-bool ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRet, int nTimeout)
+bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRet, int nTimeout)
 {
     hSocketRet = INVALID_SOCKET;
 
@@ -468,20 +481,22 @@ bool ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRet, int 
     if (hSocket == INVALID_SOCKET)
         return false;
 
-#ifdef SO_NOSIGPIPE
     int set = 1;
+#ifdef SO_NOSIGPIPE
     // Different way of disabling SIGPIPE on BSD
     setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
 #endif
 
     //Disable Nagle's algorithm
-    SetSocketNoDelay(hSocket);
+#ifdef WIN32
+    setsockopt(hSocket, IPPROTO_TCP, TCP_NODELAY, (const char*)&set, sizeof(int));
+#else
+    setsockopt(hSocket, IPPROTO_TCP, TCP_NODELAY, (void*)&set, sizeof(int));
+#endif
 
     // Set to non-blocking
-    if (!SetSocketNonBlocking(hSocket, true)) {
-        CloseSocket(hSocket);
+    if (!SetSocketNonBlocking(hSocket, true))
         return error("ConnectSocketDirectly: Setting socket to non-blocking failed, error %s\n", NetworkErrorString(WSAGetLastError()));
-    }
 
     if (connect(hSocket, (struct sockaddr*)&sockaddr, len) == SOCKET_ERROR)
     {
@@ -493,10 +508,10 @@ bool ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRet, int 
             fd_set fdset;
             FD_ZERO(&fdset);
             FD_SET(hSocket, &fdset);
-            int nRet = select(hSocket + 1, nullptr, &fdset, nullptr, &timeout);
+            int nRet = select(hSocket + 1, NULL, &fdset, NULL, &timeout);
             if (nRet == 0)
             {
-                LogPrint(BCLog::NET, "connection to %s timeout\n", addrConnect.ToString());
+                LogPrint("net", "connection to %s timeout\n", addrConnect.ToString());
                 CloseSocket(hSocket);
                 return false;
             }
@@ -588,7 +603,7 @@ bool IsProxy(const CNetAddr &addr) {
     return false;
 }
 
-bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int port, SOCKET& hSocketRet, int nTimeout, bool *outProxyConnectionFailed)
+static bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int port, SOCKET& hSocketRet, int nTimeout, bool *outProxyConnectionFailed)
 {
     SOCKET hSocket = INVALID_SOCKET;
     // first connect to proxy server
@@ -600,7 +615,7 @@ bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int
     // do socks negotiation
     if (proxy.randomize_credentials) {
         ProxyCredentials random_auth;
-        static std::atomic_int counter(0);
+        static std::atomic_int counter;
         random_auth.username = random_auth.password = strprintf("%i", counter++);
         if (!Socks5(strDest, (unsigned short)port, &random_auth, hSocket))
             return false;
@@ -612,6 +627,47 @@ bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int
     hSocketRet = hSocket;
     return true;
 }
+
+bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout, bool *outProxyConnectionFailed)
+{
+    proxyType proxy;
+    if (outProxyConnectionFailed)
+        *outProxyConnectionFailed = false;
+
+    if (GetProxy(addrDest.GetNetwork(), proxy))
+        return ConnectThroughProxy(proxy, addrDest.ToStringIP(), addrDest.GetPort(), hSocketRet, nTimeout, outProxyConnectionFailed);
+    else // no proxy needed (none set for target network)
+        return ConnectSocketDirectly(addrDest, hSocketRet, nTimeout);
+}
+
+bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault, int nTimeout, bool *outProxyConnectionFailed)
+{
+    std::string strDest;
+    int port = portDefault;
+
+    if (outProxyConnectionFailed)
+        *outProxyConnectionFailed = false;
+
+    SplitHostPort(std::string(pszDest), port, strDest);
+
+    proxyType proxy;
+    GetNameProxy(proxy);
+
+    std::vector<CService> addrResolved;
+    if (Lookup(strDest.c_str(), addrResolved, port, fNameLookup && !HaveNameProxy(), 256)) {
+        if (addrResolved.size() > 0) {
+            addr = addrResolved[GetRand(addrResolved.size())];
+            return ConnectSocket(addr, hSocketRet, nTimeout);
+        }
+    }
+
+    addr = CService();
+
+    if (!HaveNameProxy())
+        return false;
+    return ConnectThroughProxy(proxy, strDest, port, hSocketRet, nTimeout, outProxyConnectionFailed);
+}
+
 bool LookupSubNet(const char* pszName, CSubNet& ret)
 {
     std::string strSubnet(pszName);
@@ -655,8 +711,8 @@ std::string NetworkErrorString(int err)
     char buf[256];
     buf[0] = 0;
     if(FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
-            nullptr, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            buf, sizeof(buf), nullptr))
+            NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            buf, sizeof(buf), NULL))
     {
         return strprintf("%s (%d)", buf, err);
     }
@@ -669,14 +725,13 @@ std::string NetworkErrorString(int err)
 std::string NetworkErrorString(int err)
 {
     char buf[256];
+    const char *s = buf;
     buf[0] = 0;
     /* Too bad there are two incompatible implementations of the
      * thread-safe strerror. */
-    const char *s;
 #ifdef STRERROR_R_CHAR_P /* GNU variant can return a pointer outside the passed buffer */
     s = strerror_r(err, buf, sizeof(buf));
 #else /* POSIX variant always returns message in buffer */
-    s = buf;
     if (strerror_r(err, buf, sizeof(buf)))
         buf[0] = 0;
 #endif
@@ -697,7 +752,7 @@ bool CloseSocket(SOCKET& hSocket)
     return ret != SOCKET_ERROR;
 }
 
-bool SetSocketNonBlocking(const SOCKET& hSocket, bool fNonBlocking)
+bool SetSocketNonBlocking(SOCKET& hSocket, bool fNonBlocking)
 {
     if (fNonBlocking) {
 #ifdef WIN32
@@ -707,6 +762,7 @@ bool SetSocketNonBlocking(const SOCKET& hSocket, bool fNonBlocking)
         int fFlags = fcntl(hSocket, F_GETFL, 0);
         if (fcntl(hSocket, F_SETFL, fFlags | O_NONBLOCK) == SOCKET_ERROR) {
 #endif
+            CloseSocket(hSocket);
             return false;
         }
     } else {
@@ -717,18 +773,12 @@ bool SetSocketNonBlocking(const SOCKET& hSocket, bool fNonBlocking)
         int fFlags = fcntl(hSocket, F_GETFL, 0);
         if (fcntl(hSocket, F_SETFL, fFlags & ~O_NONBLOCK) == SOCKET_ERROR) {
 #endif
+            CloseSocket(hSocket);
             return false;
         }
     }
 
     return true;
-}
-
-bool SetSocketNoDelay(const SOCKET& hSocket)
-{
-    int set = 1;
-    int rc = setsockopt(hSocket, IPPROTO_TCP, TCP_NODELAY, (const char*)&set, sizeof(int));
-    return rc == 0;
 }
 
 void InterruptSocks5(bool interrupt)

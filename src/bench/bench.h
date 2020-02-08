@@ -1,22 +1,20 @@
-// Copyright (c) 2015-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_BENCH_BENCH_H
-#define PIGEON_BENCH_BENCH_H
+#ifndef BITCOIN_BENCH_BENCH_H
+#define BITCOIN_BENCH_BENCH_H
 
-#include <functional>
-#include <limits>
 #include <map>
 #include <string>
 
+#include <boost/function.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/stringize.hpp>
 
 // Simple micro-benchmarking framework; API mostly matches a subset of the Google Benchmark
 // framework (see https://github.com/google/benchmark)
-// Why not use the Google Benchmark framework? Because adding Yet Another Dependency
+// Wny not use the Google Benchmark framework? Because adding Yet Another Dependency
 // (that uses cmake as its build system and has lots of features we don't need) isn't
 // worth it.
 
@@ -42,7 +40,7 @@ namespace benchmark {
         std::string name;
         double maxElapsed;
         double beginTime;
-        double lastTime, minTime, maxTime;
+        double lastTime, minTime, maxTime, countMaskInv;
         uint64_t count;
         uint64_t countMask;
         uint64_t beginCycles;
@@ -56,11 +54,12 @@ namespace benchmark {
             minCycles = std::numeric_limits<uint64_t>::max();
             maxCycles = std::numeric_limits<uint64_t>::min();
             countMask = 1;
+            countMaskInv = 1./(countMask + 1);
         }
         bool KeepRunning();
     };
 
-    typedef std::function<void(State&)> BenchFunction;
+    typedef boost::function<void(State&)> BenchFunction;
 
     class BenchRunner
     {
@@ -78,4 +77,4 @@ namespace benchmark {
 #define BENCHMARK(n) \
     benchmark::BenchRunner BOOST_PP_CAT(bench_, BOOST_PP_CAT(__LINE__, n))(BOOST_PP_STRINGIZE(n), n);
 
-#endif // PIGEON_BENCH_BENCH_H
+#endif // BITCOIN_BENCH_BENCH_H

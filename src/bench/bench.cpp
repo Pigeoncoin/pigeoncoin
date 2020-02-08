@@ -1,12 +1,10 @@
-// Copyright (c) 2015-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "bench.h"
 #include "perf.h"
 
-#include <assert.h>
 #include <iostream>
 #include <iomanip>
 #include <sys/time.h>
@@ -18,7 +16,7 @@ benchmark::BenchRunner::BenchmarkMap &benchmark::BenchRunner::benchmarks() {
 
 static double gettimedouble(void) {
     struct timeval tv;
-    gettimeofday(&tv, nullptr);
+    gettimeofday(&tv, NULL);
     return tv.tv_usec * 0.000001 + tv.tv_sec;
 }
 
@@ -56,13 +54,13 @@ bool benchmark::State::KeepRunning()
     else {
         now = gettimedouble();
         double elapsed = now - lastTime;
-        double elapsedOne = elapsed / (countMask + 1);
+        double elapsedOne = elapsed * countMaskInv;
         if (elapsedOne < minTime) minTime = elapsedOne;
         if (elapsedOne > maxTime) maxTime = elapsedOne;
 
         // We only use relative values, so don't have to handle 64-bit wrap-around specially
         nowCycles = perf_cpucycles();
-        uint64_t elapsedOneCycles = (nowCycles - lastCycles) / (countMask + 1);
+        uint64_t elapsedOneCycles = (nowCycles - lastCycles) * countMaskInv;
         if (elapsedOneCycles < minCycles) minCycles = elapsedOneCycles;
         if (elapsedOneCycles > maxCycles) maxCycles = elapsedOneCycles;
 
@@ -70,6 +68,7 @@ bool benchmark::State::KeepRunning()
           // If the execution was much too fast (1/128th of maxElapsed), increase the count mask by 8x and restart timing.
           // The restart avoids including the overhead of this code in the measurement.
           countMask = ((countMask<<3)|7) & ((1LL<<60)-1);
+          countMaskInv = 1./(countMask+1);
           count = 0;
           minTime = std::numeric_limits<double>::max();
           maxTime = std::numeric_limits<double>::min();
@@ -81,6 +80,7 @@ bool benchmark::State::KeepRunning()
           uint64_t newCountMask = ((countMask<<1)|1) & ((1LL<<60)-1);
           if ((count & newCountMask)==0) {
               countMask = newCountMask;
+              countMaskInv = 1./(countMask+1);
           }
         }
     }
@@ -99,7 +99,6 @@ bool benchmark::State::KeepRunning()
     int64_t averageCycles = (nowCycles-beginCycles)/count;
     std::cout << std::fixed << std::setprecision(15) << name << "," << count << "," << minTime << "," << maxTime << "," << average << ","
               << minCycles << "," << maxCycles << "," << averageCycles << "\n";
-    std::cout.copyfmt(std::ios(nullptr));
 
     return false;
 }

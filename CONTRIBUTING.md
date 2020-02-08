@@ -1,7 +1,7 @@
-Contributing to Pigeon Core
+Contributing to Dash Core
 ============================
 
-The Pigeon Core project operates an open contributor model where anyone is
+The Dash Core project operates an open contributor model where anyone is
 welcome to contribute towards development in the form of peer review, testing
 and patches. This document explains the practical process and guidelines for
 contributing.
@@ -37,8 +37,8 @@ fixes or code moves with actual code changes.
 
 Commit messages should be verbose by default consisting of a short subject line
 (50 chars max), a blank line and detailed explanatory text as separate
-paragraph(s), unless the title alone is self-explanatory (like "Corrected typo
-in init.cpp") in which case a single title line is sufficient. Commit messages should be
+paragraph(s); unless the title alone is self-explanatory (like "Corrected typo
+in init.cpp") then a single title line is sufficient. Commit messages should be
 helpful to people reading your code in the future, so explain the reasoning for
 your decisions. Further explanation [here](http://chris.beams.io/posts/git-commit/).
 
@@ -57,12 +57,12 @@ the pull request affects. Valid areas as:
 
   - *Consensus* for changes to consensus critical code
   - *Docs* for changes to the documentation
-  - *Qt* for changes to pigeon-qt
+  - *Qt* for changes to bitcoin-qt
   - *Mining* for changes to the mining code
   - *Net* or *P2P* for changes to the peer-to-peer network code
   - *RPC/REST/ZMQ* for changes to the RPC, REST or ZMQ APIs
   - *Scripts and tools* for changes to the scripts and tools
-  - *Tests* for changes to the pigeon unit tests or QA tests
+  - *Tests* for changes to the bitcoin unit tests or QA tests
   - *Trivial* should **only** be used for PRs that do not change generated
     executable code. Notably, refactors (change of function arguments and code
     reorganization) and changes in behavior should **not** be marked as trivial.
@@ -80,10 +80,6 @@ Examples:
     Net: Automatically create hidden service, listen on Tor
     Qt: Add feed bump button
     Trivial: Fix typo in init.cpp
-
-Note that translations should not be submitted as pull requests, please see
-[Translation Process](https://github.com/PigeonProject/Pigeoncoin/blob/master/doc/translation_process.md) 
-for more information on helping with translations.
 
 If a pull request is specifically not to be considered for merging (yet) please
 prefix the title with [WIP] or use [Tasks Lists](https://help.github.com/articles/basic-writing-and-formatting-syntax/#task-lists)
@@ -157,23 +153,15 @@ behaviour of code within the pull request (bugs must be preserved as is).
 Project maintainers aim for a quick turnaround on refactoring pull requests, so
 where possible keep them short, uncomplex and easy to verify.
 
-Pull requests that refactor the code should not be made by new contributors. It
-requires a certain level of experience to know where the code belongs to and to
-understand the full ramification (including rebase effort of open pull requests).
-
-Trivial pull requests or pull requests that refactor the code with no clear
-benefits may be immediately closed by the maintainers to reduce unnecessary
-workload on reviewing.
-
 
 "Decision Making" Process
 -------------------------
 
-The following applies to code changes to the Pigeon Core project (and related
-projects such as libsecp256k1), and is not to be confused with overall Pigeon
+The following applies to code changes to the Dash Core project (and related
+projects such as libsecp256k1), and is not to be confused with overall Dash
 Network Protocol consensus changes.
 
-Whether a pull request is merged into Pigeon Core rests with the project merge
+Whether a pull request is merged into Dash Core rests with the project merge
 maintainers and ultimately the project lead.
 
 Maintainers will take into consideration if a patch is in line with the general
@@ -182,16 +170,16 @@ judge the general consensus of contributors.
 
 In general, all pull requests must:
 
-  - Have a clear use case, fix a demonstrable bug or serve the greater good of
+  - have a clear use case, fix a demonstrable bug or serve the greater good of
     the project (for example refactoring for modularisation);
-  - Be well peer reviewed;
-  - Have unit tests and functional tests where appropriate;
-  - Follow code style guidelines;
-  - Not break the existing test suite;
-  - Where bugs are fixed, where possible, there should be unit tests
+  - be well peer reviewed;
+  - have unit tests and functional tests where appropriate;
+  - follow [code style guidelines](/doc/developer-notes.md);
+  - not break the existing test suite;
+  - where bugs are fixed, where possible, there should be unit tests
     demonstrating the bug and also proving the fix. This helps prevent regression.
 
-Patches that change Pigeon consensus rules are considerably more involved than
+Patches that change Dash consensus rules are considerably more involved than
 normal because they affect the entire ecosystem and so must be preceded by
 extensive mailing list discussions and have a numbered BIP. While each case will
 be different, one should be prepared to expend more time and effort than for
@@ -232,47 +220,16 @@ higher in terms of discussion and peer review requirements, keeping in mind that
 mistakes could be very costly to the wider community. This includes refactoring
 of consensus critical code.
 
-Where a patch set proposes to change the Pigeon consensus, it must have been
+Where a patch set proposes to change the Dash consensus, it must have been
 discussed extensively on the mailing list and IRC, be accompanied by a widely
 discussed BIP and have a generally widely perceived technical consensus of being
 a worthwhile change based on the judgement of the maintainers.
-
-### Finding Reviewers
-
-As most reviewers are themselves developers with their own projects, the review
-process can be quite lengthy, and some amount of patience is required. If you find
-that you've been waiting for a pull request to be given attention for several
-months, there may be a number of reasons for this, some of which you can do something
-about:
-
-  - It may be because of a feature freeze due to an upcoming release. During this time,
-    only bug fixes are taken into consideration. If your pull request is a new feature,
-    it will not be prioritized until the release is over. Wait for release.
-  - It may be because the changes you are suggesting do not appeal to people. Rather than
-    nits and critique, which require effort and means they care enough to spend time on your
-    contribution, thundering silence is a good sign of widespread (mild) dislike of a given change
-    (because people don't assume *others* won't actually like the proposal). Don't take
-    that personally, though! Instead, take another critical look at what you are suggesting
-    and see if it: changes too much, is too broad, doesn't adhere to the
-    [developer notes](doc/developer-notes.md), is dangerous or insecure, is messily written, etc.
-    Identify and address any of the issues you find. Then ask e.g. on IRC if someone could give
-    their opinion on the concept itself.
-  - It may be because your code is too complex for all but a few people. And those people
-    may not have realized your pull request even exists. A great way to find people who
-    are qualified and care about the code you are touching is the
-    [Git Blame feature](https://help.github.com/articles/tracing-changes-in-a-file/). Simply
-    find the person touching the code you are touching before you and see if you can find
-    them and give them a nudge. Don't be incessant about the nudging though.
-  - Finally, if all else fails, ask on IRC or elsewhere for someone to give your pull request
-    a look. If you think you've been waiting an unreasonably long amount of time (month+) for
-    no particular reason (few lines changed, etc), this is totally fine. Try to return the favor
-    when someone else is asking for feedback on their code, and universe balances out.
 
 
 Release Policy
 --------------
 
-The project leader is the release manager for each Pigeon Core release.
+The project leader is the release manager for each Dash Core release.
 
 Copyright
 ---------

@@ -1,14 +1,15 @@
 // Copyright (c) 2015 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_ZMQ_ZMQABSTRACTNOTIFIER_H
-#define PIGEON_ZMQ_ZMQABSTRACTNOTIFIER_H
+#ifndef BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
+#define BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 
 #include "zmqconfig.h"
 
 class CBlockIndex;
+class CGovernanceObject;
+class CGovernanceVote;
 class CZMQAbstractNotifier;
 
 typedef CZMQAbstractNotifier* (*CZMQNotifierFactory)();
@@ -16,7 +17,7 @@ typedef CZMQAbstractNotifier* (*CZMQNotifierFactory)();
 class CZMQAbstractNotifier
 {
 public:
-    CZMQAbstractNotifier() : psocket(nullptr) { }
+    CZMQAbstractNotifier() : psocket(0) { }
     virtual ~CZMQAbstractNotifier();
 
     template <typename T>
@@ -34,7 +35,13 @@ public:
     virtual void Shutdown() = 0;
 
     virtual bool NotifyBlock(const CBlockIndex *pindex);
+    virtual bool NotifyChainLock(const CBlockIndex *pindex);
     virtual bool NotifyTransaction(const CTransaction &transaction);
+    virtual bool NotifyTransactionLock(const CTransaction &transaction);
+    virtual bool NotifyGovernanceVote(const CGovernanceVote &vote);
+    virtual bool NotifyGovernanceObject(const CGovernanceObject &object);
+    virtual bool NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx);
+
 
 protected:
     void *psocket;
@@ -42,4 +49,4 @@ protected:
     std::string address;
 };
 
-#endif // PIGEON_ZMQ_ZMQABSTRACTNOTIFIER_H
+#endif // BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H

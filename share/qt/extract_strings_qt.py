@@ -1,19 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (c) 2012-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
 Extract _("...") strings for translation and convert to Qt stringdefs so that
 they can be picked up by Qt linguist.
 '''
-from __future__ import division,print_function,unicode_literals
 from subprocess import Popen, PIPE
 import operator
 import os
 import sys
 
-OUT_CPP="qt/pigeonstrings.cpp"
+OUT_CPP="qt/dashstrings.cpp"
 EMPTY=['""']
 
 def parse_po(text):
@@ -59,7 +57,7 @@ XGETTEXT=os.getenv('XGETTEXT', 'xgettext')
 if not XGETTEXT:
     print('Cannot extract strings: xgettext utility is not installed or not configured.',file=sys.stderr)
     print('Please install package "gettext" and re-run \'./configure\'.',file=sys.stderr)
-    sys.exit(1)
+    exit(1)
 child = Popen([XGETTEXT,'--output=-','-n','--keyword=_'] + files, stdout=PIPE)
 (out, err) = child.communicate()
 
@@ -77,14 +75,14 @@ f.write("""
 #define UNUSED
 #endif
 """)
-f.write('static const char UNUSED *pigeon_strings[] = {\n')
-f.write('QT_TRANSLATE_NOOP("pigeon-core", "%s"),\n' % (os.getenv('PACKAGE_NAME'),))
-f.write('QT_TRANSLATE_NOOP("pigeon-core", "%s"),\n' % (os.getenv('COPYRIGHT_HOLDERS'),))
+f.write('static const char UNUSED *dash_strings[] = {\n')
+f.write('QT_TRANSLATE_NOOP("dash-core", "%s"),\n' % (os.getenv('PACKAGE_NAME'),))
+f.write('QT_TRANSLATE_NOOP("dash-core", "%s"),\n' % (os.getenv('COPYRIGHT_HOLDERS'),))
 if os.getenv('COPYRIGHT_HOLDERS_SUBSTITUTION') != os.getenv('PACKAGE_NAME'):
-    f.write('QT_TRANSLATE_NOOP("pigeon-core", "%s"),\n' % (os.getenv('COPYRIGHT_HOLDERS_SUBSTITUTION'),))
+    f.write('QT_TRANSLATE_NOOP("dash-core", "%s"),\n' % (os.getenv('COPYRIGHT_HOLDERS_SUBSTITUTION'),))
 messages.sort(key=operator.itemgetter(0))
 for (msgid, msgstr) in messages:
     if msgid != EMPTY:
-        f.write('QT_TRANSLATE_NOOP("pigeon-core", %s),\n' % ('\n'.join(msgid)))
+        f.write('QT_TRANSLATE_NOOP("dash-core", %s),\n' % ('\n'.join(msgid)))
 f.write('};\n')
 f.close()

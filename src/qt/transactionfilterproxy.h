@@ -1,10 +1,9 @@
 // Copyright (c) 2011-2014 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_QT_TRANSACTIONFILTERPROXY_H
-#define PIGEON_QT_TRANSACTIONFILTERPROXY_H
+#ifndef BITCOIN_QT_TRANSACTIONFILTERPROXY_H
+#define BITCOIN_QT_TRANSACTIONFILTERPROXY_H
 
 #include "amount.h"
 
@@ -25,6 +24,8 @@ public:
     static const QDateTime MAX_DATE;
     /** Type filter bit field (all types) */
     static const quint32 ALL_TYPES = 0xFFFFFFFF;
+    /** Type filter bit field (all types but Darksend-SPAM) */
+    static const quint32 COMMON_TYPES = 4223;
 
     static quint32 TYPE(int type) { return 1<<type; }
 
@@ -35,6 +36,13 @@ public:
         WatchOnlyFilter_No
     };
 
+    enum InstantSendFilter
+    {
+        InstantSendFilter_All,
+        InstantSendFilter_Yes,
+        InstantSendFilter_No
+    };
+
     void setDateRange(const QDateTime &from, const QDateTime &to);
     void setAddressPrefix(const QString &addrPrefix);
     /**
@@ -43,6 +51,7 @@ public:
     void setTypeFilter(quint32 modes);
     void setMinAmount(const CAmount& minimum);
     void setWatchOnlyFilter(WatchOnlyFilter filter);
+    void setInstantSendFilter(InstantSendFilter filter);
 
     /** Set maximum number of rows returned, -1 if unlimited. */
     void setLimit(int limit);
@@ -61,9 +70,10 @@ private:
     QString addrPrefix;
     quint32 typeFilter;
     WatchOnlyFilter watchOnlyFilter;
+    InstantSendFilter instantsendFilter;
     CAmount minAmount;
     int limitRows;
     bool showInactive;
 };
 
-#endif // PIGEON_QT_TRANSACTIONFILTERPROXY_H
+#endif // BITCOIN_QT_TRANSACTIONFILTERPROXY_H

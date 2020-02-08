@@ -1,7 +1,7 @@
 Description
 ------------
 
-This directory contains data-driven tests for various aspects of Pigeon.
+This directory contains data-driven tests for various aspects of Dash.
 
 License
 --------

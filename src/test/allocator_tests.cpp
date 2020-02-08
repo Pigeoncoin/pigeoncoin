@@ -1,12 +1,11 @@
-// Copyright (c) 2012-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2012-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "util.h"
 
 #include "support/allocators/secure.h"
-#include "test/test_pigeon.h"
+#include "test/test_dash.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -132,7 +131,7 @@ class TestLockedPageAllocator: public LockedPageAllocator
 {
 public:
     TestLockedPageAllocator(int count_in, int lockedcount_in): count(count_in), lockedcount(lockedcount_in) {}
-    void* AllocateLocked(size_t len, bool *lockingSuccess) override
+    void* AllocateLocked(size_t len, bool *lockingSuccess)
     {
         *lockingSuccess = false;
         if (count > 0) {
@@ -147,10 +146,10 @@ public:
         }
         return 0;
     }
-    void FreeLocked(void* addr, size_t len) override
+    void FreeLocked(void* addr, size_t len)
     {
     }
-    size_t GetLimit() override
+    size_t GetLimit()
     {
         return std::numeric_limits<size_t>::max();
     }

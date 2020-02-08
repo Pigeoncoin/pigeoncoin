@@ -57,7 +57,7 @@
       <item>
        <widget class="QValidatedLineEdit" name="payTo">
         <property name="toolTip">
-         <string>The Pigeon address to send the payment to</string>
+         <string>The Dash address to send the payment to</string>
         </property>
        </widget>
       </item>
@@ -68,10 +68,6 @@
         </property>
         <property name="text">
          <string/>
-        </property>
-        <property name="icon">
-         <iconset resource="../pigeon.qrc">
-          <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
         </property>
         <property name="iconSize">
          <size>
@@ -92,10 +88,6 @@
         <property name="text">
          <string/>
         </property>
-        <property name="icon">
-         <iconset resource="../pigeon.qrc">
-          <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
-        </property>
         <property name="iconSize">
          <size>
           <width>22</width>
@@ -114,10 +106,6 @@
         </property>
         <property name="text">
          <string/>
-        </property>
-        <property name="icon">
-         <iconset resource="../pigeon.qrc">
-          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
         </property>
         <property name="iconSize">
          <size>
@@ -165,12 +153,12 @@
     <item row="2" column="1">
      <layout class="QHBoxLayout" name="horizontalLayoutAmount" stretch="0,1">
       <item>
-       <widget class="PigeonAmountField" name="payAmount"/>
+       <widget class="BitcoinAmountField" name="payAmount"/>
       </item>
       <item>
        <widget class="QCheckBox" name="checkboxSubtractFeeFromAmount">
         <property name="toolTip">
-         <string>The fee will be deducted from the amount being sent. The recipient will receive less pigeons than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</string>
+         <string>The fee will be deducted from the amount being sent. The recipient will receive a lower amount of Dash than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</string>
         </property>
         <property name="text">
          <string>S&amp;ubtract fee from amount</string>
@@ -192,7 +180,7 @@
     <item row="3" column="1">
      <widget class="QLabel" name="messageTextLabel">
       <property name="toolTip">
-       <string>A message that was attached to the pigeon: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Pigeon network.</string>
+       <string>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</string>
       </property>
       <property name="textFormat">
        <enum>Qt::PlainText</enum>
@@ -663,10 +651,6 @@
         <property name="text">
          <string/>
         </property>
-        <property name="icon">
-         <iconset resource="../pigeon.qrc">
-          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
-        </property>
        </widget>
       </item>
      </layout>
@@ -702,7 +686,7 @@
      </widget>
     </item>
     <item row="2" column="1">
-     <widget class="PigeonAmountField" name="payAmount_is">
+     <widget class="BitcoinAmountField" name="payAmount_is">
       <property name="acceptDrops">
        <bool>false</bool>
       </property>
@@ -1196,10 +1180,6 @@
         <property name="text">
          <string/>
         </property>
-        <property name="icon">
-         <iconset resource="../pigeon.qrc">
-          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
-        </property>
        </widget>
       </item>
      </layout>
@@ -1235,7 +1215,7 @@
      </widget>
     </item>
     <item row="2" column="1">
-     <widget class="PigeonAmountField" name="payAmount_s">
+     <widget class="BitcoinAmountField" name="payAmount_s">
       <property name="acceptDrops">
        <bool>false</bool>
       </property>
@@ -1251,9 +1231,9 @@
    <header>qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>
-   <class>PigeonAmountField</class>
+   <class>BitcoinAmountField</class>
    <extends>QLineEdit</extends>
-   <header>pigeonamountfield.h</header>
+   <header>bitcoinamountfield.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
@@ -1269,7 +1249,7 @@
   <tabstop>deleteButton_s</tabstop>
  </tabstops>
  <resources>
-  <include location="../pigeon.qrc"/>
+  <include location="../dash.qrc"/>
  </resources>
  <connections/>
 </ui>

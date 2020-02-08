@@ -1,5 +1,4 @@
-// Copyright (c) 2012-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2012-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +8,7 @@
 
 #include <stdint.h>
 
+#include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
 extern CWallet* pwalletMain;
@@ -23,7 +23,7 @@ GetResults(std::map<CAmount, CAccountingEntry>& results)
     results.clear();
     BOOST_CHECK(pwalletMain->ReorderTransactions() == DB_LOAD_OK);
     pwalletMain->ListAccountCreditDebit("", aes);
-    for (CAccountingEntry& ae : aes)
+    BOOST_FOREACH(CAccountingEntry& ae, aes)
     {
         results[ae.nOrderPos] = ae;
     }

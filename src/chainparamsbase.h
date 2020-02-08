@@ -1,18 +1,16 @@
 // Copyright (c) 2014-2015 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_CHAINPARAMSBASE_H
-#define PIGEON_CHAINPARAMSBASE_H
+#ifndef BITCOIN_CHAINPARAMSBASE_H
+#define BITCOIN_CHAINPARAMSBASE_H
 
-#include <memory>
 #include <string>
 #include <vector>
 
 /**
- * CBaseChainParams defines the base parameters (shared between pigeon-cli and pigeond)
- * of a given instance of the Pigeon system.
+ * CBaseChainParams defines the base parameters (shared between dash-cli and dashd)
+ * of a given instance of the Dash system.
  */
 class CBaseChainParams
 {
@@ -20,11 +18,11 @@ public:
     /** BIP70 chain name strings (main, test or regtest) */
     static const std::string MAIN;
     static const std::string TESTNET;
+    static const std::string DEVNET;
     static const std::string REGTEST;
 
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }
- 
 
 protected:
     CBaseChainParams() {}
@@ -32,13 +30,6 @@ protected:
     int nRPCPort;
     std::string strDataDir;
 };
-
-/**
- * Creates and returns a std::unique_ptr<CBaseChainParams> of the chosen chain.
- * @returns a CBaseChainParams* of the chosen chain.
- * @throws a std::runtime_error if the chain is not supported.
- */
-std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain);
 
 /**
  * Append the help messages for the chainparams options to the
@@ -52,6 +43,8 @@ void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp=true);
  */
 const CBaseChainParams& BaseParams();
 
+CBaseChainParams& BaseParams(const std::string& chain);
+
 /** Sets the params returned by Params() to those for the given network. */
 void SelectBaseParams(const std::string& chain);
 
@@ -61,4 +54,12 @@ void SelectBaseParams(const std::string& chain);
  */
 std::string ChainNameFromCommandLine();
 
-#endif // PIGEON_CHAINPARAMSBASE_H
+std::string GetDevNetName();
+
+/**
+ * Return true if SelectBaseParamsFromCommandLine() has been called to select
+ * a network.
+ */
+bool AreBaseParamsConfigured();
+
+#endif // BITCOIN_CHAINPARAMSBASE_H

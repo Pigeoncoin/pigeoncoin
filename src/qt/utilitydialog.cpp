@@ -1,17 +1,17 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2019 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/pigeon-config.h"
+#include "config/dash-config.h"
 #endif
 
 #include "utilitydialog.h"
 
 #include "ui_helpmessagedialog.h"
 
-#include "pigeongui.h"
+#include "bitcoingui.h"
 #include "clientmodel.h"
 #include "guiconstants.h"
 #include "intro.h"
@@ -32,7 +32,7 @@
 #include <QVBoxLayout>
 
 /** "Help message" or "About" dialog box */
-HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
+HelpMessageDialog::HelpMessageDialog(QWidget *parent, HelpMode helpMode) :
     QDialog(parent),
     ui(new Ui::HelpMessageDialog)
 {
@@ -48,13 +48,14 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
     version += " " + tr("(%1-bit)").arg(32);
 #endif
 
-    if (about)
+    if (helpMode == about)
     {
         setWindowTitle(tr("About %1").arg(tr(PACKAGE_NAME)));
 
         /// HTML-format the license message from the core
         QString licenseInfo = QString::fromStdString(LicenseInfo());
         QString licenseInfoHTML = licenseInfo;
+
         // Make URLs clickable
         QRegExp uri("<(.*)>", Qt::CaseSensitive, QRegExp::RegExp2);
         uri.setMinimal(true); // use non-greedy matching
@@ -68,18 +69,18 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         ui->aboutMessage->setText(version + "<br><br>" + licenseInfoHTML);
         ui->aboutMessage->setWordWrap(true);
         ui->helpMessage->setVisible(false);
-    } else {
+    } else if (helpMode == cmdline) {
         setWindowTitle(tr("Command-line options"));
         QString header = tr("Usage:") + "\n" +
-            "  pigeon-qt [" + tr("command-line options") + "]                     " + "\n";
+            "  dash-qt [" + tr("command-line options") + "]                     " + "\n";
         QTextCursor cursor(ui->helpMessage->document());
         cursor.insertText(version);
         cursor.insertBlock();
         cursor.insertText(header);
         cursor.insertBlock();
 
-        std::string strUsage = HelpMessage(HMM_PIGEON_QT);
-        const bool showDebug = gArgs.GetBoolArg("-help-debug", false);
+        std::string strUsage = HelpMessage(HMM_BITCOIN_QT);
+        const bool showDebug = GetBoolArg("-help-debug", false);
         strUsage += HelpMessageGroup(tr("UI Options:").toStdString());
         if (showDebug) {
             strUsage += HelpMessageOpt("-allowselfsignedrootcertificates", strprintf("Allow self signed root certificates (default: %u)", DEFAULT_SELFSIGNED_ROOTCERTS));
@@ -91,7 +92,7 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         strUsage += HelpMessageOpt("-splash", strprintf(tr("Show splash screen on startup (default: %u)").toStdString(), DEFAULT_SPLASHSCREEN));
         strUsage += HelpMessageOpt("-resetguisettings", tr("Reset all settings changed in the GUI").toStdString());
         if (showDebug) {
-            strUsage += HelpMessageOpt("-uiplatform", strprintf("Select platform to customize UI for (one of windows, macosx, other; default: %s)", PigeonGUI::DEFAULT_UIPLATFORM));
+            strUsage += HelpMessageOpt("-uiplatform", strprintf("Select platform to customize UI for (one of windows, macosx, other; default: %s)", BitcoinGUI::DEFAULT_UIPLATFORM));
         }
         QString coreOptions = QString::fromStdString(strUsage);
         text = version + "\n" + header + "\n" + coreOptions;
@@ -107,7 +108,7 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         QTextCharFormat bold;
         bold.setFontWeight(QFont::Bold);
 
-        for (const QString &line : coreOptions.split("\n")) {
+        Q_FOREACH (const QString &line, coreOptions.split("\n")) {
             if (line.startsWith("  -"))
             {
                 cursor.currentTable()->appendRows(1);
@@ -130,7 +131,46 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         ui->helpMessage->moveCursor(QTextCursor::Start);
         ui->scrollArea->setVisible(false);
         ui->aboutLogo->setVisible(false);
+    } else if (helpMode == pshelp) {
+        setWindowTitle(tr("PrivateSend information"));
+
+        ui->aboutMessage->setTextFormat(Qt::RichText);
+        ui->scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+        ui->aboutMessage->setText(tr("\
+<h3>PrivateSend Basics</h3> \
+PrivateSend gives you true financial privacy by obscuring the origins of your funds. \
+All the Dash in your wallet is comprised of different \"inputs\" which you can think of as separate, discrete coins.<br> \
+PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. \
+You retain control of your money at all times.<hr> \
+<b>The PrivateSend process works like this:</b>\
+<ol type=\"1\"> \
+<li>PrivateSend begins by breaking your transaction inputs down into standard denominations. \
+These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.</li> \
+<li>Your wallet then sends requests to specially configured software nodes on the network, called \"masternodes.\" \
+These masternodes are informed then that you are interested in mixing a certain denomination. \
+No identifiable information is sent to the masternodes, so they never know \"who\" you are.</li> \
+<li>When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. \
+The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. \
+Your wallet pays that denomination directly to itself, but in a different address (called a change address).</li> \
+<li>In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. \
+Each time the process is completed, it's called a \"round.\" Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.</li> \
+<li>This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, \
+your funds will already be anonymized. No additional waiting is required.</li> \
+</ol> <hr>\
+<b>IMPORTANT:</b> Your wallet only contains 1000 of these \"change addresses.\" Every time a mixing event happens, up to 9 of your addresses are used up. \
+This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. \
+It can only do this, however, if you have automatic backups enabled.<br> \
+Consequently, users who have backups disabled will also have PrivateSend disabled. <hr>\
+For more information, see the <a href=\"https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html\">PrivateSend documentation</a>."
+        ));
+        ui->aboutMessage->setWordWrap(true);
+        ui->helpMessage->setVisible(false);
+        ui->aboutLogo->setVisible(false);
     }
+    // Theme dependent Gfx in About popup
+    QString helpMessageGfx = ":/images/" + GUIUtil::getThemeName() + "/about";
+    QPixmap pixmap = QPixmap(helpMessageGfx);
+    ui->aboutLogo->setPixmap(pixmap);
 }
 
 HelpMessageDialog::~HelpMessageDialog()
@@ -172,7 +212,7 @@ ShutdownWindow::ShutdownWindow(QWidget *parent, Qt::WindowFlags f):
     setLayout(layout);
 }
 
-QWidget *ShutdownWindow::showShutdownWindow(PigeonGUI *window)
+QWidget *ShutdownWindow::showShutdownWindow(BitcoinGUI *window)
 {
     if (!window)
         return nullptr;

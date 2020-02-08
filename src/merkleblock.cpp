@@ -1,6 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,8 +9,45 @@
 #include "consensus/consensus.h"
 #include "utilstrencodings.h"
 
+CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter& filter)
+{
+    header = block.GetBlockHeader();
 
-CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std::set<uint256>* txids)
+    std::vector<bool> vMatch;
+    std::vector<uint256> vHashes;
+
+    vMatch.reserve(block.vtx.size());
+    vHashes.reserve(block.vtx.size());
+
+    const static std::set<int> allowedTxTypes = {
+            TRANSACTION_NORMAL,
+            TRANSACTION_PROVIDER_REGISTER,
+            TRANSACTION_PROVIDER_UPDATE_SERVICE,
+            TRANSACTION_PROVIDER_UPDATE_REGISTRAR,
+            TRANSACTION_PROVIDER_UPDATE_REVOKE,
+            TRANSACTION_COINBASE,
+    };
+
+    for (unsigned int i = 0; i < block.vtx.size(); i++)
+    {
+        const auto& tx = *block.vtx[i];
+        const uint256& hash = tx.GetHash();
+        bool isAllowedType = tx.nVersion != 3 || allowedTxTypes.count(tx.nType) != 0;
+
+        if (isAllowedType && filter.IsRelevantAndUpdate(tx))
+        {
+            vMatch.push_back(true);
+            vMatchedTxn.push_back(std::make_pair(i, hash));
+        }
+        else
+            vMatch.push_back(false);
+        vHashes.push_back(hash);
+    }
+
+    txn = CPartialMerkleTree(vHashes, vMatch);
+}
+
+CMerkleBlock::CMerkleBlock(const CBlock& block, const std::set<uint256>& txids)
 {
     header = block.GetBlockHeader();
 
@@ -24,14 +60,10 @@ CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std:
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const uint256& hash = block.vtx[i]->GetHash();
-        if (txids && txids->count(hash)) {
+        if (txids.count(hash))
             vMatch.push_back(true);
-        } else if (filter && filter->IsRelevantAndUpdate(*block.vtx[i])) {
-            vMatch.push_back(true);
-            vMatchedTxn.emplace_back(i, hash);
-        } else {
+        else
             vMatch.push_back(false);
-        }
         vHashes.push_back(hash);
     }
 
@@ -39,9 +71,6 @@ CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter* filter, const std:
 }
 
 uint256 CPartialMerkleTree::CalcHash(int height, unsigned int pos, const std::vector<uint256> &vTxid) {
-    //we can never have zero txs in a merkle block, we always need the coinbase tx
-    //if we do not have this assert, we can hit a memory access violation when indexing into vTxid
-    assert(vTxid.size() != 0);
     if (height == 0) {
         // hash at height 0 is the txids themself
         return vTxid[pos];
@@ -136,7 +165,7 @@ uint256 CPartialMerkleTree::ExtractMatches(std::vector<uint256> &vMatch, std::ve
     if (nTransactions == 0)
         return uint256();
     // check for excessively high numbers of transactions
-    if (nTransactions > MAX_BLOCK_WEIGHT / MIN_TRANSACTION_WEIGHT)
+    if (nTransactions > MaxBlockSize(true) / 60) // 60 is the lower bound for the size of a serialized CTransaction
         return uint256();
     // there can never be more hashes provided than one for every txid
     if (vHash.size() > nTransactions)

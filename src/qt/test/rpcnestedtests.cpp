@@ -1,5 +1,4 @@
 // Copyright (c) 2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,17 +6,21 @@
 
 #include "chainparams.h"
 #include "consensus/validation.h"
-#include "fs.h"
 #include "validation.h"
 #include "rpc/register.h"
 #include "rpc/server.h"
 #include "rpcconsole.h"
-#include "test/test_pigeon.h"
+#include "test/testutil.h"
 #include "univalue.h"
 #include "util.h"
 
+#include "evo/deterministicmns.h"
+#include "llmq/quorums_init.h"
+
 #include <QDir>
 #include <QtGlobal>
+
+#include <boost/filesystem.hpp>
 
 static UniValue rpcNestedTest_rpc(const JSONRPCRequest& request)
 {
@@ -29,17 +32,37 @@ static UniValue rpcNestedTest_rpc(const JSONRPCRequest& request)
 
 static const CRPCCommand vRPCCommands[] =
 {
-    { "test", "rpcNestedTest", &rpcNestedTest_rpc, {} },
+    { "test", "rpcNestedTest", &rpcNestedTest_rpc, true, {} },
 };
 
 void RPCNestedTests::rpcNestedTests()
 {
+    UniValue jsonRPCError;
+
     // do some test setup
     // could be moved to a more generic place when we add more tests on QT level
+    const CChainParams& chainparams = Params();
+    RegisterAllCoreRPCCommands(tableRPC);
     tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
+    ClearDatadirCache();
+    std::string path = QDir::tempPath().toStdString() + "/" + strprintf("test_dash_qt_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
+    QDir dir(QString::fromStdString(path));
+    dir.mkpath(".");
+    ForceSetArg("-datadir", path);
     //mempool.setSanityCheck(1.0);
+    evoDb = new CEvoDB(1 << 20, true, true);
+    pblocktree = new CBlockTreeDB(1 << 20, true);
+    pcoinsdbview = new CCoinsViewDB(1 << 23, true);
+    deterministicMNManager = new CDeterministicMNManager(*evoDb);
+    llmq::InitLLMQSystem(*evoDb, nullptr, true);
 
-    TestingSetup test;
+    pcoinsTip = new CCoinsViewCache(pcoinsdbview);
+    InitBlockIndex(chainparams);
+    {
+        CValidationState state;
+        bool ok = ActivateBestChain(state, chainparams);
+        QVERIFY(ok);
+    }
 
     SetRPCWarmupFinished();
 
@@ -64,17 +87,17 @@ void RPCNestedTests::rpcNestedTests()
     RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo "); //whitespace at the end will be tolerated
     QVERIFY(result.substr(0,1) == "{");
 
-    (RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo()[\"chain\"]")); //Quote path identifier are allowed, but look after a child containing the quotes in the key
+    (RPCConsole::RPCExecuteCommandLine(result, "getblockchaininfo()[\"chain\"]")); //Quote path identifier are allowed, but look after a child contaning the quotes in the key
     QVERIFY(result == "null");
 
     (RPCConsole::RPCExecuteCommandLine(result, "createrawtransaction [] {} 0")); //parameter not in brackets are allowed
     (RPCConsole::RPCExecuteCommandLine(result2, "createrawtransaction([],{},0)")); //parameter in brackets are allowed
     QVERIFY(result == result2);
-    (RPCConsole::RPCExecuteCommandLine(result2, "createrawtransaction( [],  {} , 0   )")); //whitespace between parameters is allowed
+    (RPCConsole::RPCExecuteCommandLine(result2, "createrawtransaction( [],  {} , 0   )")); //whitespace between parametres is allowed
     QVERIFY(result == result2);
 
     RPCConsole::RPCExecuteCommandLine(result, "getblock(getbestblockhash())[tx][0]", &filtered);
-    QVERIFY(result == "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
+    QVERIFY(result == "e0028eb9648db56b1ac77cf090b99048a8007e2bb64b68f092c03c7f56a662c7");
     QVERIFY(filtered == "getblock(getbestblockhash())[tx][0]");
 
     RPCConsole::RPCParseCommandLine(result, "importprivkey", false, &filtered);
@@ -131,4 +154,13 @@ void RPCNestedTests::rpcNestedTests()
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest(abc,,abc)"), std::runtime_error); //don't tollerate empty arguments when using ,
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest(abc,,)"), std::runtime_error); //don't tollerate empty arguments when using ,
 #endif
+
+    delete pcoinsTip;
+    llmq::DestroyLLMQSystem();
+    delete deterministicMNManager;
+    delete pcoinsdbview;
+    delete pblocktree;
+    delete evoDb;
+
+    boost::filesystem::remove_all(boost::filesystem::path(path));
 }

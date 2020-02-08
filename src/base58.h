@@ -1,6 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,12 +11,13 @@
  * - E-mail usually won't line-break if there's no punctuation to break at.
  * - Double-clicking selects the whole string as one word if it's all alphanumeric.
  */
-#ifndef PIGEON_BASE58_H
-#define PIGEON_BASE58_H
+#ifndef BITCOIN_BASE58_H
+#define BITCOIN_BASE58_H
 
 #include "chainparams.h"
 #include "key.h"
 #include "pubkey.h"
+#include "script/script.h"
 #include "script/standard.h"
 #include "support/allocators/zeroafterfree.h"
 
@@ -26,7 +26,7 @@
 
 /**
  * Encode a byte sequence as a base58-encoded string.
- * pbegin and pend cannot be nullptr, unless both are.
+ * pbegin and pend cannot be NULL, unless both are.
  */
 std::string EncodeBase58(const unsigned char* pbegin, const unsigned char* pend);
 
@@ -38,7 +38,7 @@ std::string EncodeBase58(const std::vector<unsigned char>& vch);
 /**
  * Decode a base58-encoded string (psz) into a byte vector (vchRet).
  * return true if decoding is successful.
- * psz cannot be nullptr.
+ * psz cannot be NULL.
  */
 bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet);
 
@@ -95,10 +95,35 @@ public:
     bool operator> (const CBase58Data& b58) const { return CompareTo(b58) >  0; }
 };
 
+/** base58-encoded Dash addresses.
+ * Public-key-hash-addresses have version 76 (or 140 testnet).
+ * The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key.
+ * Script-hash-addresses have version 16 (or 19 testnet).
+ * The data vector contains RIPEMD160(SHA256(cscript)), where cscript is the serialized redemption script.
+ */
+class CBitcoinAddress : public CBase58Data {
+public:
+    bool Set(const CKeyID &id);
+    bool Set(const CScriptID &id);
+    bool Set(const CTxDestination &dest);
+    bool IsValid() const;
+    bool IsValid(const CChainParams &params) const;
+
+    CBitcoinAddress() {}
+    CBitcoinAddress(const CTxDestination &dest) { Set(dest); }
+    CBitcoinAddress(const std::string& strAddress) { SetString(strAddress); }
+    CBitcoinAddress(const char* pszAddress) { SetString(pszAddress); }
+
+    CTxDestination Get() const;
+    bool GetKeyID(CKeyID &keyID) const;
+    bool GetIndexKey(uint160& hashBytes, int& type) const;
+    bool IsScript() const;
+};
+
 /**
  * A base58-encoded secret key
  */
-class CPigeonSecret : public CBase58Data
+class CBitcoinSecret : public CBase58Data
 {
 public:
     void SetKey(const CKey& vchSecret);
@@ -107,11 +132,11 @@ public:
     bool SetString(const char* pszSecret);
     bool SetString(const std::string& strSecret);
 
-    CPigeonSecret(const CKey& vchSecret) { SetKey(vchSecret); }
-    CPigeonSecret() {}
+    CBitcoinSecret(const CKey& vchSecret) { SetKey(vchSecret); }
+    CBitcoinSecret() {}
 };
 
-template<typename K, int Size, CChainParams::Base58Type Type> class CPigeonExtKeyBase : public CBase58Data
+template<typename K, int Size, CChainParams::Base58Type Type> class CBitcoinExtKeyBase : public CBase58Data
 {
 public:
     void SetKey(const K &key) {
@@ -124,28 +149,23 @@ public:
         K ret;
         if (vchData.size() == Size) {
             // If base58 encoded data does not hold an ext key, return a !IsValid() key
-            ret.Decode(vchData.data());
+            ret.Decode(&vchData[0]);
         }
         return ret;
     }
 
-    CPigeonExtKeyBase(const K &key) {
+    CBitcoinExtKeyBase(const K &key) {
         SetKey(key);
     }
 
-    CPigeonExtKeyBase(const std::string& strBase58c) {
+    CBitcoinExtKeyBase(const std::string& strBase58c) {
         SetString(strBase58c.c_str(), Params().Base58Prefix(Type).size());
     }
 
-    CPigeonExtKeyBase() {}
+    CBitcoinExtKeyBase() {}
 };
 
-typedef CPigeonExtKeyBase<CExtKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_SECRET_KEY> CPigeonExtKey;
-typedef CPigeonExtKeyBase<CExtPubKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_PUBLIC_KEY> CPigeonExtPubKey;
+typedef CBitcoinExtKeyBase<CExtKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_SECRET_KEY> CBitcoinExtKey;
+typedef CBitcoinExtKeyBase<CExtPubKey, BIP32_EXTKEY_SIZE, CChainParams::EXT_PUBLIC_KEY> CBitcoinExtPubKey;
 
-std::string EncodeDestination(const CTxDestination& dest);
-CTxDestination DecodeDestination(const std::string& str);
-bool IsValidDestinationString(const std::string& str);
-bool IsValidDestinationString(const std::string& str, const CChainParams& params);
-
-#endif // PIGEON_BASE58_H
+#endif // BITCOIN_BASE58_H

@@ -1,5 +1,5 @@
-Building Pigeon
-================
+Building Dash
+=============
 
 See doc/build-*.md for instructions on building the various
-elements of the Pigeon Core reference implementation of Pigeon.
+elements of the Dash Core reference implementation of Dash.

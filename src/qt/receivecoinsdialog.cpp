@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +7,7 @@
 
 #include "addressbookpage.h"
 #include "addresstablemodel.h"
-#include "pigeonunits.h"
+#include "bitcoinunits.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
 #include "platformstyle.h"
@@ -31,17 +30,18 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, QWid
     platformStyle(_platformStyle)
 {
     ui->setupUi(this);
-
+    QString theme = GUIUtil::getThemeName();
+    
     if (!_platformStyle->getImagesOnButtons()) {
         ui->clearButton->setIcon(QIcon());
         ui->receiveButton->setIcon(QIcon());
         ui->showRequestButton->setIcon(QIcon());
         ui->removeRequestButton->setIcon(QIcon());
     } else {
-        ui->clearButton->setIcon(_platformStyle->SingleColorIcon(":/icons/remove"));
-        ui->receiveButton->setIcon(_platformStyle->SingleColorIcon(":/icons/receiving_addresses"));
-        ui->showRequestButton->setIcon(_platformStyle->SingleColorIcon(":/icons/edit"));
-        ui->removeRequestButton->setIcon(_platformStyle->SingleColorIcon(":/icons/remove"));
+        ui->clearButton->setIcon(QIcon(":/icons/" + theme + "/remove"));
+        ui->receiveButton->setIcon(QIcon(":/icons/" + theme + "/receiving_addresses"));
+        ui->showRequestButton->setIcon(QIcon(":/icons/" + theme + "/edit"));
+        ui->removeRequestButton->setIcon(QIcon(":/icons/" + theme + "/remove"));
     }
 
     // context menu actions
@@ -157,6 +157,7 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     }
     SendCoinsRecipient info(address, label,
         ui->reqAmount->value(), ui->reqMessage->text());
+    info.fUseInstantSend = ui->checkUseInstantSend->isChecked();
     ReceiveRequestDialog *dialog = new ReceiveRequestDialog(this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setModel(model->getOptionsModel());
@@ -192,7 +193,7 @@ void ReceiveCoinsDialog::on_showRequestButton_clicked()
         return;
     QModelIndexList selection = ui->recentRequestsView->selectionModel()->selectedRows();
 
-    for (const QModelIndex& index : selection) {
+    Q_FOREACH (const QModelIndex& index, selection) {
         on_recentRequestsView_doubleClicked(index);
     }
 }
@@ -273,7 +274,7 @@ void ReceiveCoinsDialog::copyURI()
     }
 
     const RecentRequestsTableModel * const submodel = model->getRecentRequestsTableModel();
-    const QString uri = GUIUtil::formatPigeonURI(submodel->entry(sel.row()).recipient);
+    const QString uri = GUIUtil::formatBitcoinURI(submodel->entry(sel.row()).recipient);
     GUIUtil::setClipboard(uri);
 }
 
