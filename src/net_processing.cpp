@@ -62,7 +62,7 @@
 #endif
 
 std::atomic<int64_t> nTimeBestReceived(0); // Used only to inform the wallet of when we last received a block
-
+extern FeeFilterRounder filterRounder;
 struct IteratorComparator
 {
     template<typename I>
@@ -3045,6 +3045,17 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         LogPrint("net", "received not-requested mnlistdiff. peer=%d\n", pfrom->id);
     }
 
+    else if (strCommand == NetMsgType::FEEFILTER) {	
+        CAmount newFeeFilter = 0;	
+        vRecv >> newFeeFilter;	
+        if (MoneyRange(newFeeFilter)) {	
+            {	
+                LOCK(pfrom->cs_feeFilter);	
+                pfrom->minFeeFilter = newFeeFilter;	
+            }	
+            LogPrint("net", "received: feefilter of %s from peer=%d\n", CFeeRate(newFeeFilter).ToString(), pfrom->id);	
+        }	
+    }
 
     else if (strCommand == NetMsgType::NOTFOUND) {
         // We do not care about the NOTFOUND message, but logging an Unknown Command
@@ -3553,13 +3564,21 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
             if (fSendTrickle && pto->fSendMempool) {
                 auto vtxinfo = mempool.infoAll();
                 pto->fSendMempool = false;
-
+                CAmount filterrate = 0;	
+                {	
+                    LOCK(pto->cs_feeFilter);	
+                    filterrate = pto->minFeeFilter;	
+                }
                 LOCK(pto->cs_filter);
 
                 for (const auto& txinfo : vtxinfo) {
                     const uint256& hash = txinfo.tx->GetHash();
                     CInv inv(MSG_TX, hash);
                     pto->setInventoryTxToSend.erase(hash);
+                    if (filterrate) {	
+                        if (txinfo.feeRate.GetFeePerK() < filterrate)	
+                            continue;	
+                    }
                     if (pto->pfilter) {
                         if (!pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                     }
@@ -3583,6 +3602,11 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                 vInvTx.reserve(pto->setInventoryTxToSend.size());
                 for (std::set<uint256>::iterator it = pto->setInventoryTxToSend.begin(); it != pto->setInventoryTxToSend.end(); it++) {
                     vInvTx.push_back(it);
+                }
+                CAmount filterrate = 0;	
+                {	
+                    LOCK(pto->cs_feeFilter);	
+                    filterrate = pto->minFeeFilter;	
                 }
                 // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
                 // A heap is used so that not all items need sorting if only a few are being sent.
@@ -3608,6 +3632,9 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
                     auto txinfo = mempool.info(hash);
                     if (!txinfo.tx) {
                         continue;
+                    }
+                    if (filterrate && txinfo.feeRate.GetFeePerK() < filterrate) {	
+                        continue;	
                     }
                     if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                     // Send
@@ -3761,7 +3788,30 @@ bool SendMessages(CNode* pto, CConnman& connman, const std::atomic<bool>& interr
             connman.PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
             LogPrint("net", "SendMessages -- GETDATA -- pushed size = %lu peer=%d\n", vGetData.size(), pto->id);
         }
-
+        //	
+        // Message: feefilter	
+        //	
+        // We don't want white listed peers to filter txs to us if we have -whitelistforcerelay	
+        if (pto->nVersion >= FEEFILTER_VERSION && GetBoolArg("-feefilter", DEFAULT_FEEFILTER) &&	
+            !(pto->fWhitelisted && GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY))) {	
+            CAmount currentFilter = mempool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();	
+            int64_t timeNow = GetTimeMicros();	
+            if (timeNow > pto->nextSendTimeFeeFilter) {	
+                CAmount filterToSend = filterRounder.round(currentFilter);	
+                    filterToSend = std::max(filterToSend, ::minRelayTxFee.GetFeePerK());	
+                if (filterToSend != pto->lastSentFeeFilter) {	
+                    connman.PushMessage(pto, msgMaker.Make(NetMsgType::FEEFILTER, filterToSend));	
+                    pto->lastSentFeeFilter = filterToSend;	
+                }	
+                pto->nextSendTimeFeeFilter = PoissonNextSend(timeNow, AVG_FEEFILTER_BROADCAST_INTERVAL);	
+            }	
+            // If the fee filter has changed substantially and it's still more than MAX_FEEFILTER_CHANGE_DELAY	
+            // until scheduled broadcast, then move the broadcast to within MAX_FEEFILTER_CHANGE_DELAY.	
+            else if (timeNow + MAX_FEEFILTER_CHANGE_DELAY * 1000000 < pto->nextSendTimeFeeFilter &&	
+                     (currentFilter < 3 * pto->lastSentFeeFilter / 4 || currentFilter > 4 * pto->lastSentFeeFilter / 3)) {	
+                pto->nextSendTimeFeeFilter = timeNow + GetRandInt(MAX_FEEFILTER_CHANGE_DELAY) * 1000000;	
+            }	
+        }
     }
     return true;
 }

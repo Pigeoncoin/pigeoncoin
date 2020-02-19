@@ -8,7 +8,7 @@
 #define BITCOIN_VALIDATION_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/dash-config.h"
+#include "config/pigeon-config.h"
 #endif
 
 #include "amount.h"
@@ -119,6 +119,10 @@ static const unsigned int INVENTORY_BROADCAST_INTERVAL = 5;
  *  Limits the impact of low-fee transaction floods.
  *  We have 4 times smaller block times in Dash, so we need to push 4 times more invs per 1MB. */
 static const unsigned int INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK = 4 * 7 * INVENTORY_BROADCAST_INTERVAL;
+/** Average delay between feefilter broadcasts in seconds. */	
+static const unsigned int AVG_FEEFILTER_BROADCAST_INTERVAL = 10 * 60;	
+/** Maximum feefilter broadcast delay after significant change. */	
+static const unsigned int MAX_FEEFILTER_CHANGE_DELAY = 5 * 60;
 /** Block download timeout base, expressed in millionths of the block interval (i.e. 2.5 min) */
 static const int64_t BLOCK_DOWNLOAD_TIMEOUT_BASE = 1000000;
 /** Additional block download timeout per parallel downloading peer (i.e. 1.25 min) */
@@ -383,7 +387,7 @@ void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
 /** Transaction validation functions */
 
 /** Context-independent validity checks */
-bool CheckTransaction(const CTransaction& tx, CValidationState& state);
+bool CheckTransaction(const CTransaction& tx, CValidationState& state, bool fCheckDuplicateInputs=true);
 
 namespace Consensus {
 

@@ -1,0 +1,33 @@
+# /etc/conf.d/pigeond: config file for /etc/init.d/pigeond
+
+# Config file location
+#BITCOIND_CONFIGFILE="/etc/dashcore/pigeon.conf"
+
+# What directory to write pidfile to?  (created and owned by $BITCOIND_USER)
+#BITCOIND_PIDDIR="/var/run/pigeond"
+
+# What filename to give the pidfile
+#BITCOIND_PIDFILE="${BITCOIND_PIDDIR}/pigeond.pid"
+
+# Where to write pigeond data (be mindful that the blockchain is large)
+#BITCOIND_DATADIR="/var/lib/pigeond"
+
+# User and group to own pigeond process
+#BITCOIND_USER="dashcore"
+#BITCOIND_GROUP="dashcore"
+
+# Path to pigeond executable
+#BITCOIND_BIN="/usr/bin/pigeond"
+
+# Nice value to run pigeond under
+#BITCOIND_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+#BITCOIND_OPTS=""
+
+# The timeout in seconds OpenRC will wait for bitcoind to terminate
+# after a SIGTERM has been raised.
+# Note that this will be mapped as argument to start-stop-daemon's
+# '--retry' option, which means you can specify a retry schedule
+# here. For more information see man 8 start-stop-daemon.
+BITCOIND_SIGTERM_TIMEOUT=60

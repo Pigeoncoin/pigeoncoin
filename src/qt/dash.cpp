@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/dash-config.h"
+#include "config/pigeon-config.h"
 #endif
 
 #include "bitcoingui.h"
@@ -96,7 +96,7 @@ static void InitMessage(const std::string &message)
  */
 static std::string Translate(const char* psz)
 {
-    return QCoreApplication::translate("dash-core", psz).toStdString();
+    return QCoreApplication::translate("pigeon-core", psz).toStdString();
 }
 
 static QString GetLangTerritory()
@@ -582,7 +582,7 @@ int main(int argc, char *argv[])
 #endif
 
     Q_INIT_RESOURCE(dash);
-    Q_INIT_RESOURCE(dash_locale);
+    Q_INIT_RESOURCE(pigeon_locale);
 
     BitcoinApplication app(argc, argv);
 #if QT_VERSION > 0x050100
@@ -638,7 +638,7 @@ int main(int argc, char *argv[])
     if (!Intro::pickDataDirectory())
         return EXIT_SUCCESS;
 
-    /// 6. Determine availability of data directory and parse dash.conf
+    /// 6. Determine availability of data directory and parse pigeon.conf
     /// - Do not call GetDataDir(true) before this step finishes
     if (!boost::filesystem::is_directory(GetDataDir(false)))
     {

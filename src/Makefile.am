@@ -50,23 +50,23 @@ BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
 BLS_LIBS=-lchiabls -lgmp
 
-LIBBITCOIN_SERVER=libdash_server.a
-LIBBITCOIN_COMMON=libdash_common.a
-LIBBITCOIN_CONSENSUS=libdash_consensus.a
-LIBBITCOIN_CLI=libdash_cli.a
-LIBBITCOIN_UTIL=libdash_util.a
-LIBBITCOIN_CRYPTO=crypto/libdash_crypto.a
-LIBBITCOINQT=qt/libdashqt.a
+LIBBITCOIN_SERVER=libpigeon_server.a
+LIBBITCOIN_COMMON=libpigeon_common.a
+LIBBITCOIN_CONSENSUS=libpigeon_consensus.a
+LIBBITCOIN_CLI=libpigeon_cli.a
+LIBBITCOIN_UTIL=libpigeon_util.a
+LIBBITCOIN_CRYPTO=crypto/libpigeon_crypto.a
+LIBBITCOINQT=qt/libpigeonqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
 if ENABLE_ZMQ
-LIBBITCOIN_ZMQ=libdash_zmq.a
+LIBBITCOIN_ZMQ=libpigeon_zmq.a
 endif
 if BUILD_BITCOIN_LIBS
-LIBBITCOINCONSENSUS=libdashconsensus.la
+LIBBITCOINCONSENSUS=libpigeonconsensus.la
 endif
 if ENABLE_WALLET
-LIBBITCOIN_WALLET=libdash_wallet.a
+LIBBITCOIN_WALLET=libpigeon_wallet.a
 endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
@@ -91,11 +91,11 @@ TESTS =
 BENCHMARKS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += dashd
+  bin_PROGRAMS += pigeond
 endif
 
 if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += dash-cli dash-tx
+  bin_PROGRAMS += pigeon-cli pigeon-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
@@ -252,12 +252,12 @@ obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
 	@$(top_srcdir)/share/genbuild.sh $(abs_top_builddir)/src/obj/build.h \
 	  $(abs_top_srcdir)
-libdash_util_a-clientversion.$(OBJEXT): obj/build.h
+libpigeon_util_a-clientversion.$(OBJEXT): obj/build.h
 
-# server: shared between dashd and dash-qt
-libdash_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
-libdash_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libdash_server_a_SOURCES = \
+# server: shared between pigeond and pigeon-qt
+libpigeon_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libpigeon_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libpigeon_server_a_SOURCES = \
   activemasternode.cpp \
   addrman.cpp \
   addrdb.cpp \
@@ -341,20 +341,20 @@ libdash_server_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 if ENABLE_ZMQ
-libdash_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
-libdash_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libdash_zmq_a_SOURCES = \
+libpigeon_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
+libpigeon_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libpigeon_zmq_a_SOURCES = \
   zmq/zmqabstractnotifier.cpp \
   zmq/zmqnotificationinterface.cpp \
   zmq/zmqpublishnotifier.cpp
 endif
 
 
-# wallet: shared between dashd and dash-qt, but only linked
+# wallet: shared between pigeond and pigeon-qt, but only linked
 # when wallet enabled
-libdash_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libdash_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libdash_wallet_a_SOURCES = \
+libpigeon_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libpigeon_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libpigeon_wallet_a_SOURCES = \
   keepass.cpp \
   privatesend-client.cpp \
   privatesend-util.cpp \
@@ -367,9 +367,9 @@ libdash_wallet_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
-crypto_libdash_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_CONFIG_INCLUDES) $(PIC_FLAGS)
-crypto_libdash_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
-crypto_libdash_crypto_a_SOURCES = \
+crypto_libpigeon_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_CONFIG_INCLUDES) $(PIC_FLAGS)
+crypto_libpigeon_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
+crypto_libpigeon_crypto_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
   crypto/common.h \
@@ -388,35 +388,56 @@ crypto_libdash_crypto_a_SOURCES = \
   crypto/sha512.h
 
 # x11
-crypto_libdash_crypto_a_SOURCES += \
-  crypto/blake.c \
-  crypto/bmw.c \
-  crypto/cubehash.c \
-  crypto/echo.c \
-  crypto/groestl.c \
-  crypto/jh.c \
-  crypto/keccak.c \
-  crypto/luffa.c \
-  crypto/shavite.c \
-  crypto/simd.c \
-  crypto/skein.c \
-  crypto/sph_blake.h \
-  crypto/sph_bmw.h \
-  crypto/sph_cubehash.h \
-  crypto/sph_echo.h \
-  crypto/sph_groestl.h \
-  crypto/sph_jh.h \
-  crypto/sph_keccak.h \
-  crypto/sph_luffa.h \
-  crypto/sph_shavite.h \
-  crypto/sph_simd.h \
-  crypto/sph_skein.h \
-  crypto/sph_types.h
+crypto_libpigeon_crypto_a_SOURCES += \
+  algo/sph_groestl.h \
+  algo/sph_types.h \
+  algo/sph_blake.h \
+  algo/sph_bmw.h \
+  algo/sph_jh.h \
+  algo/sph_keccak.h \
+  algo/sph_skein.h \
+  algo/sph_luffa.h \
+  algo/sph_cubehash.h \
+  algo/sph_simd.h \
+  algo/sph_echo.h \
+  algo/sph_shavite.h \
+  algo/sph_sha2.h \
+  algo/sph_haval.h \
+  algo/sph_tiger.h \
+  algo/lyra2.h \
+  algo/sponge.h \
+  algo/gost_streebog.h \
+  algo/hashx21s.h \
+  algo/groestl.c \
+  algo/blake.c \
+  algo/bmw.c \
+  algo/cubehash.c \
+  algo/echo.c \
+  algo/jh.c \
+  algo/keccak.c \
+  algo/luffa.c \
+  algo/shavite.c \
+  algo/simd.c \
+  algo/skein.c \
+  algo/hamsi.c \
+  algo/whirlpool.c \
+  algo/shabal.c \
+  algo/fugue.c \
+  algo/sha2.c \
+  algo/extra.c \
+  algo/extra.h \
+  algo/sph_sha2big.c \
+  algo/haval.c \
+  algo/tiger.cpp \
+  algo/lyra2.cpp \
+  algo/sponge.cpp \
+  algo/sph_sha2.c \
+  algo/gost_streebog.c 
 
 # consensus: shared between all executables that validate any consensus rules.
-libdash_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libdash_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libdash_consensus_a_SOURCES = \
+libpigeon_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libpigeon_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libpigeon_consensus_a_SOURCES = \
   amount.h \
   arith_uint256.cpp \
   arith_uint256.h \
@@ -451,10 +472,10 @@ libdash_consensus_a_SOURCES = \
   utilstrencodings.h \
   version.h
 
-# common: shared between dashd, and dash-qt and non-server tools
-libdash_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libdash_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libdash_common_a_SOURCES = \
+# common: shared between pigeond, and pigeon-qt and non-server tools
+libpigeon_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libpigeon_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libpigeon_common_a_SOURCES = \
   amount.cpp \
   base58.cpp \
   bip39.cpp \
@@ -479,9 +500,9 @@ libdash_common_a_SOURCES = \
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
 # backward-compatibility objects and their sanity checks are linked.
-libdash_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libdash_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libdash_util_a_SOURCES = \
+libpigeon_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libpigeon_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libpigeon_util_a_SOURCES = \
   bls/bls_batchverifier.h \
   bls/bls_ies.cpp \
   bls/bls_ies.h \
@@ -506,31 +527,31 @@ libdash_util_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
-libdash_util_a_SOURCES += compat/glibc_compat.cpp
+libpigeon_util_a_SOURCES += compat/glibc_compat.cpp
 AM_LDFLAGS += -Wl,--wrap=log2f -Wl,--wrap=__divmoddi4
 endif
 
-# cli: shared between dash-cli and dash-qt
-libdash_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libdash_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libdash_cli_a_SOURCES = \
+# cli: shared between pigeon-cli and pigeon-qt
+libpigeon_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libpigeon_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libpigeon_cli_a_SOURCES = \
   rpc/client.cpp \
   $(BITCOIN_CORE_H)
 
-nodist_libdash_util_a_SOURCES = $(srcdir)/obj/build.h
+nodist_libpigeon_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
-# dashd binary #
-dashd_SOURCES = dashd.cpp
-dashd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-dashd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-dashd_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# pigeond binary #
+pigeond_SOURCES = pigeond.cpp
+pigeond_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+pigeond_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+pigeond_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-dashd_SOURCES += dashd-res.rc
+pigeond_SOURCES += pigeond-res.rc
 endif
 
-dashd_LDADD = \
+pigeond_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
   $(LIBUNIVALUE) \
@@ -543,37 +564,37 @@ dashd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-dashd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS)
+pigeond_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS)
 
-# dash-cli binary #
-dash_cli_SOURCES = dash-cli.cpp
-dash_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
-dash_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-dash_cli_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# pigeon-cli binary #
+pigeon_cli_SOURCES = pigeon-cli.cpp
+pigeon_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+pigeon_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+pigeon_cli_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-dash_cli_SOURCES += dash-cli-res.rc
+pigeon_cli_SOURCES += pigeon-cli-res.rc
 endif
 
-dash_cli_LDADD = \
+pigeon_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
-dash_cli_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
+pigeon_cli_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
 #
 
-# dash-tx binary #
-dash_tx_SOURCES = dash-tx.cpp
-dash_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-dash_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-dash_tx_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# pigeon-tx binary #
+pigeon_tx_SOURCES = pigeon-tx.cpp
+pigeon_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+pigeon_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+pigeon_tx_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-dash_tx_SOURCES += dash-tx-res.rc
+pigeon_tx_SOURCES += pigeon-tx-res.rc
 endif
 
-dash_tx_LDADD = \
+pigeon_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -581,22 +602,22 @@ dash_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-dash_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(CRYPTO_LIBS) $(BLS_LIBS)
+pigeon_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(CRYPTO_LIBS) $(BLS_LIBS)
 #
 
 # dashconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/dashconsensus.h
-libdashconsensus_la_SOURCES = $(crypto_libdash_crypto_a_SOURCES) $(libdash_consensus_a_SOURCES)
+libpigeonconsensus_la_SOURCES = $(crypto_libpigeon_crypto_a_SOURCES) $(libpigeon_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
-  libdashconsensus_la_SOURCES += compat/glibc_compat.cpp
+  libpigeonconsensus_la_SOURCES += compat/glibc_compat.cpp
 endif
 
-libdashconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libdashconsensus_la_LIBADD = $(LIBSECP256K1) $(BLS_LIBS)
-libdashconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
-libdashconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libpigeonconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
+libpigeonconsensus_la_LIBADD = $(LIBSECP256K1) $(BLS_LIBS)
+libpigeonconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
+libpigeonconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif
 #
@@ -630,12 +651,12 @@ EXTRA_DIST = $(CTAES_DIST)
 EXTRA_DIST += $(IMMER_DIST)
 
 
-config/dash-config.h: config/stamp-h1
+config/pigeon-config.h: config/stamp-h1
 	@$(MAKE) -C $(top_builddir) $(subdir)/$(@)
-config/stamp-h1: $(top_srcdir)/$(subdir)/config/dash-config.h.in $(top_builddir)/config.status
+config/stamp-h1: $(top_srcdir)/$(subdir)/config/pigeon-config.h.in $(top_builddir)/config.status
 	$(AM_V_at)$(MAKE) -C $(top_builddir) $(subdir)/$(@)
-$(top_srcdir)/$(subdir)/config/dash-config.h.in:  $(am__configure_deps)
-	$(AM_V_at)$(MAKE) -C $(top_srcdir) $(subdir)/config/dash-config.h.in
+$(top_srcdir)/$(subdir)/config/pigeon-config.h.in:  $(am__configure_deps)
+	$(AM_V_at)$(MAKE) -C $(top_srcdir) $(subdir)/config/pigeon-config.h.in
 
 clean-local:
 	-$(MAKE) -C secp256k1 clean

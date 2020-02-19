@@ -128,7 +128,7 @@ See detailed [change log](https://github.com/dashpay/dash/compare/v0.12.2.1...da
 - [`09b3e042f`](https://github.com/dashpay/dash/commit/09b3e042f) Backport #9310: Assert FRESH validity in CCoinsViewCache::BatchWrite
 - [`ceb64fcd4`](https://github.com/dashpay/dash/commit/ceb64fcd4) Backport #8610: Share unused mempool memory with coincache
 - [`817ecc03d`](https://github.com/dashpay/dash/commit/817ecc03d) Backport #9353: Add data() method to CDataStream (and use it)
-- [`249db2776`](https://github.com/dashpay/dash/commit/249db2776) Backport #9999: [LevelDB] Plug leveldb logs to bitcoin logs
+- [`249db2776`](https://github.com/dashpay/dash/commit/249db2776) Backport #8757: [LevelDB] Plug leveldb logs to bitcoin logs
 - [`cfefd34f4`](https://github.com/dashpay/dash/commit/cfefd34f4) Backport #10126: Compensate for memory peak at flush time
 - [`ff9b2967a`](https://github.com/dashpay/dash/commit/ff9b2967a) Backport #10133: Clean up calculations of pcoinsTip memory usage
 - [`567043d36`](https://github.com/dashpay/dash/commit/567043d36) Make DisconnectBlock and ConnectBlock static in validation.cpp

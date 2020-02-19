@@ -11,16 +11,18 @@
  */
 
 
-static const int PROTOCOL_VERSION = 70215;
+static const int PROTOCOL_VERSION = 70036;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
 
 //! In this version, 'getheaders' was introduced.
-static const int GETHEADERS_VERSION = 70077;
+static const int GETHEADERS_VERSION = 31800;
 
 //! disconnect from peers older than this proto version
-static const int MIN_PEER_PROTO_VERSION = 70213;
+static const int MIN_PEER_PROTO_VERSION = GETHEADERS_VERSION;
+//! disconnect from peers older than this proto version
+static const int NEW_MIN_PEER_PROTO_VERSION = 70026;
 
 //! nTime field added to CAddress, starting with this version;
 //! if possible, avoid requesting addresses nodes older than this
@@ -37,6 +39,8 @@ static const int NO_BLOOM_VERSION = 70201;
 
 //! "sendheaders" command and announcing blocks with headers starts with this version
 static const int SENDHEADERS_VERSION = 70201;
+//! "feefilter" tells peers to filter invs to you by fee starts with this version	
+static const int FEEFILTER_VERSION = 99999; // disable for now (clarify deployment later)	
 
 //! DIP0001 was activated in this version
 static const int DIP0001_PROTOCOL_VERSION = 70208;

@@ -38,7 +38,7 @@ import logging
 import copy
 from test_framework.siphash import siphash256
 
-import dash_hash
+import pigeon_hash
 
 BIP0031_VERSION = 60000
 MY_VERSION = 70214  # MIN_PEER_PROTO_VERSION
@@ -78,7 +78,7 @@ def hash256(s):
     return sha256(sha256(s))
 
 def dashhash(s):
-    return dash_hash.getPoWHash(s)
+    return pigeon_hash.getPoWHash(s)
 
 def ser_compact_size(l):
     r = b""
@@ -240,7 +240,7 @@ def FromHex(obj, hex_string):
 def ToHex(obj):
     return bytes_to_hex_str(obj.serialize())
 
-# Objects that map to dashd objects, which can be serialized/deserialized
+# Objects that map to pigeond objects, which can be serialized/deserialized
 
 class CService(object):
     def __init__(self):
@@ -1349,7 +1349,7 @@ class msg_headers(object):
         self.headers = headers if headers is not None else []
 
     def deserialize(self, f):
-        # comment in dashd indicates these should be deserialized as blocks
+        # comment in pigeond indicates these should be deserialized as blocks
         blocks = deser_vector(f, CBlock)
         for x in blocks:
             self.headers.append(CBlockHeader(x))

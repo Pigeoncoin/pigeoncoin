@@ -1,0 +1,6 @@
+usr/local/bin/pigeon-qt usr/bin
+share/pixmaps/dash32.xpm usr/share/pixmaps
+share/pixmaps/dash16.xpm usr/share/pixmaps
+share/pixmaps/dash128.png usr/share/pixmaps
+debian/pigeon-qt.desktop usr/share/applications
+debian/pigeon-qt.protocol usr/share/kde4/services/

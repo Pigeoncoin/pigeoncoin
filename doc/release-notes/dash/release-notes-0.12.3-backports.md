@@ -55,7 +55,7 @@
 - [`4959ff201`](https://github.com/dashpay/dash/commit/4959ff201) Fix formatting of help in sendfrom
 - [`a4430b624`](https://github.com/dashpay/dash/commit/a4430b624) Fix rpc tests
 - [`5901531bc`](https://github.com/dashpay/dash/commit/5901531bc) Use constant 7200 instead of TIMESTAMP_WINDOW for now
-- [`4d3856b5a`](https://github.com/dashpay/dash/commit/4d3856b5a) Include test_dash.h instead of test_bitcoin.h
+- [`4d3856b5a`](https://github.com/dashpay/dash/commit/4d3856b5a) Include test_pigeon.h instead of test_bitcoin.h
 - [`d500d77c4`](https://github.com/dashpay/dash/commit/d500d77c4) Use nBlockSize/nBlockMaxSize instead of nBlockWeight/nBlockMaxWeight
 - [`12770beb6`](https://github.com/dashpay/dash/commit/12770beb6) Merge #10310: [doc] Add hint about getmempoolentry to getrawmempool help.
 - [`e9976d20f`](https://github.com/dashpay/dash/commit/e9976d20f) Merge #10495: contrib: Update location of seeds.txt
@@ -607,7 +607,7 @@
 - [`39909d373`](https://github.com/dashpay/dash/commit/39909d373) Merge #8558: Add copyright header to wallet_text_fixture.cpp
 - [`e2a795fd8`](https://github.com/dashpay/dash/commit/e2a795fd8) Return EXIT_SUCCESS instead of 0 in main()
 - [`e3da73ebf`](https://github.com/dashpay/dash/commit/e3da73ebf) Update Dash related code to use new SyncTransaction notifications interface
-- [`ebc466dbd`](https://github.com/dashpay/dash/commit/ebc466dbd) Revert test_bitcoin.info to test_dash.info in Makefile.am
+- [`ebc466dbd`](https://github.com/dashpay/dash/commit/ebc466dbd) Revert test_bitcoin.info to test_pigeon.info in Makefile.am
 - [`f8ffc55af`](https://github.com/dashpay/dash/commit/f8ffc55af) Partially cherry-pick tests refactorings found in Bitcoin SegWit PRs
 - [`8460a9b97`](https://github.com/dashpay/dash/commit/8460a9b97) Dashify translation_process.md
 - [`5b62ad34a`](https://github.com/dashpay/dash/commit/5b62ad34a) Merge #8551: [qa] Remove unused code

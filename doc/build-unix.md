@@ -12,7 +12,7 @@ Run the following commands to install required packages:
 
 ##### Debian/Ubuntu:
 ```bash
-$ sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake
+$ sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake libssl-dev libboost-all-dev libevent-dev
 ```
 
 ##### Fedora:
@@ -64,7 +64,7 @@ Hardening enables the following features:
 
     To test that you have built PIE executable, install scanelf, part of paxutils, and use:
 
-    	scanelf -e ./dashd
+    	scanelf -e ./pigeond
 
     The output should contain:
 
@@ -79,7 +79,7 @@ Hardening enables the following features:
     executable without the non-executable stack protection.
 
     To verify that the stack is non-executable after compiling use:
-    `scanelf -e ./dashd`
+    `scanelf -e ./pigeond`
 
     the output should contain:
 	STK/REL/PTL

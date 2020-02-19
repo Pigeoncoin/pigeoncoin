@@ -10,7 +10,7 @@
 #include "consensus/params.h"
 #include "primitives/block.h"
 #include "protocol.h"
-
+#include "timedata.h"
 #include <vector>
 
 struct CDNSSeedData {
@@ -57,7 +57,7 @@ public:
     };
 
     const Consensus::Params& GetConsensus() const { return consensus; }
-    const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
+    const CMessageHeader::MessageStartChars& MessageStart() const {return pchMessageStart; }
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
 
@@ -97,6 +97,7 @@ protected:
 
     Consensus::Params consensus;
     CMessageHeader::MessageStartChars pchMessageStart;
+    CMessageHeader::MessageStartChars pchMessageStartNew;
     //! Raw pub key bytes for the broadcast alert signing key.
     std::vector<unsigned char> vAlertPubKey;
     int nDefaultPort;
@@ -104,6 +105,7 @@ protected:
     std::vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
     int nExtCoinType;
+    int HFTimestamp;
     std::string strNetworkID;
     CBlock genesis;
     CBlock devnetGenesis;

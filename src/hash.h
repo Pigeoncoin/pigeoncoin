@@ -29,7 +29,14 @@
 #include <vector>
 
 typedef uint256 ChainCode;
+inline int GetHashSelection(const uint256 PrevBlockHash, int index) {
+    assert(index >= 0);
+    assert(index < 16);
 
+    #define START_OF_LAST_16_NIBBLES_OF_HASH 48
+    int hashSelection = PrevBlockHash.GetNibble(START_OF_LAST_16_NIBBLES_OF_HASH + index);
+    return(hashSelection);
+}
 /* ----------- Bitcoin Hash ------------------------------------------------- */
 /** A hasher class for Bitcoin's 256-bit hash (double SHA-256). */
 class CHash256 {
@@ -54,7 +61,6 @@ public:
         return *this;
     }
 };
-
 /** A hasher class for Bitcoin's 160-bit hash (SHA-256 + RIPEMD-160). */
 class CHash160 {
 private:

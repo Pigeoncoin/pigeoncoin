@@ -150,6 +150,8 @@ struct Params {
     /** Block height at which DIP0003 becomes enforced */
     int DIP0003EnforcementHeight;
     uint256 DIP0003EnforcementHash;
+    // Block height at which LWMA difficulty adjustment method becomes active
+    int zawyLWMAHeight;
     /**
      * Minimum blocks including miner confirmation of the total of nMinerConfirmationWindow blocks in a retargeting period,
      * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
@@ -171,7 +173,23 @@ struct Params {
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
+    int nPowDifficultyRetargetHeight;
+    int64_t nPowTargetTimespanShort;
+    
+    //We need to return the correct values after we adjust the dificulty retarget
+    int64_t DifficultyAdjustmentIntervalAtHeight(unsigned nHeight) const { 
+        if(nHeight <= nPowDifficultyRetargetHeight) {
+            return nPowTargetTimespan / nPowTargetSpacing; 
+        }
+        return nPowTargetTimespanShort / nPowTargetSpacing; 
+    }
 
+    int64_t getPowTargetTimespan(unsigned nHeight) const {
+        if(nHeight <= nPowDifficultyRetargetHeight) {
+            return nPowTargetTimespan; 
+        }
+        return nPowTargetTimespanShort;
+    }
     /** these parameters are only used on devnet and can be configured from the outside */
     int nMinimumDifficultyBlocks{0};
     int nHighSubsidyBlocks{0};

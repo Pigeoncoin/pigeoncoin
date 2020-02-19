@@ -1,0 +1,25 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource prefix="/translations">
+        <file alias="ar">locale/pigeon_ar.qm</file>
+        <file alias="bg">locale/pigeon_bg.qm</file>
+        <file alias="de">locale/pigeon_de.qm</file>
+        <file alias="en">locale/pigeon_en.qm</file>
+        <file alias="es">locale/pigeon_es.qm</file>
+        <file alias="fi">locale/pigeon_fi.qm</file>
+        <file alias="fr">locale/pigeon_fr.qm</file>
+        <file alias="it">locale/pigeon_it.qm</file>
+        <file alias="ja">locale/pigeon_ja.qm</file>
+        <file alias="ko">locale/pigeon_ko.qm</file>
+        <file alias="nl">locale/pigeon_nl.qm</file>
+        <file alias="pl">locale/pigeon_pl.qm</file>
+        <file alias="pt">locale/pigeon_pt.qm</file>
+        <file alias="ru">locale/pigeon_ru.qm</file>
+        <file alias="sk">locale/pigeon_sk.qm</file>
+        <file alias="sv">locale/pigeon_sv.qm</file>
+        <file alias="th">locale/pigeon_th.qm</file>
+        <file alias="tr">locale/pigeon_tr.qm</file>
+        <file alias="vi">locale/pigeon_vi.qm</file>
+        <file alias="zh_CN">locale/pigeon_zh_CN.qm</file>
+        <file alias="zh_TW">locale/pigeon_zh_TW.qm</file>
+    </qresource>
+</RCC>

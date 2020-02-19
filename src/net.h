@@ -8,6 +8,7 @@
 
 #include "addrdb.h"
 #include "addrman.h"
+#include "amount.h"	
 #include "bloom.h"
 #include "compat.h"
 #include "hash.h"
@@ -834,6 +835,11 @@ public:
     std::atomic<int64_t> nPingUsecTime;
     // Best measured round-trip time.
     std::atomic<int64_t> nMinPingUsecTime;
+    // Minimum fee rate with which to filter inv's to this node	
+    CAmount minFeeFilter;	
+    CCriticalSection cs_feeFilter;	
+    CAmount lastSentFeeFilter;	
+    int64_t nextSendTimeFeeFilter;
     // Whether a ping is requested.
     std::atomic<bool> fPingQueued;
 

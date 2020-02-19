@@ -1,4 +1,4 @@
-TOR SUPPORT IN DASH CORE
+TOR SUPPORT IN PGN CORE
 =======================
 
 It is possible to run Dash Core as a Tor hidden service, and connect to such services.
@@ -37,11 +37,11 @@ outgoing connections be anonymized, but more is possible.
 An example how to start the client if the Tor proxy is running on local host on
 port 9050 and only allows .onion nodes to connect:
 
-	./dashd -onion=127.0.0.1:9050 -onlynet=tor -listen=0 -addnode=ssapp53tmftyjmjb.onion
+	./pigeond -onion=127.0.0.1:9050 -onlynet=tor -listen=0 -addnode=ssapp53tmftyjmjb.onion
 
 In a typical situation, this suffices to run behind a Tor proxy:
 
-	./dashd -proxy=127.0.0.1:9050
+	./pigeond -proxy=127.0.0.1:9050
 
 
 2. Run a Dash Core hidden server
@@ -52,11 +52,11 @@ reachable from the Tor network. Add these lines to your /etc/tor/torrc (or equiv
 config file):
 
 	HiddenServiceDir /var/lib/tor/dashcore-service/
-	HiddenServicePort 9999 127.0.0.1:9999
-	HiddenServicePort 19999 127.0.0.1:19999
+	HiddenServicePort 8757 127.0.0.1:8757
+	HiddenServicePort 18757 127.0.0.1:18757
 
 The directory can be different of course, but (both) port numbers should be equal to
-your dashd's P2P listen port (9999 by default).
+your pigeond's P2P listen port (8757 by default).
 
 	-externalip=X   You can tell Dash Core about its publicly reachable address using
 	                this option, and this can be a .onion address. Given the above
@@ -78,25 +78,25 @@ your dashd's P2P listen port (9999 by default).
 
 In a typical situation, where you're only reachable via Tor, this should suffice:
 
-	./dashd -proxy=127.0.0.1:9050 -externalip=ssapp53tmftyjmjb.onion -listen
+	./pigeond -proxy=127.0.0.1:9050 -externalip=ssapp53tmftyjmjb.onion -listen
 
 (obviously, replace the Onion address with your own). It should be noted that you still
 listen on all devices and another node could establish a clearnet connection, when knowing
 your address. To mitigate this, additionally bind the address of your Tor proxy:
 
-	./dashd ... -bind=127.0.0.1
+	./pigeond ... -bind=127.0.0.1
 
 If you don't care too much about hiding your node, and want to be reachable on IPv4
 as well, use `discover` instead:
 
-	./dashd ... -discover
+	./pigeond ... -discover
 
-and open port 9999 on your firewall (or use -upnp).
+and open port 8757 on your firewall (or use -upnp).
 
 If you only want to use Tor to reach onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:
 
-	./dashd -onion=127.0.0.1:9050 -externalip=ssapp53tmftyjmjb.onion -discover
+	./pigeond -onion=127.0.0.1:9050 -externalip=ssapp53tmftyjmjb.onion -discover
 
 
 3. List of known Dash Core Tor relays
@@ -132,12 +132,12 @@ and, if not disabled, configured using the `-torcontrol` and `-torpassword` sett
 To show verbose debugging information, pass `-debug=tor`.
 
 Connecting to Tor's control socket API requires one of two authentication methods to be 
-configured. For cookie authentication the user running dashd must have write access 
+configured. For cookie authentication the user running pigeond must have write access 
 to the `CookieAuthFile` specified in Tor configuration. In some cases this is 
 preconfigured and the creation of a hidden service is automatic. If permission problems 
 are seen with `-debug=tor` they can be resolved by adding both the user running tor and 
-the user running dashd to the same group and setting permissions appropriately. On 
-Debian-based systems the user running dashd can be added to the debian-tor group, 
+the user running pigeond to the same group and setting permissions appropriately. On 
+Debian-based systems the user running pigeond can be added to the debian-tor group, 
 which has the appropriate permissions. An alternative authentication method is the use 
 of the `-torpassword` flag and a `hash-password` which can be enabled and specified in 
 Tor configuration.

@@ -11,12 +11,12 @@ The following are some helpful notes on how to run Dash on your native platform.
 
 Unpack the files into a directory and run:
 
-- `bin/dash-qt` (GUI) or
-- `bin/dashd` (headless)
+- `bin/pigeon-qt` (GUI) or
+- `bin/pigeond` (headless)
 
 ### Windows
 
-Unpack the files into a directory, and then run dash-qt.exe.
+Unpack the files into a directory, and then run pigeon-qt.exe.
 
 ### OS X
 

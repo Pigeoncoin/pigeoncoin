@@ -23,7 +23,7 @@ class TxnMallTest(BitcoinTestFramework):
         return super(TxnMallTest, self).setup_network(True)
 
     def run_test(self):
-        # All nodes should start with 12,500 DASH:
+        # All nodes should start with 12,500 PGN:
         starting_balance = 12500
         for i in range(4):
             assert_equal(self.nodes[i].getbalance(), starting_balance)
@@ -44,7 +44,7 @@ class TxnMallTest(BitcoinTestFramework):
         # Coins are sent to node1_address
         node1_address = self.nodes[1].getnewaddress("from0")
 
-        # First: use raw transaction API to send 12400 DASH to node1_address,
+        # First: use raw transaction API to send 12400 PGN to node1_address,
         # but don't broadcast:
         doublespend_fee = Decimal('-.02')
         rawtx_input_0 = {}
@@ -62,7 +62,7 @@ class TxnMallTest(BitcoinTestFramework):
         doublespend = self.nodes[0].signrawtransaction(rawtx)
         assert_equal(doublespend["complete"], True)
 
-        # Create two spends using 1 500 DASH coin each
+        # Create two spends using 1 500 PGN coin each
         txid1 = self.nodes[0].sendfrom("foo", node1_address, 400, 0)
         txid2 = self.nodes[0].sendfrom("bar", node1_address, 200, 0)
         

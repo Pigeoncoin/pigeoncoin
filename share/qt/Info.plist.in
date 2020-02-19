@@ -26,16 +26,16 @@
   <string>????</string>
 
   <key>CFBundleExecutable</key>
-  <string>Dash-Qt</string>
+  <string>Pigeon-Qt</string>
 
   <key>CFBundleName</key>
-  <string>Dash-Qt</string>
+  <string>Pigeon-Qt</string>
 
   <key>LSHasLocalizedDisplayName</key>
   <true/>
 
   <key>CFBundleIdentifier</key>
-  <string>org.dash.Dash-Qt</string>
+  <string>org.pigeon.Pigeon-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>
