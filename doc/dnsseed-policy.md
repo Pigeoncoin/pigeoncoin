@@ -43,12 +43,11 @@ related to the DNS seed operation.
 
 If these expectations cannot be satisfied the operator should
 discontinue providing services and contact the active Pigeon
-Core development team as well as posting on
-[pigeon-dev](https://lists.linuxfoundation.org/mailman/listinfo/pigeon-dev).
+Core development team.
 
 Behavior outside of these expectations may be reasonable in some
 situations but should be discussed in public in advance.
 
 See also
 ----------
-- [pigeon-seeder](https://github.com/sipa/pigeon-seeder) is a reference implementation of a DNS seed.
+- [pigeon-seeder](https://github.com/nightlypigeon/pigeon-seeder) is a reference implementation of a DNS seed.

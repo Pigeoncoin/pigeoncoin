@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the fundrawtransaction RPC."""
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 
@@ -15,10 +14,11 @@ def get_unspent(listunspent, amount):
             return utx
     raise AssertionError('Could not find unspent with amount={}'.format(amount))
 
-class RawTransactionsTest(PigeonTestFramework):
+class RawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
+        self.extra_args = [['-usehd=0']] * self.num_nodes
 
     def setup_network(self, split=False):
         self.setup_nodes()
@@ -49,20 +49,20 @@ class RawTransactionsTest(PigeonTestFramework):
         self.sync_all()
 
         # ensure that setting changePosition in fundraw with an exact match is handled properly
-        rawmatch = self.nodes[2].createrawtransaction([], {self.nodes[2].getnewaddress():5000})
+        rawmatch = self.nodes[2].createrawtransaction([], {self.nodes[2].getnewaddress():500})
         rawmatch = self.nodes[2].fundrawtransaction(rawmatch, {"changePosition":1, "subtractFeeFromOutputs":[0]})
         assert_equal(rawmatch["changepos"], -1)
 
         watchonly_address = self.nodes[0].getnewaddress()
         watchonly_pubkey = self.nodes[0].validateaddress(watchonly_address)["pubkey"]
-        watchonly_amount = Decimal(20000)
+        watchonly_amount = Decimal(2000)
         self.nodes[3].importpubkey(watchonly_pubkey, "", True)
         watchonly_txid = self.nodes[0].sendtoaddress(watchonly_address, watchonly_amount)
         self.nodes[0].sendtoaddress(self.nodes[3].getnewaddress(), watchonly_amount / 10)
 
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.5)
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.0)
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 5.0)
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 15)
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 10)
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 50)
 
         self.nodes[0].generate(1)
         self.sync_all()
@@ -71,7 +71,7 @@ class RawTransactionsTest(PigeonTestFramework):
         # simple test #
         ###############
         inputs  = [ ]
-        outputs = { self.nodes[0].getnewaddress() : 1.0 }
+        outputs = { self.nodes[0].getnewaddress() : 10 }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
@@ -83,7 +83,7 @@ class RawTransactionsTest(PigeonTestFramework):
         # simple test with two coins #
         ##############################
         inputs  = [ ]
-        outputs = { self.nodes[0].getnewaddress() : 2.2 }
+        outputs = { self.nodes[0].getnewaddress() : 22 }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
 
@@ -96,7 +96,7 @@ class RawTransactionsTest(PigeonTestFramework):
         # simple test with two coins #
         ##############################
         inputs  = [ ]
-        outputs = { self.nodes[0].getnewaddress() : 2.6 }
+        outputs = { self.nodes[0].getnewaddress() : 26 }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
 
@@ -111,7 +111,7 @@ class RawTransactionsTest(PigeonTestFramework):
         # simple test with two outputs #
         ################################
         inputs  = [ ]
-        outputs = { self.nodes[0].getnewaddress() : 2.6, self.nodes[1].getnewaddress() : 2.5 }
+        outputs = { self.nodes[0].getnewaddress() : 26, self.nodes[1].getnewaddress() : 25 }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
 
@@ -129,10 +129,10 @@ class RawTransactionsTest(PigeonTestFramework):
         #########################################################################
         # test a fundrawtransaction with a VIN greater than the required amount #
         #########################################################################
-        utx = get_unspent(self.nodes[2].listunspent(), 5)
+        utx = get_unspent(self.nodes[2].listunspent(), 50)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']}]
-        outputs = { self.nodes[0].getnewaddress() : 1.0 }
+        outputs = { self.nodes[0].getnewaddress() : 10 }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
@@ -150,10 +150,10 @@ class RawTransactionsTest(PigeonTestFramework):
         #####################################################################
         # test a fundrawtransaction with which will not get a change output #
         #####################################################################
-        utx = get_unspent(self.nodes[2].listunspent(), 5)
+        utx = get_unspent(self.nodes[2].listunspent(), 50)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']}]
-        outputs = { self.nodes[0].getnewaddress() : Decimal(5.0) - fee - feeTolerance }
+        outputs = { self.nodes[0].getnewaddress() : Decimal(50) - fee - feeTolerance }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
@@ -172,10 +172,10 @@ class RawTransactionsTest(PigeonTestFramework):
         ####################################################
         # test a fundrawtransaction with an invalid option #
         ####################################################
-        utx = get_unspent(self.nodes[2].listunspent(), 5)
+        utx = get_unspent(self.nodes[2].listunspent(), 50)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']} ]
-        outputs = { self.nodes[0].getnewaddress() : Decimal(4.0) }
+        outputs = { self.nodes[0].getnewaddress() : Decimal(40) }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
@@ -185,10 +185,10 @@ class RawTransactionsTest(PigeonTestFramework):
         ############################################################
         # test a fundrawtransaction with an invalid change address #
         ############################################################
-        utx = get_unspent(self.nodes[2].listunspent(), 5)
+        utx = get_unspent(self.nodes[2].listunspent(), 50)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']} ]
-        outputs = { self.nodes[0].getnewaddress() : Decimal(4.0) }
+        outputs = { self.nodes[0].getnewaddress() : Decimal(40) }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
@@ -198,10 +198,10 @@ class RawTransactionsTest(PigeonTestFramework):
         ############################################################
         # test a fundrawtransaction with a provided change address #
         ############################################################
-        utx = get_unspent(self.nodes[2].listunspent(), 5)
+        utx = get_unspent(self.nodes[2].listunspent(), 50)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']} ]
-        outputs = { self.nodes[0].getnewaddress() : Decimal(4.0) }
+        outputs = { self.nodes[0].getnewaddress() : Decimal(40) }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
@@ -217,10 +217,10 @@ class RawTransactionsTest(PigeonTestFramework):
         #########################################################################
         # test a fundrawtransaction with a VIN smaller than the required amount #
         #########################################################################
-        utx = get_unspent(self.nodes[2].listunspent(), 1)
+        utx = get_unspent(self.nodes[2].listunspent(), 10)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']}]
-        outputs = { self.nodes[0].getnewaddress() : 1.0 }
+        outputs = { self.nodes[0].getnewaddress() : 10 }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
 
         # 4-byte version + 1-byte vin count + 36-byte prevout then script_len
@@ -252,11 +252,11 @@ class RawTransactionsTest(PigeonTestFramework):
         ###########################################
         # test a fundrawtransaction with two VINs #
         ###########################################
-        utx = get_unspent(self.nodes[2].listunspent(), 1)
-        utx2 = get_unspent(self.nodes[2].listunspent(), 5)
+        utx = get_unspent(self.nodes[2].listunspent(), 10)
+        utx2 = get_unspent(self.nodes[2].listunspent(), 50)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']},{'txid' : utx2['txid'], 'vout' : utx2['vout']} ]
-        outputs = { self.nodes[0].getnewaddress() : 6.0 }
+        outputs = { self.nodes[0].getnewaddress() : 60 }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
@@ -285,11 +285,11 @@ class RawTransactionsTest(PigeonTestFramework):
         #########################################################
         # test a fundrawtransaction with two VINs and two vOUTs #
         #########################################################
-        utx = get_unspent(self.nodes[2].listunspent(), 1)
-        utx2 = get_unspent(self.nodes[2].listunspent(), 5)
+        utx = get_unspent(self.nodes[2].listunspent(), 10)
+        utx2 = get_unspent(self.nodes[2].listunspent(), 50)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']},{'txid' : utx2['txid'], 'vout' : utx2['vout']} ]
-        outputs = { self.nodes[0].getnewaddress() : 6.0, self.nodes[0].getnewaddress() : 1.0 }
+        outputs = { self.nodes[0].getnewaddress() : 60, self.nodes[0].getnewaddress() : 10 }
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
         assert_equal(utx['txid'], dec_tx['vin'][0]['txid'])
@@ -310,8 +310,9 @@ class RawTransactionsTest(PigeonTestFramework):
         ##############################################
         # test a fundrawtransaction with invalid vin #
         ##############################################
+        listunspent = self.nodes[2].listunspent()
         inputs  = [ {'txid' : "1c7f966dab21119bac53213a2bc7532bff1fa844c124fd750a7d0b1332440bd1", 'vout' : 0} ] #invalid vin!
-        outputs = { self.nodes[0].getnewaddress() : 1.0}
+        outputs = { self.nodes[0].getnewaddress() : 10}
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
 
@@ -320,12 +321,12 @@ class RawTransactionsTest(PigeonTestFramework):
         ############################################################
         #compare fee of a standard pubkeyhash transaction
         inputs = []
-        outputs = {self.nodes[1].getnewaddress():1.1}
+        outputs = {self.nodes[1].getnewaddress():11}
         rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
         fundedTx = self.nodes[0].fundrawtransaction(rawtx)
 
         #create same transaction over sendtoaddress
-        txId = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1.1)
+        txId = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 11)
         signedFee = self.nodes[0].getrawmempool(True)[txId]['fee']
 
         #compare fee
@@ -336,7 +337,7 @@ class RawTransactionsTest(PigeonTestFramework):
         ############################################################
         #compare fee of a standard pubkeyhash transaction with multiple outputs
         inputs = []
-        outputs = {self.nodes[1].getnewaddress():1.1,self.nodes[1].getnewaddress():1.2,self.nodes[1].getnewaddress():0.1,self.nodes[1].getnewaddress():1.3,self.nodes[1].getnewaddress():0.2,self.nodes[1].getnewaddress():0.3}
+        outputs = {self.nodes[1].getnewaddress():11,self.nodes[1].getnewaddress():12,self.nodes[1].getnewaddress():1,self.nodes[1].getnewaddress():13,self.nodes[1].getnewaddress():2,self.nodes[1].getnewaddress():3}
         rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
         fundedTx = self.nodes[0].fundrawtransaction(rawtx)
         #create same transaction over sendtoaddress
@@ -362,12 +363,12 @@ class RawTransactionsTest(PigeonTestFramework):
         mSigObj = self.nodes[1].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])
 
         inputs = []
-        outputs = {mSigObj:1.1}
+        outputs = {mSigObj:11}
         rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
         fundedTx = self.nodes[0].fundrawtransaction(rawtx)
 
         #create same transaction over sendtoaddress
-        txId = self.nodes[0].sendtoaddress(mSigObj, 1.1)
+        txId = self.nodes[0].sendtoaddress(mSigObj, 11)
         signedFee = self.nodes[0].getrawmempool(True)[txId]['fee']
 
         #compare fee
@@ -395,12 +396,12 @@ class RawTransactionsTest(PigeonTestFramework):
         mSigObj = self.nodes[1].addmultisigaddress(4, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey'], addr4Obj['pubkey'], addr5Obj['pubkey']])
 
         inputs = []
-        outputs = {mSigObj:1.1}
+        outputs = {mSigObj:11}
         rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
         fundedTx = self.nodes[0].fundrawtransaction(rawtx)
 
         #create same transaction over sendtoaddress
-        txId = self.nodes[0].sendtoaddress(mSigObj, 1.1)
+        txId = self.nodes[0].sendtoaddress(mSigObj, 11)
         signedFee = self.nodes[0].getrawmempool(True)[txId]['fee']
 
         #compare fee
@@ -422,15 +423,15 @@ class RawTransactionsTest(PigeonTestFramework):
         mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])
 
 
-        # send 1.2 PGN to msig addr
-        txId = self.nodes[0].sendtoaddress(mSigObj, 1.2)
+        # send 12 PIGEON to msig addr
+        txId = self.nodes[0].sendtoaddress(mSigObj, 12)
         self.sync_all()
         self.nodes[1].generate(1)
         self.sync_all()
 
         oldBalance = self.nodes[1].getbalance()
         inputs = []
-        outputs = {self.nodes[1].getnewaddress():1.1}
+        outputs = {self.nodes[1].getnewaddress():11}
         rawtx = self.nodes[2].createrawtransaction(inputs, outputs)
         fundedTx = self.nodes[2].fundrawtransaction(rawtx)
 
@@ -441,7 +442,7 @@ class RawTransactionsTest(PigeonTestFramework):
         self.sync_all()
 
         # make sure funds are received at node1
-        assert_equal(oldBalance+Decimal('1.10000000'), self.nodes[1].getbalance())
+        assert_equal(oldBalance+Decimal('11.0000000'), self.nodes[1].getbalance())
 
         ############################################################
         # locked wallet test
@@ -464,7 +465,6 @@ class RawTransactionsTest(PigeonTestFramework):
 
         # drain the keypool
         self.nodes[1].getnewaddress()
-        self.nodes[1].getrawchangeaddress()
         inputs = []
         outputs = {self.nodes[0].getnewaddress():1.1}
         rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
@@ -474,15 +474,14 @@ class RawTransactionsTest(PigeonTestFramework):
 
         #refill the keypool
         self.nodes[1].walletpassphrase("test", 100)
-        self.nodes[1].keypoolrefill(8) #need to refill the keypool to get an internal change address
         self.nodes[1].walletlock()
 
-        assert_raises_rpc_error(-13, "walletpassphrase", self.nodes[1].sendtoaddress, self.nodes[0].getnewaddress(), 1.2)
+        assert_raises_rpc_error(-13, "walletpassphrase", self.nodes[1].sendtoaddress, self.nodes[0].getnewaddress(), 12)
 
         oldBalance = self.nodes[0].getbalance()
 
         inputs = []
-        outputs = {self.nodes[0].getnewaddress():1.1}
+        outputs = {self.nodes[0].getnewaddress():11}
         rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
         fundedTx = self.nodes[1].fundrawtransaction(rawtx)
 
@@ -494,8 +493,7 @@ class RawTransactionsTest(PigeonTestFramework):
         self.sync_all()
 
         # make sure funds are received at node1
-        assert_equal(oldBalance+Decimal('5001.10000000'), self.nodes[0].getbalance())
-
+        assert_equal(oldBalance+Decimal('511.0000000'), self.nodes[0].getbalance())
 
         ###############################################
         # multiple (~19) inputs tx test | Compare fee #
@@ -554,7 +552,7 @@ class RawTransactionsTest(PigeonTestFramework):
         self.sync_all()
         self.nodes[0].generate(1)
         self.sync_all()
-        assert_equal(oldBalance+Decimal('5000.19000000'), self.nodes[0].getbalance()) #0.19+block reward
+        assert_equal(oldBalance+Decimal('500.19000000'), self.nodes[0].getbalance()) #0.19+block reward
 
         #####################################################
         # test fundrawtransaction with OP_RETURN and no vin #
@@ -681,9 +679,10 @@ class RawTransactionsTest(PigeonTestFramework):
         outputs = {self.nodes[2].getnewaddress(): value for value in (1.0, 1.1, 1.2, 1.3)}
         rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
 
-        result = [self.nodes[3].fundrawtransaction(rawtx),
+        # Add changePosition=4 to circumvent BIP69 input/output sorting
+        result = [self.nodes[3].fundrawtransaction(rawtx, {"changePosition": 4}),
                   # split the fee between outputs 0, 2, and 3, but not output 1
-                  self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": [0, 2, 3]})]
+                  self.nodes[3].fundrawtransaction(rawtx, {"subtractFeeFromOutputs": [0, 2, 3], "changePosition": 4})]
 
         dec_tx = [self.nodes[3].decoderawtransaction(result[0]['hex']),
                   self.nodes[3].decoderawtransaction(result[1]['hex'])]

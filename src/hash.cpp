@@ -1,5 +1,4 @@
-// Copyright (c) 2013-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2013-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,9 +7,6 @@
 #include "crypto/hmac_sha512.h"
 #include "pubkey.h"
 
-//TODO remove these
-double algoHashTotal[16];
-int algoHashHits[16];
 
 inline uint32_t ROTL32(uint32_t x, int8_t r)
 {

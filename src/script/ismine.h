@@ -1,11 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_SCRIPT_ISMINE_H
-#define PIGEON_SCRIPT_ISMINE_H
+#ifndef BITCOIN_SCRIPT_ISMINE_H
+#define BITCOIN_SCRIPT_ISMINE_H
 
 #include "script/standard.h"
 
@@ -29,14 +28,7 @@ enum isminetype
 /** used for bitflags of isminetype */
 typedef uint8_t isminefilter;
 
-/* isInvalid becomes true when the script is found invalid by consensus or policy. This will terminate the recursion
- * and return a ISMINE_NO immediately, as an invalid script should never be considered as "mine". This is needed as
- * different SIGVERSION may have different network rules. Currently the only use of isInvalid is indicate uncompressed
- * keys in SIGVERSION_WITNESS_V0 script, but could also be used in similar cases in the future
- */
-isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, bool& isInvalid, SigVersion = SIGVERSION_BASE);
-isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, SigVersion = SIGVERSION_BASE);
-isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, bool& isInvalid, SigVersion = SIGVERSION_BASE);
-isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, SigVersion = SIGVERSION_BASE);
+isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
+isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest);
 
-#endif // PIGEON_SCRIPT_ISMINE_H
+#endif // BITCOIN_SCRIPT_ISMINE_H

@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 # Copyright (c) 2015-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test transaction signing using the signrawtransaction RPC."""
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 
-class SignRawTransactionsTest(PigeonTestFramework):
+class SignRawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -31,7 +30,7 @@ class SignRawTransactionsTest(PigeonTestFramework):
              'scriptPubKey': '76a914669b857c03a5ed269d5d85a1ffac9ed5d663072788ac'},
         ]
 
-        outputs = {'mpLQjfK79b7CCV4VMJWEWAj5Mpx8Up5zxB': 0.1}
+        outputs = {'ycwedq2f3sz2Yf9JqZsBCQPxp18WU3Hp4J': 0.1}
 
         rawTx = self.nodes[0].createrawtransaction(inputs, outputs)
         rawTxSigned = self.nodes[0].signrawtransaction(rawTx, inputs, privKeys)
@@ -72,7 +71,7 @@ class SignRawTransactionsTest(PigeonTestFramework):
              'scriptPubKey': 'badbadbadbad'}
         ]
 
-        outputs = {'mpLQjfK79b7CCV4VMJWEWAj5Mpx8Up5zxB': 0.1}
+        outputs = {'ycwedq2f3sz2Yf9JqZsBCQPxp18WU3Hp4J': 0.1}
 
         rawTx = self.nodes[0].createrawtransaction(inputs, outputs)
 
@@ -98,7 +97,6 @@ class SignRawTransactionsTest(PigeonTestFramework):
         # 5) Script verification errors have certain properties
         assert 'txid' in rawTxSigned['errors'][0]
         assert 'vout' in rawTxSigned['errors'][0]
-        assert 'witness' in rawTxSigned['errors'][0]
         assert 'scriptSig' in rawTxSigned['errors'][0]
         assert 'sequence' in rawTxSigned['errors'][0]
         assert 'error' in rawTxSigned['errors'][0]
@@ -108,32 +106,6 @@ class SignRawTransactionsTest(PigeonTestFramework):
         assert_equal(rawTxSigned['errors'][0]['vout'], inputs[1]['vout'])
         assert_equal(rawTxSigned['errors'][1]['txid'], inputs[2]['txid'])
         assert_equal(rawTxSigned['errors'][1]['vout'], inputs[2]['vout'])
-        assert not rawTxSigned['errors'][0]['witness']
-
-        # Now test signing failure for transaction with input witnesses
-        p2wpkh_raw_tx = "01000000000102fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f00000000494830450221008b9d1dc26ba6a9cb62127b02742fa9d754cd3bebf337f7a55d114c8e5cdd30be022040529b194ba3f9281a99f2b1c0a19c0489bc22ede944ccf4ecbab4cc618ef3ed01eeffffffef51e1b804cc89d182d279655c3aa89e815b1b309fe287d9b2b55d57b90ec68a0100000000ffffffff02202cb206000000001976a9148280b37df378db99f66f85c95a783a76ac7a6d5988ac9093510d000000001976a9143bde42dbee7e4dbe6a21b2d50ce2f0167faa815988ac000247304402203609e17b84f6a7d30c80bfa610b5b4542f32a8a0d5447a12fb1366d7f01cc44a0220573a954c4518331561406f90300e8f3358f51928d43c212a8caed02de67eebee0121025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee635711000000"
-
-        rawTxSigned = self.nodes[0].signrawtransaction(p2wpkh_raw_tx)
-
-        # 7) The transaction has no complete set of signatures
-        assert 'complete' in rawTxSigned
-        assert_equal(rawTxSigned['complete'], False)
-
-        # 8) Two script verification errors occurred
-        assert 'errors' in rawTxSigned
-        assert_equal(len(rawTxSigned['errors']), 2)
-
-        # 9) Script verification errors have certain properties
-        assert 'txid' in rawTxSigned['errors'][0]
-        assert 'vout' in rawTxSigned['errors'][0]
-        assert 'witness' in rawTxSigned['errors'][0]
-        assert 'scriptSig' in rawTxSigned['errors'][0]
-        assert 'sequence' in rawTxSigned['errors'][0]
-        assert 'error' in rawTxSigned['errors'][0]
-
-        # Non-empty witness checked here
-        assert_equal(rawTxSigned['errors'][1]['witness'], ["304402203609e17b84f6a7d30c80bfa610b5b4542f32a8a0d5447a12fb1366d7f01cc44a0220573a954c4518331561406f90300e8f3358f51928d43c212a8caed02de67eebee01", "025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357"])
-        assert not rawTxSigned['errors'][0]['witness']
 
     def run_test(self):
         self.successful_signing_test()

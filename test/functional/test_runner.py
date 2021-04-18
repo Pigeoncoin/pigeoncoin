@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Run regression test suite.
@@ -11,7 +10,7 @@ forward all unrecognized arguments onto the individual test scripts.
 Functional tests are disabled on Windows by default. Use --force to run them anyway.
 
 For a description of arguments recognized by test scripts, see
-`test/functional/test_framework/test_framework.py:PigeonTestFramework.main`.
+`test/functional/test_framework/test_framework.py:BitcoinTestFramework.main`.
 
 """
 
@@ -55,34 +54,42 @@ TEST_EXIT_SKIPPED = 77
 BASE_SCRIPTS= [
     # Scripts that are run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
+    'dip3-deterministicmns.py', # NOTE: needs pigeon_hash to pass
     'wallet-hd.py',
     'walletbackup.py',
     # vv Tests less than 5m vv
-    #'p2p-fullblocktest.py', TODO - fix comptool.TestInstance timeout (
+    'p2p-fullblocktest.py', # NOTE: needs pigeon_hash to pass
     'fundrawtransaction.py',
-    #'p2p-compactblocks.py' - TODO - refactor to assume segwit is always active
-    # 'segwit.py', TODO fix mininode rehash methods to use X16R
+    'fundrawtransaction-hd.py',
     # vv Tests less than 2m vv
+    'p2p-instantsend.py',
     'wallet.py',
     'wallet-accounts.py',
-    # 'p2p-segwit.py',TODO - refactor to assume segwit is always active
     'wallet-dump.py',
     'listtransactions.py',
+    'multikeysporks.py',
+    'llmq-signing.py', # NOTE: needs pigeon_hash to pass
+    'llmq-chainlocks.py', # NOTE: needs pigeon_hash to pass
+    'llmq-simplepose.py', # NOTE: needs pigeon_hash to pass
+    'llmq-is-cl-conflicts.py', # NOTE: needs pigeon_hash to pass
+    'llmq-is-retroactive.py', # NOTE: needs pigeon_hash to pass
+    'llmq-dkgerrors.py', # NOTE: needs pigeon_hash to pass
+    'dip4-coinbasemerkleroots.py', # NOTE: needs pigeon_hash to pass
     # vv Tests less than 60s vv
-    # 'sendheaders.py', TODO fix mininode rehash methods to use X16R
+    'sendheaders.py', # NOTE: needs pigeon_hash to pass
     'zapwallettxes.py',
     'importmulti.py',
     'mempool_limit.py',
     'merkle_blocks.py',
     'receivedby.py',
     'abandonconflict.py',
-    #'bip68-112-113-p2p.py', - TODO - currently testing softfork activations, we need to test the features
+    'bip68-112-113-p2p.py',
     'rawtransactions.py',
     'reindex.py',
     # vv Tests less than 30s vv
     'keypool-topup.py',
     'zmq_test.py',
-    'pigeon_cli.py',
+    'bitcoin_cli.py',
     'mempool_resurrect_test.py',
     'txn_doublespend.py --mineblock',
     'txn_clone.py',
@@ -97,64 +104,68 @@ BASE_SCRIPTS= [
     'proxy_test.py',
     'signrawtransactions.py',
     'disconnect_ban.py',
+    'addressindex.py',
+    'timestampindex.py',
+    'spentindex.py',
     'decodescript.py',
     'blockchain.py',
-    'deprecated_rpc.py',
     'disablewallet.py',
     'net.py',
     'keypool.py',
+    'keypool-hd.py',
     'p2p-mempool.py',
     'prioritise_transaction.py',
-    # 'invalidblockrequest.py', TODO fix mininode rehash methods to use X16R
-    # 'invalidtxrequest.py', TODO fix mininode rehash methods to use X16R
-    # 'p2p-versionbits-warning.py', TODO fix mininode rehash methods to use X16R
+    'invalidblockrequest.py', # NOTE: needs pigeon_hash to pass
+    'invalidtxrequest.py', # NOTE: needs pigeon_hash to pass
+    'p2p-versionbits-warning.py',
     'preciousblock.py',
     'importprunedfunds.py',
     'signmessages.py',
-    # 'nulldummy.py',  TODO fix mininode rehash methods to use X16R
+    'nulldummy.py',
     'import-rescan.py',
-    # 'mining.py', TODO fix mininode rehash methods to use X16R
-    # 'bumpfee.py', TODO fix mininode rehash methods to use X16R
+    'mining.py',
     'rpcnamedargs.py',
     'listsinceblock.py',
     'p2p-leaktests.py',
+    'p2p-compactblocks.py',
+    'sporks.py',
+    'rpc_getblockstats.py',
+    'p2p-fingerprint.py',
     'wallet-encryption.py',
-    # 'bipdersig-p2p.py', TODO fix mininode rehash methods to use X16R
-    # 'bip65-cltv-p2p.py', TODO fix mininode rehash methods to use X16R
+    'bipdersig-p2p.py',
+    'bip65-cltv-p2p.py',
     'uptime.py',
     'resendwallettransactions.py',
     'minchainwork.py',
-    # 'p2p-fingerprint.py', TODO fix mininode rehash methods to use X16R
-    'uacomment.py',
+    'p2p-acceptblock.py', # NOTE: needs pigeon_hash to pass
+    'feature_shutdown.py',
 ]
 
 EXTENDED_SCRIPTS = [
     # These tests are not run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
-    'pruning.py',
+    'pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work in litemode though.
     # vv Tests less than 20m vv
     'smartfees.py',
     # vv Tests less than 5m vv
-    # 'maxuploadtarget.py', TODO fix mininode rehash methods to use X16R
+    'maxuploadtarget.py',
     'mempool_packages.py',
-    #'dbcrash.py',
+    'dbcrash.py',
     # vv Tests less than 2m vv
     'bip68-sequence.py',
-    'getblocktemplate_longpoll.py',
+    'getblocktemplate_longpoll.py',  # FIXME: "socket.error: [Errno 54] Connection reset by peer" on my Mac, same as  https://github.com/bitcoin/bitcoin/issues/6651
     'p2p-timeouts.py',
     # vv Tests less than 60s vv
-    # use this for future soft fork testing --> 'bip9-softforks.py',
-    'p2p-feefilter.py',
+    'bip9-softforks.py',
     'rpcbind_test.py',
     # vv Tests less than 30s vv
     'assumevalid.py',
-    #'example_test.py', TODO fix mininode rehash methods to use X16R
+    'example_test.py',
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
-    'notifications.py',
+    'txindex.py',
+    'forknotify.py',
     'invalidateblock.py',
-    #'p2p-acceptblock.py',  TODO fix mininode rehash methods to use X16R
-    'replace-by-fee.py',
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
@@ -176,18 +187,17 @@ def main():
     Help text and arguments for individual test script:''',
                                      formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
-    parser.add_argument('--exclude', '-x', help='specify a comma-separated-list of scripts to exclude.')
+    parser.add_argument('--exclude', '-x', help='specify a comma-seperated-list of scripts to exclude.')
     parser.add_argument('--extended', action='store_true', help='run the extended test suite in addition to the basic tests')
-    parser.add_argument('--onlyextended', action='store_true', help='run only the extended test suite')
     parser.add_argument('--force', '-f', action='store_true', help='run tests even on platforms where they are disabled by default (e.g. windows).')
     parser.add_argument('--help', '-h', '-?', action='store_true', help='print help text and exit')
     parser.add_argument('--jobs', '-j', type=int, default=4, help='how many test scripts to run in parallel. Default=4.')
-    parser.add_argument('--keepcache', '-k', action='store_true', help='the default behavior is to flush the cache directory on startup. --keepcache retains the cache from the previous testrun.')
     parser.add_argument('--quiet', '-q', action='store_true', help='only print results summary and failure logs')
+    parser.add_argument('--keepcache', '-k', action='store_true', help='the default behavior is to flush the cache directory on startup. --keepcache retains the cache from the previous testrun.')
     parser.add_argument('--tmpdirprefix', '-t', default=tempfile.gettempdir(), help="Root directory for datadirs")
     args, unknown_args = parser.parse_known_args()
 
-    # args to be passed on always start with two dashes; tests are the remaining unknown args
+    # args to be passed on always start with two pigeones; tests are the remaining unknown args
     tests = [arg for arg in unknown_args if arg[:2] != "--"]
     passon_args = [arg for arg in unknown_args if arg[:2] == "--"]
 
@@ -210,16 +220,16 @@ def main():
 
     enable_wallet = config["components"].getboolean("ENABLE_WALLET")
     enable_utils = config["components"].getboolean("ENABLE_UTILS")
-    enable_pigeond = config["components"].getboolean("ENABLE_PIGEOND")
+    enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
 
     if config["environment"]["EXEEXT"] == ".exe" and not args.force:
-        # https://github.com/PigeonProject/Pigeoncoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
-        # https://github.com/PigeonProject/Pigeoncoin/pull/5677#issuecomment-136646964
+        # https://github.com/bitcoin/bitcoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
+        # https://github.com/bitcoin/bitcoin/pull/5677#issuecomment-136646964
         print("Tests currently disabled on Windows by default. Use --force option to enable")
         sys.exit(0)
 
-    if not (enable_wallet and enable_utils and enable_pigeond):
-        print("No functional tests to run. Wallet, utils, and pigeond must all be enabled")
+    if not (enable_wallet and enable_utils and enable_bitcoind):
+        print("No functional tests to run. Wallet, utils, and bitcoind must all be enabled")
         print("Rerun `configure` with -enable-wallet, -with-utils and -with-daemon and rerun make")
         sys.exit(0)
 
@@ -242,8 +252,6 @@ def main():
             # place the EXTENDED_SCRIPTS first since the three longest ones
             # are there and the list is shorter
             test_list = EXTENDED_SCRIPTS + test_list
-        elif args.onlyextended:
-            test_list = EXTENDED_SCRIPTS
 
     # Remove the test cases that the user has explicitly asked to exclude.
     if args.exclude:
@@ -275,7 +283,8 @@ def main():
 def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_coverage=False, args=[]):
     # Warn if pigeond is already running (unix only)
     try:
-        if subprocess.check_output(["pidof", "pigeond"]) is not None:
+        pidof_output = subprocess.check_output(["pidof", "pigeond"])
+        if not (pidof_output is None or pidof_output == b''):
             print("%sWARNING!%s There is already a pigeond process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
     except (OSError, subprocess.SubprocessError):
         pass
@@ -285,10 +294,11 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
     if os.path.isdir(cache_dir):
         print("%sWARNING!%s There is a cache directory here: %s. If tests fail unexpectedly, try deleting the cache directory." % (BOLD[1], BOLD[0], cache_dir))
 
+
     #Set env vars
-    if "PIGEOND" not in os.environ:
-        os.environ["PIGEOND"] = build_dir + '/src/pigeond' + exeext
-        os.environ["PIGEONCLI"] = build_dir + '/src/pigeon-cli' + exeext
+    if "BITCOIND" not in os.environ:
+        os.environ["BITCOIND"] = build_dir + '/src/pigeond' + exeext
+        os.environ["BITCOINCLI"] = build_dir + '/src/pigeon-cli' + exeext
 
     tests_dir = src_dir + '/test/functional/'
 
@@ -316,16 +326,15 @@ def run_tests(test_list, src_dir, build_dir, exeext, tmpdir, jobs=1, enable_cove
     for _ in range(len(test_list)):
         test_result, stdout, stderr = job_queue.get_next()
         test_results.append(test_result)
+
         if test_result.status == "Passed":
             logging.debug("\n%s%s%s passed, Duration: %s s" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
         elif test_result.status == "Skipped":
             logging.debug("\n%s%s%s skipped" % (BOLD[1], test_result.name, BOLD[0]))
         else:
-            logging.debug("\n%s%s%s failed, Duration: %s s\n" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
             print("\n%s%s%s failed, Duration: %s s\n" % (BOLD[1], test_result.name, BOLD[0], test_result.time))
             print(BOLD[1] + 'stdout:\n' + BOLD[0] + stdout + '\n')
             print(BOLD[1] + 'stderr:\n' + BOLD[0] + stderr + '\n')
-        logging.debug("%s / %s tests ran" % (job_queue.num_finished, job_queue.num_jobs))
 
     print_results(test_results, max_len_name, (int(time.time() - time0)))
 
@@ -363,7 +372,7 @@ def print_results(test_results, max_len_name, runtime):
 
 class TestHandler:
     """
-    Trigger the test scripts passed in via the list.
+    Trigger the testscrips passed in via the list.
     """
 
     def __init__(self, num_tests_parallel, tests_dir, tmpdir, test_list=None, flags=None):
@@ -374,9 +383,7 @@ class TestHandler:
         self.test_list = test_list
         self.flags = flags
         self.num_running = 0
-        self.num_finished = 0
-        self.num_jobs = len(test_list)
-        # In case there is a graveyard of zombie pigeonds, we can apply a
+        # In case there is a graveyard of zombie bitcoinds, we can apply a
         # pseudorandom offset to hopefully jump over them.
         # (625 is PORT_RANGE/MAX_NODES)
         self.portseed_offset = int(time.time() * 1000) % 625
@@ -423,7 +430,6 @@ class TestHandler:
                     else:
                         status = "Failed"
                     self.num_running -= 1
-                    self.num_finished += 1
                     self.jobs.remove(j)
 
                     return TestResult(name, status, int(time.time() - time0)), stdout, stderr
@@ -468,14 +474,14 @@ def check_script_list(src_dir):
             # On travis this warning is an error to prevent merging incomplete commits into master
             sys.exit(1)
 
-class RPCCoverage():
+class RPCCoverage(object):
     """
     Coverage reporting utilities for test_runner.
 
     Coverage calculation works by having each test script subprocess write
     coverage files into a particular directory. These files contain the RPC
     commands invoked during testing, as well as a complete listing of RPC
-    commands per `pigeon-cli help` (`rpc_interface.txt`).
+    commands per `bitcoin-cli help` (`rpc_interface.txt`).
 
     After all tests complete, the commands run are combined and diff'd against
     the complete list to calculate uncovered RPC commands.

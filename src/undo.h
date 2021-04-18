@@ -1,11 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_UNDO_H
-#define PIGEON_UNDO_H
+#ifndef BITCOIN_UNDO_H
+#define BITCOIN_UNDO_H
 
 #include "compressor.h" 
 #include "consensus/consensus.h"
@@ -34,7 +33,7 @@ public:
         ::Serialize(s, CTxOutCompressor(REF(txout->out)));
     }
 
-    explicit TxInUndoSerializer(const Coin* coin) : txout(coin) {}
+    TxInUndoSerializer(const Coin* coin) : txout(coin) {}
 };
 
 class TxInUndoDeserializer
@@ -58,11 +57,10 @@ public:
         ::Unserialize(s, REF(CTxOutCompressor(REF(txout->out))));
     }
 
-    explicit TxInUndoDeserializer(Coin* coin) : txout(coin) {}
+    TxInUndoDeserializer(Coin* coin) : txout(coin) {}
 };
 
-static const size_t MIN_TRANSACTION_INPUT_WEIGHT = WITNESS_SCALE_FACTOR * ::GetSerializeSize(CTxIn(), SER_NETWORK, PROTOCOL_VERSION);
-static const size_t MAX_INPUTS_PER_BLOCK = MAX_BLOCK_WEIGHT / MIN_TRANSACTION_INPUT_WEIGHT;
+static const size_t MAX_INPUTS_PER_BLOCK = MaxBlockSize(true) / ::GetSerializeSize(CTxIn(), SER_NETWORK, PROTOCOL_VERSION);
 
 /** Undo information for a CTransaction */
 class CTxUndo
@@ -110,4 +108,4 @@ public:
     }
 };
 
-#endif // PIGEON_UNDO_H
+#endif // BITCOIN_UNDO_H

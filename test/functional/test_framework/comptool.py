@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # Copyright (c) 2015-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Compare two or more pigeonds to each other.
@@ -28,7 +27,7 @@ logger=logging.getLogger("TestFramework.comptool")
 
 global mininode_lock
 
-class RejectResult():
+class RejectResult(object):
     """Outcome that expects rejection of a transaction or block."""
     def __init__(self, code, reason=b''):
         self.code = code
@@ -157,13 +156,13 @@ class TestNode(NodeConnCB):
 #    across all connections.  (If outcome of final tx is specified as true
 #    or false, then only the last tx is tested against outcome.)
 
-class TestInstance():
+class TestInstance(object):
     def __init__(self, objects=None, sync_every_block=True, sync_every_tx=False):
         self.blocks_and_transactions = objects if objects else []
         self.sync_every_block = sync_every_block
         self.sync_every_tx = sync_every_tx
 
-class TestManager():
+class TestManager(object):
 
     def __init__(self, testgen, datadir):
         self.test_generator = testgen
@@ -195,10 +194,10 @@ class TestManager():
     def wait_for_verack(self):
         return all(node.wait_for_verack() for node in self.test_nodes)
 
-    def wait_for_pings(self, counter):
+    def wait_for_pings(self, counter, timeout=float('inf')):
         def received_pongs():
             return all(node.received_ping_response(counter) for node in self.test_nodes)
-        wait_until(received_pongs, lock=mininode_lock)
+        wait_until(received_pongs, timeout=timeout, lock=mininode_lock)
 
     # sync_blocks: Wait for all connections to request the blockhash given
     # then send get_headers to find out the tip of each node, and synchronize
@@ -211,14 +210,14 @@ class TestManager():
             )
 
         # --> error if not requested
-        wait_until(blocks_requested, attempts=20*num_blocks, lock=mininode_lock)
+        wait_until(blocks_requested, attempts=20*num_blocks, sleep=0.1, lock=mininode_lock)
 
         # Send getheaders message
         [ c.cb.send_getheaders() for c in self.connections ]
 
         # Send ping and wait for response -- synchronization hack
         [ c.cb.send_ping(self.ping_counter) for c in self.connections ]
-        self.wait_for_pings(self.ping_counter)
+        self.wait_for_pings(self.ping_counter, timeout=300)
         self.ping_counter += 1
 
     # Analogous to sync_block (see above)
@@ -349,12 +348,13 @@ class TestManager():
                         else:
                             [ c.send_message(msg_block(block)) for c in self.connections ]
                             [ c.cb.send_ping(self.ping_counter) for c in self.connections ]
-                            self.wait_for_pings(self.ping_counter)
+                            self.wait_for_pings(self.ping_counter, timeout=300)
                             self.ping_counter += 1
                         if (not self.check_results(tip, outcome)):
                             raise AssertionError("Test failed at test %d" % test_number)
                     else:
-                        invqueue.append(CInv(2, block.sha256))
+                        block_header = CBlockHeader(block)
+                        [ c.cb.send_header(block_header) for c in self.connections ]
                 elif isinstance(b_or_t, CBlockHeader):
                     block_header = b_or_t
                     self.block_store.add_header(block_header)

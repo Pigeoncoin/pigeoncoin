@@ -45,7 +45,7 @@ operation.
 
 By default, the ZeroMQ feature is automatically compiled in if the
 necessary prerequisites are found.  To disable, use --disable-zmq
-during the *configure* step of building pigeond:
+during the *configure* step of building bitcoind:
 
     $ ./configure --disable-zmq (other options)
 
@@ -56,23 +56,35 @@ the command line or in the configuration file.
 
 Currently, the following notifications are supported:
 
-    -zmqpubhashtx=address
     -zmqpubhashblock=address
+    -zmqpubhashchainlock=address
+    -zmqpubhashtx=address
+    -zmqpubhashtxlock=address
+    -zmqpubhashgovernancevote=address
+    -zmqpubhashgovernanceobject=address
+    -zmqpubhashinstantsenddoublespend=address
     -zmqpubrawblock=address
+    -zmqpubrawchainlock=address
+    -zmqpubrawchainlocksig=address
     -zmqpubrawtx=address
+    -zmqpubrawtxlock=address
+    -zmqpubrawtxlocksig=address
+    -zmqpubrawgovernancevote=address
+    -zmqpubrawgovernanceobject=address
+    -zmqpubrawinstantsenddoublespend=address
 
 The socket type is PUB and the address must be a valid ZeroMQ socket
 address. The same address can be used in more than one notification.
 
 For instance:
 
-    $ pigeond -zmqpubhashtx=tcp://127.0.0.1:28756 \
+    $ pigeond -zmqpubhashtx=tcp://127.0.0.1:28332 \
                -zmqpubrawtx=ipc:///tmp/pigeond.tx.raw
 
 Each PUB notification has a topic and body, where the header
 corresponds to the notification type. For instance, for the
 notification `-zmqpubhashtx` the topic is `hashtx` (no null
-terminator) and the body is the transaction hash (32
+terminator) and the body is the hexadecimal transaction hash (32
 bytes).
 
 These options can also be provided in pigeon.conf.

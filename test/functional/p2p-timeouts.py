@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # Copyright (c) 2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test various net timeouts.
 
-- Create three pigeond nodes:
+- Create three bitcoind nodes:
 
     no_verack_node - we never send a verack in response to their version
     no_version_node - we never send a version (only a ping)
@@ -25,7 +24,7 @@
 from time import sleep
 
 from test_framework.mininode import *
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 class TestNode(NodeConnCB):
@@ -33,53 +32,44 @@ class TestNode(NodeConnCB):
         # Don't send a verack in response
         pass
 
-class TimeoutsTest(PigeonTestFramework):
+class TimeoutsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
     def run_test(self):
         # Setup the p2p connections and start up the network thread.
-        self.no_verack_node = TestNode() # never send verack
-        self.no_version_node = TestNode() # never send version (just ping)
-        self.no_send_node = TestNode() # never send anything
+        no_verack_node = self.nodes[0].add_p2p_connection(TestNode())
+        no_version_node = self.nodes[0].add_p2p_connection(TestNode(), send_version=False)
+        no_send_node = self.nodes[0].add_p2p_connection(TestNode(), send_version=False)
 
-        connections = []
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], self.no_verack_node))
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], self.no_version_node, send_version=False))
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], self.no_send_node, send_version=False))
-        self.no_verack_node.add_connection(connections[0])
-        self.no_version_node.add_connection(connections[1])
-        self.no_send_node.add_connection(connections[2])
-
-        NetworkThread().start()  # Start up network handling in another thread
+        network_thread_start()
 
         sleep(1)
 
-        assert(self.no_verack_node.connected)
-        assert(self.no_version_node.connected)
-        assert(self.no_send_node.connected)
+        assert no_verack_node.connected
+        assert no_version_node.connected
+        assert no_send_node.connected
 
-        ping_msg = msg_ping()
-        connections[0].send_message(ping_msg)
-        connections[1].send_message(ping_msg)
+        no_verack_node.send_message(msg_ping())
+        no_version_node.send_message(msg_ping())
 
         sleep(30)
 
-        assert "version" in self.no_verack_node.last_message
+        assert "version" in no_verack_node.last_message
 
-        assert(self.no_verack_node.connected)
-        assert(self.no_version_node.connected)
-        assert(self.no_send_node.connected)
+        assert no_verack_node.connected
+        assert no_version_node.connected
+        assert no_send_node.connected
 
-        connections[0].send_message(ping_msg)
-        connections[1].send_message(ping_msg)
+        no_verack_node.send_message(msg_ping())
+        no_version_node.send_message(msg_ping())
 
         sleep(31)
 
-        assert(not self.no_verack_node.connected)
-        assert(not self.no_version_node.connected)
-        assert(not self.no_send_node.connected)
+        assert not no_verack_node.connected
+        assert not no_version_node.connected
+        assert not no_send_node.connected
 
 if __name__ == '__main__':
     TimeoutsTest().main()

@@ -1,26 +1,14 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_PRIMITIVES_BLOCK_H
-#define PIGEON_PRIMITIVES_BLOCK_H
+#ifndef BITCOIN_PRIMITIVES_BLOCK_H
+#define BITCOIN_PRIMITIVES_BLOCK_H
 
 #include "primitives/transaction.h"
 #include "serialize.h"
 #include "uint256.h"
-
-class BlockNetwork
-{
-public:
-    BlockNetwork();
-    bool fOnRegtest;
-    bool fOnTestnet;
-    void SetNetwork(const std::string& network);
-};
-
-extern BlockNetwork bNetwork;
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -86,7 +74,7 @@ class CBlock : public CBlockHeader
 public:
     // network and disk
     std::vector<CTransactionRef> vtx;
-    mutable CTxOut txoutFounder; // founder payment
+
     // memory only
     mutable bool fChecked;
 
@@ -112,7 +100,6 @@ public:
     void SetNull()
     {
         CBlockHeader::SetNull();
-        txoutFounder = CTxOut();
         vtx.clear();
         fChecked = false;
     }
@@ -129,13 +116,9 @@ public:
         return block;
     }
 
-    // void SetPrevBlockHash(uint256 prevHash) 
-    // {
-    //     block.hashPrevBlock = prevHash;
-    // }
-
     std::string ToString() const;
 };
+
 
 /** Describes a place in the block chain to another node such that if the
  * other node doesn't have the same branch, it can find a recent common trunk.
@@ -147,7 +130,7 @@ struct CBlockLocator
 
     CBlockLocator() {}
 
-    explicit CBlockLocator(const std::vector<uint256>& vHaveIn) : vHave(vHaveIn) {}
+    CBlockLocator(const std::vector<uint256>& vHaveIn) : vHave(vHaveIn) {}
 
     ADD_SERIALIZE_METHODS;
 
@@ -170,4 +153,4 @@ struct CBlockLocator
     }
 };
 
-#endif // PIGEON_PRIMITIVES_BLOCK_H
+#endif // BITCOIN_PRIMITIVES_BLOCK_H

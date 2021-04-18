@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2014-2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,7 @@
 #include "util.h"
 #include "uritests.h"
 #include "compattests.h"
+#include "trafficgraphdatatests.h"
 
 #ifdef ENABLE_WALLET
 #include "paymentservertests.h"
@@ -62,7 +63,7 @@ int main(int argc, char *argv[])
     bool fInvalid = false;
 
     // Prefer the "minimal" platform for the test instead of the normal default
-    // platform ("xcb", "windows", or "cocoa") so tests can't unintentionally
+    // platform ("xcb", "windows", or "cocoa") so tests can't unintentially
     // interfere with any background GUIs and don't require extra resources.
     #if defined(WIN32)
         _putenv_s("QT_QPA_PLATFORM", "minimal");
@@ -102,7 +103,8 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    fs::remove_all(pathTemp);
-
+    TrafficGraphDataTests test6;
+    if (QTest::qExec(&test6) != 0)
+        fInvalid = true;
     return fInvalid;
 }

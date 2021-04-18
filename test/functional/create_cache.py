@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # Copyright (c) 2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Create a blockchain cache.
@@ -10,9 +9,9 @@ multiple functional tests. This helper script is executed by test_runner when mu
 tests are being run in parallel.
 """
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 
-class CreateCache(PigeonTestFramework):
+class CreateCache(BitcoinTestFramework):
     # Test network and test nodes are not required:
 
     def set_test_params(self):

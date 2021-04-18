@@ -1,5 +1,4 @@
-// Copyright (c) 2012-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2012-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -338,6 +337,55 @@ BOOST_AUTO_TEST_CASE(insert_delete)
     CSerializeData d;
     ss.GetAndClear(d);
     BOOST_CHECK_EQUAL(ss.size(), 0);
+}
+
+// Change struct size and check if it can be deserialized
+// from old version archive and vice versa
+struct old_version
+{
+    int field1;
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(field1);
+    }
+};\
+struct new_version
+{
+    int field1;
+    int field2;
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(field1);
+        if(ser_action.ForRead() && (s.size() == 0))
+        {
+            field2 = 0;
+            return;
+        }
+        READWRITE(field2);
+    }
+};
+
+BOOST_AUTO_TEST_CASE(check_backward_compatibility)
+{
+    CDataStream ss(SER_DISK, 0);
+    old_version old_src({5});
+    ss << old_src;
+    new_version new_dest({6, 7});
+    BOOST_REQUIRE_NO_THROW(ss >> new_dest);
+    BOOST_REQUIRE(old_src.field1 == new_dest.field1);
+    BOOST_REQUIRE(ss.size() == 0);
+
+    new_version new_src({6, 7});
+    ss << new_src;
+    old_version old_dest({5});
+    BOOST_REQUIRE_NO_THROW(ss >> old_dest);
+    BOOST_REQUIRE(new_src.field1 == old_dest.field1);
 }
 
 BOOST_AUTO_TEST_CASE(class_methods)

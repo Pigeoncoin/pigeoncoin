@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test descendant package tracking code."""
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import COIN
 
 MAX_ANCESTORS = 25
 MAX_DESCENDANTS = 25
 
-class MempoolPackagesTest(PigeonTestFramework):
+class MempoolPackagesTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.extra_args = [["-maxorphantx=1000"], ["-maxorphantx=1000", "-limitancestorcount=5"]]
+        self.extra_args = [["-maxorphantxsize=1000"], ["-maxorphantxsize=1000", "-limitancestorcount=5"]]
 
     # Build a transaction that spends parent_txid:vout
     # Return amount sent
@@ -95,7 +94,7 @@ class MempoolPackagesTest(PigeonTestFramework):
 
         # Check that ancestor modified fees includes fee deltas from
         # prioritisetransaction
-        self.nodes[0].prioritisetransaction(txid=chain[0], fee_delta=1000)
+        self.nodes[0].prioritisetransaction(chain[0], 1000)
         mempool = self.nodes[0].getrawmempool(True)
         ancestor_fees = 0
         for x in chain:
@@ -103,11 +102,11 @@ class MempoolPackagesTest(PigeonTestFramework):
             assert_equal(mempool[x]['ancestorfees'], ancestor_fees * COIN + 1000)
         
         # Undo the prioritisetransaction for later tests
-        self.nodes[0].prioritisetransaction(txid=chain[0], fee_delta=-1000)
+        self.nodes[0].prioritisetransaction(chain[0], -1000)
 
         # Check that descendant modified fees includes fee deltas from
         # prioritisetransaction
-        self.nodes[0].prioritisetransaction(txid=chain[-1], fee_delta=1000)
+        self.nodes[0].prioritisetransaction(chain[-1], 1000)
         mempool = self.nodes[0].getrawmempool(True)
 
         descendant_fees = 0
@@ -125,7 +124,7 @@ class MempoolPackagesTest(PigeonTestFramework):
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
         # Prioritise a transaction that has been mined, then add it back to the
         # mempool by using invalidateblock.
-        self.nodes[0].prioritisetransaction(txid=chain[-1], fee_delta=2000)
+        self.nodes[0].prioritisetransaction(chain[-1], 2000)
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         # Keep node1's tip synced with node0
         self.nodes[1].invalidateblock(self.nodes[1].getbestblockhash())
@@ -212,7 +211,7 @@ class MempoolPackagesTest(PigeonTestFramework):
         value = send_value
 
         # Create tx1
-        tx1_id, _ = self.chain_transaction(self.nodes[0], tx0_id, 0, value, fee, 1)
+        (tx1_id, tx1_value) = self.chain_transaction(self.nodes[0], tx0_id, 0, value, fee, 1)
 
         # Create tx2-7
         vout = 1

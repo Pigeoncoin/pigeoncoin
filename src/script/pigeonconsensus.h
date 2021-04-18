@@ -1,15 +1,14 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_PIGEONCONSENSUS_H
-#define PIGEON_PIGEONCONSENSUS_H
+#ifndef BITCOIN_BITCOINCONSENSUS_H
+#define BITCOIN_BITCOINCONSENSUS_H
 
 #include <stdint.h>
 
-#if defined(BUILD_PIGEON_INTERNAL) && defined(HAVE_CONFIG_H)
+#if defined(BUILD_BITCOIN_INTERNAL) && defined(HAVE_CONFIG_H)
 #include "config/pigeon-config.h"
   #if defined(_WIN32)
     #if defined(DLL_EXPORT)
@@ -22,7 +21,7 @@
   #elif defined(HAVE_FUNC_ATTRIBUTE_VISIBILITY)
     #define EXPORT_SYMBOL __attribute__ ((visibility ("default")))
   #endif
-#elif defined(MSC_VER) && !defined(STATIC_LIBPIGEONCONSENSUS)
+#elif defined(MSC_VER) && !defined(STATIC_LIBBITCOINCONSENSUS)
   #define EXPORT_SYMBOL __declspec(dllimport)
 #endif
 
@@ -34,7 +33,7 @@
 extern "C" {
 #endif
 
-#define PIGEONCONSENSUS_API_VER 1
+#define BITCOINCONSENSUS_API_VER 0
 
 typedef enum pigeonconsensus_error_t
 {
@@ -42,7 +41,6 @@ typedef enum pigeonconsensus_error_t
     pigeonconsensus_ERR_TX_INDEX,
     pigeonconsensus_ERR_TX_SIZE_MISMATCH,
     pigeonconsensus_ERR_TX_DESERIALIZE,
-    pigeonconsensus_ERR_AMOUNT_REQUIRED,
     pigeonconsensus_ERR_INVALID_FLAGS,
 } pigeonconsensus_error;
 
@@ -55,10 +53,9 @@ enum
     pigeonconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY           = (1U << 4), // enforce NULLDUMMY (BIP147)
     pigeonconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9), // enable CHECKLOCKTIMEVERIFY (BIP65)
     pigeonconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10), // enable CHECKSEQUENCEVERIFY (BIP112)
-    pigeonconsensus_SCRIPT_FLAGS_VERIFY_WITNESS             = (1U << 11), // enable WITNESS (BIP141)
     pigeonconsensus_SCRIPT_FLAGS_VERIFY_ALL                 = pigeonconsensus_SCRIPT_FLAGS_VERIFY_P2SH | pigeonconsensus_SCRIPT_FLAGS_VERIFY_DERSIG |
-                                                               pigeonconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY | pigeonconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY |
-                                                               pigeonconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY | pigeonconsensus_SCRIPT_FLAGS_VERIFY_WITNESS
+                                                            pigeonconsensus_SCRIPT_FLAGS_VERIFY_NULLDUMMY | pigeonconsensus_SCRIPT_FLAGS_VERIFY_CHECKLOCKTIMEVERIFY |
+                                                            pigeonconsensus_SCRIPT_FLAGS_VERIFY_CHECKSEQUENCEVERIFY
 };
 
 /// Returns 1 if the input nIn of the serialized transaction pointed to by
@@ -66,10 +63,6 @@ enum
 /// the additional constraints specified by flags.
 /// If not nullptr, err will contain an error/success code for the operation
 EXPORT_SYMBOL int pigeonconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen,
-                                                 const unsigned char *txTo        , unsigned int txToLen,
-                                                 unsigned int nIn, unsigned int flags, pigeonconsensus_error* err);
-
-EXPORT_SYMBOL int pigeonconsensus_verify_script_with_amount(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, int64_t amount,
                                     const unsigned char *txTo        , unsigned int txToLen,
                                     unsigned int nIn, unsigned int flags, pigeonconsensus_error* err);
 
@@ -81,4 +74,4 @@ EXPORT_SYMBOL unsigned int pigeonconsensus_version();
 
 #undef EXPORT_SYMBOL
 
-#endif // PIGEON_PIGEONCONSENSUS_H
+#endif // BITCOIN_BITCOINCONSENSUS_H

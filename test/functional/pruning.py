@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the pruning code.
@@ -10,10 +9,11 @@ This test uses 4GB of disk space.
 This test takes 30 mins or more (up to 2 hours)
 """
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 import time
 import os
+import sys
 
 MIN_BLOCKS_TO_KEEP = 288
 
@@ -26,7 +26,7 @@ TIMESTAMP_WINDOW = 2 * 60 * 60
 def calc_usage(blockdir):
     return sum(os.path.getsize(blockdir+f) for f in os.listdir(blockdir) if os.path.isfile(blockdir+f)) / (1024. * 1024.)
 
-class PruneTest(PigeonTestFramework):
+class PruneTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 6
@@ -38,10 +38,10 @@ class PruneTest(PigeonTestFramework):
         # Create nodes 5 to test wallet in prune mode, but do not connect
         self.extra_args = [self.full_node_default_args,
                            self.full_node_default_args,
-                           ["-maxreceivebuffer=20000", "-prune=550"],
-                           ["-maxreceivebuffer=20000", "-blockmaxsize=999000"],
-                           ["-maxreceivebuffer=20000", "-blockmaxsize=999000"],
-                           ["-prune=550"]]
+                           ["-litemode","-txindex=0","-maxreceivebuffer=20000","-prune=550"],
+                           ["-litemode","-txindex=0","-maxreceivebuffer=20000","-blockmaxsize=999000"],
+                           ["-litemode","-txindex=0","-maxreceivebuffer=20000","-blockmaxsize=999000"],
+                           ["-litemode","-txindex=0","-prune=550"]]
 
     def setup_network(self):
         self.setup_nodes()
@@ -56,7 +56,7 @@ class PruneTest(PigeonTestFramework):
         sync_blocks(self.nodes[0:5])
 
     def setup_nodes(self):
-        self.add_nodes(self.num_nodes, self.extra_args, timewait=900)
+        self.add_nodes(self.num_nodes, self.extra_args, timewait=900, stderr=sys.stdout)
         self.start_nodes()
 
     def create_big_chain(self):
@@ -139,7 +139,7 @@ class PruneTest(PigeonTestFramework):
         self.log.info("Invalidating block %s at height %d" % (badhash,invalidheight))
         self.nodes[1].invalidateblock(badhash)
 
-        # We've now switched to our previously mined-24 block fork on node 1, but that's not what we want
+        # We've now switched to our previously mined-24 block fork on node 1, but thats not what we want
         # So invalidate that fork as well, until we're on the same chain as node 0/2 (but at an ancestor 288 blocks ago)
         mainchainhash = self.nodes[0].getblockhash(invalidheight - 1)
         curhash = self.nodes[1].getblockhash(invalidheight - 1)
@@ -202,7 +202,7 @@ class PruneTest(PigeonTestFramework):
         goalbesthash = self.mainchainhash2
 
         # As of 0.10 the current block download logic is not able to reorg to the original chain created in
-        # create_chain_with_stale_blocks because it doesn't know of any peer that's on that chain from which to
+        # create_chain_with_stale_blocks because it doesn't know of any peer thats on that chain from which to
         # redownload its missing blocks.
         # Invalidate the reorg_test chain in node 0 as well, it can successfully switch to the original chain
         # because it has all the block data.
@@ -230,14 +230,14 @@ class PruneTest(PigeonTestFramework):
 
     def manual_test(self, node_number, use_timestamp):
         # at this point, node has 995 blocks and has not yet run in prune mode
-        self.start_node(node_number)
+        self.start_node(node_number, extra_args=["-litemode", "-txindex=0"])
         node = self.nodes[node_number]
         assert_equal(node.getblockcount(), 995)
         assert_raises_rpc_error(-1, "not in prune mode", node.pruneblockchain, 500)
 
         # now re-start in manual pruning mode
         self.stop_node(node_number)
-        self.start_node(node_number, extra_args=["-prune=1"])
+        self.start_node(node_number, extra_args=["-litemode", "-txindex=0", "-prune=1"])
         node = self.nodes[node_number]
         assert_equal(node.getblockcount(), 995)
 
@@ -312,7 +312,7 @@ class PruneTest(PigeonTestFramework):
 
         # stop node, start back up with auto-prune at 550MB, make sure still runs
         self.stop_node(node_number)
-        self.start_node(node_number, extra_args=["-prune=550"])
+        self.start_node(node_number, extra_args=["-litemode", "-txindex=0", "-prune=550"])
 
         self.log.info("Success")
 
@@ -320,7 +320,7 @@ class PruneTest(PigeonTestFramework):
         # check that the pruning node's wallet is still in good shape
         self.log.info("Stop and start pruning node to trigger wallet rescan")
         self.stop_node(2)
-        self.start_node(2, extra_args=["-prune=550"])
+        self.start_node(2, extra_args=["-litemode", "-txindex=0", "-prune=550"])
         self.log.info("Success")
 
         # check that wallet loads successfully when restarting a pruned node after IBD.
@@ -330,7 +330,7 @@ class PruneTest(PigeonTestFramework):
         nds = [self.nodes[0], self.nodes[5]]
         sync_blocks(nds, wait=5, timeout=300)
         self.stop_node(5) #stop and start to trigger rescan
-        self.start_node(5, extra_args=["-prune=550"])
+        self.start_node(5, extra_args=["-litemode", "-txindex=0", "-prune=550"])
         self.log.info("Success")
 
     def run_test(self):

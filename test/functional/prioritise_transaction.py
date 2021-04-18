@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 # Copyright (c) 2015-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the prioritisetransaction mining RPC."""
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.mininode import COIN, MAX_BLOCK_BASE_SIZE
+from test_framework.mininode import COIN, MAX_BLOCK_SIZE
 
-class PrioritiseTransactionTest(PigeonTestFramework):
+class PrioritiseTransactionTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [["-printpriority=1"], ["-printpriority=1"]]
+        self.extra_args = [["-printpriority=1"]] * 2
 
     def run_test(self):
         self.txouts = gen_return_txouts()
@@ -33,7 +32,7 @@ class PrioritiseTransactionTest(PigeonTestFramework):
             txids[i] = create_lots_of_big_transactions(self.nodes[0], self.txouts, utxos[start_range:end_range], end_range - start_range, (i+1)*base_fee)
 
         # Make sure that the size of each group of transactions exceeds
-        # MAX_BLOCK_BASE_SIZE -- otherwise the test needs to be revised to create
+        # MAX_BLOCK_SIZE -- otherwise the test needs to be revised to create
         # more transactions.
         mempool = self.nodes[0].getrawmempool(True)
         sizes = [0, 0, 0]
@@ -41,11 +40,11 @@ class PrioritiseTransactionTest(PigeonTestFramework):
             for j in txids[i]:
                 assert(j in mempool)
                 sizes[i] += mempool[j]['size']
-            assert(sizes[i] > MAX_BLOCK_BASE_SIZE) # Fail => raise utxo_count
+            assert(sizes[i] > MAX_BLOCK_SIZE) # Fail => raise utxo_count
 
         # add a fee delta to something in the cheapest bucket and make sure it gets mined
         # also check that a different entry in the cheapest bucket is NOT mined
-        self.nodes[0].prioritisetransaction(txid=txids[0][0], fee_delta=int(3*base_fee*COIN))
+        self.nodes[0].prioritisetransaction(txids[0][0], int(3*base_fee*COIN))
 
         self.nodes[0].generate(1)
 
@@ -64,7 +63,7 @@ class PrioritiseTransactionTest(PigeonTestFramework):
 
         # Add a prioritisation before a tx is in the mempool (de-prioritising a
         # high-fee transaction so that it's now low fee).
-        self.nodes[0].prioritisetransaction(txid=high_fee_tx, fee_delta=-int(2*base_fee*COIN))
+        self.nodes[0].prioritisetransaction(high_fee_tx, -int(2*base_fee*COIN))
 
         # Add everything back to mempool
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
@@ -108,7 +107,7 @@ class PrioritiseTransactionTest(PigeonTestFramework):
         # This is a less than 1000-byte transaction, so just set the fee
         # to be the minimum for a 1000 byte transaction and check that it is
         # accepted.
-        self.nodes[0].prioritisetransaction(txid=tx_id, fee_delta=int(self.relayfee*COIN))
+        self.nodes[0].prioritisetransaction(tx_id, int(self.relayfee*COIN))
 
         self.log.info("Assert that prioritised free transaction is accepted to mempool")
         assert_equal(self.nodes[0].sendrawtransaction(tx_hex), tx_id)
@@ -116,11 +115,10 @@ class PrioritiseTransactionTest(PigeonTestFramework):
 
         # Test that calling prioritisetransaction is sufficient to trigger
         # getblocktemplate to (eventually) return a new block.
-        mock_time = int(time.time())
-        self.nodes[0].setmocktime(mock_time)
+        self.nodes[0].setmocktime(self.mocktime)
         template = self.nodes[0].getblocktemplate()
-        self.nodes[0].prioritisetransaction(txid=tx_id, fee_delta=-int(self.relayfee*COIN))
-        self.nodes[0].setmocktime(mock_time+10)
+        self.nodes[0].prioritisetransaction(tx_id, -int(self.relayfee*COIN))
+        self.nodes[0].setmocktime(self.mocktime+10)
         new_template = self.nodes[0].getblocktemplate()
 
         assert(template != new_template)

@@ -1,11 +1,7 @@
 Pigeon Core
-=============
+==========
 
-Setup
----------------------
-Pigeon Core is the original Pigeon client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Pigeon transactions (which is currently more than 100 GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
-
-To download Pigeon Core, visit [pigeoncore.org](https://pigeoncoin.org/en/releases/).
+This is the official reference wallet for Pigeon digital currency and comprises the backbone of the Pigeon peer-to-peer network. You can [download Pigeon Core](https://www.pigeon.org/downloads/) or [build it yourself](#building) using the guides below.
 
 Running
 ---------------------
@@ -24,20 +20,21 @@ Unpack the files into a directory, and then run pigeon-qt.exe.
 
 ### OS X
 
-Drag Pigeon-Core to your applications folder, and then run Pigeon-Core.
+Drag Pigeon-Qt to your applications folder, and then run Pigeon-Qt.
 
 ### Need Help?
 
-* See the documentation at the [Pigeon Wiki](https://en.pigeon.it/wiki/Main_Page)
+* See the [Pigeon documentation](https://docs.pigeon.org)
 for help and more information.
-* Ask for help on [#pigeon](http://webchat.freenode.net?channels=pigeon) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=pigeon).
-* Ask for help on the [PigeonTalk](https://pigeontalk.org/) forums, in the [Technical Support board](https://pigeontalk.org/index.php?board=4.0).
+* See the [Pigeon Developer Documentation](https://pigeon-docs.github.io/) 
+for technical specifications and implementation details.
+* Ask for help on [Pigeon Nation Discord](http://pigeonchat.org)
+* Ask for help on the [Pigeon Forum](https://pigeon.org/forum)
 
 Building
 ---------------------
-The following are developer notes on how to build Pigeon on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
+The following are developer notes on how to build Pigeon Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
-- [Dependencies](dependencies.md)
 - [OS X Build Notes](build-osx.md)
 - [Unix Build Notes](build-unix.md)
 - [Windows Build Notes](build-windows.md)
@@ -46,12 +43,12 @@ The following are developer notes on how to build Pigeon on your native platform
 
 Development
 ---------------------
-The Pigeon repo's [root README](/README.md) contains relevant information on the development process and automated testing.
+The Pigeon Core repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
 - [Release Notes](release-notes.md)
 - [Release Process](release-process.md)
-- [Source Code Documentation (External Link)](https://dev.visucore.com/pigeon/doxygen/)
+- Source Code Documentation ***TODO***
 - [Translation Process](translation_process.md)
 - [Translation Strings Policy](translation_strings_policy.md)
 - [Travis CI](travis-ci.md)
@@ -62,9 +59,8 @@ The Pigeon repo's [root README](/README.md) contains relevant information on the
 - [Benchmarking](benchmarking.md)
 
 ### Resources
-* Discuss on the [PigeonTalk](https://pigeontalk.org/) forums, in the [Development & Technical Discussion board](https://pigeontalk.org/index.php?board=6.0).
-* Discuss project-specific development on #pigeon-core-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=pigeon-core-dev).
-* Discuss general Pigeon development on #pigeon-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=pigeon-dev).
+* Discuss on the [Pigeon Forum](https://pigeon.org/forum), in the Development & Technical Discussion board.
+* Discuss on [Pigeon Nation Discord](http://pigeonchat.org)
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)

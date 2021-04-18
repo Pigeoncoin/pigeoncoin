@@ -1,16 +1,19 @@
-TOR SUPPORT IN PIGEON
-======================
+TOR SUPPORT IN PIGEON CORE
+=======================
 
-It is possible to run Pigeon as a Tor hidden service, and connect to such services.
+It is possible to run Pigeon Core as a Tor hidden service, and connect to such services.
 
-The following directions assume you have a Tor proxy running on port 9050. Many distributions default to having a SOCKS proxy listening on port 9050, but others may not. In particular, the Tor Browser Bundle defaults to listening on port 9150. See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort) for how to properly
-configure Tor.
+The following directions assume you have a Tor proxy running on port 9050. Many
+distributions default to having a SOCKS proxy listening on port 9050, but others
+may not. In particular, the Tor Browser Bundle defaults to listening on port 9150.
+See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort)
+for how to properly configure Tor.
 
 
-1. Run pigeon behind a Tor proxy
----------------------------------
+1. Run Pigeon Core behind a Tor proxy
+----------------------------------
 
-The first step is running Pigeon behind a Tor proxy. This will already make all
+The first step is running Pigeon Core behind a Tor proxy. This will already make all
 outgoing connections be anonymized, but more is possible.
 
 	-proxy=ip:port  Set the proxy server. If SOCKS5 is selected (default), this proxy
@@ -29,29 +32,36 @@ outgoing connections be anonymized, but more is possible.
 	-seednode=X     SOCKS5. In Tor mode, such addresses can also be exchanged with
 	                other P2P nodes.
 
+	-onlynet=tor    Only connect to .onion nodes and drop IPv4/6 connections.
+
+An example how to start the client if the Tor proxy is running on local host on
+port 9050 and only allows .onion nodes to connect:
+
+	./pigeond -onion=127.0.0.1:9050 -onlynet=tor -listen=0 -addnode=ssapp53tmftyjmjb.onion
+
 In a typical situation, this suffices to run behind a Tor proxy:
 
-	./pigeon -proxy=127.0.0.1:9050
+	./pigeond -proxy=127.0.0.1:9050
 
 
-2. Run a pigeon hidden server
-------------------------------
+2. Run a Pigeon Core hidden server
+-------------------------------
 
 If you configure your Tor system accordingly, it is possible to make your node also
 reachable from the Tor network. Add these lines to your /etc/tor/torrc (or equivalent
 config file):
 
-	HiddenServiceDir /var/lib/tor/pigeon-service/
-	HiddenServicePort 8757 127.0.0.1:8757
-	HiddenServicePort 18757 127.0.0.1:18757
+	HiddenServiceDir /var/lib/tor/pigeoncore-service/
+	HiddenServicePort 9999 127.0.0.1:9999
+	HiddenServicePort 19999 127.0.0.1:19999
 
 The directory can be different of course, but (both) port numbers should be equal to
-your pigeond's P2P listen port (8757 by default).
+your pigeond's P2P listen port (9999 by default).
 
-	-externalip=X   You can tell pigeon about its publicly reachable address using
+	-externalip=X   You can tell Pigeon Core about its publicly reachable address using
 	                this option, and this can be a .onion address. Given the above
 	                configuration, you can find your onion address in
-	                /var/lib/tor/pigeon-service/hostname. Onion addresses are given
+	                /var/lib/tor/pigeoncore-service/hostname. Onion addresses are given
 	                preference for your node to advertise itself with, for connections
 	                coming from unroutable addresses (such as 127.0.0.1, where the
 	                Tor proxy typically runs).
@@ -68,7 +78,7 @@ your pigeond's P2P listen port (8757 by default).
 
 In a typical situation, where you're only reachable via Tor, this should suffice:
 
-	./pigeond -proxy=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -listen
+	./pigeond -proxy=127.0.0.1:9050 -externalip=ssapp53tmftyjmjb.onion -listen
 
 (obviously, replace the Onion address with your own). It should be noted that you still
 listen on all devices and another node could establish a clearnet connection, when knowing
@@ -81,14 +91,32 @@ as well, use `discover` instead:
 
 	./pigeond ... -discover
 
-and open port 8757 on your firewall (or use -upnp).
+and open port 9999 on your firewall (or use -upnp).
 
 If you only want to use Tor to reach onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:
 
-	./pigeon -onion=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -discover
+	./pigeond -onion=127.0.0.1:9050 -externalip=ssapp53tmftyjmjb.onion -discover
 
-3. Automatically listen on Tor
+
+3. List of known Pigeon Core Tor relays
+------------------------------------
+
+Note: All these nodes are hosted by masternodehosting.com
+
+* l7oq3v7ujau5tfrw.onion
+* vsmegqxisccimsir.onion
+* 4rbha5nrjso54l75.onion
+* 3473226fvgoenztx.onion
+* onn5v3aby2dioicx.onion
+* w5n7s2p3mdq5yf2d.onion
+* ec4qdvujskzasvrb.onion
+* g5e4hvsecwri3inf.onion
+* ys5upbdeotplam3y.onion
+* fijy6aikzxfea54i.onion
+
+
+4. Automatically listen on Tor
 --------------------------------
 
 Starting with Tor version 0.2.7.1 it is possible, through Tor's control socket
@@ -115,10 +143,10 @@ which has the appropriate permissions. An alternative authentication method is t
 of the `-torpassword` flag and a `hash-password` which can be enabled and specified in 
 Tor configuration.
 
-4. Privacy recommendations
+5. Privacy recommendations
 ---------------------------
 
-- Do not add anything but pigeon ports to the hidden service created in section 2.
+- Do not add anything but bitcoin ports to the hidden service created in section 2.
   If you run a web service too, create a new hidden service for that.
   Otherwise it is trivial to link them, which may reduce privacy. Hidden
   services created automatically (as in section 3) always have only one port

@@ -1,10 +1,10 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2020 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_QT_GUICONSTANTS_H
-#define PIGEON_QT_GUICONSTANTS_H
+#ifndef BITCOIN_QT_GUICONSTANTS_H
+#define BITCOIN_QT_GUICONSTANTS_H
 
 /* Milliseconds between model updates */
 static const int MODEL_UPDATE_DELAY = 250;
@@ -16,24 +16,6 @@ static const int MAX_PASSPHRASE_SIZE = 1024;
 static const int STATUSBAR_ICONSIZE = 16;
 
 static const bool DEFAULT_SPLASHSCREEN = true;
-
-/* Invalid field background style */
-#define STYLE_INVALID "background:#FF8080"
-
-/* Transaction list -- unconfirmed transaction */
-#define COLOR_UNCONFIRMED QColor(128, 128, 128)
-/* Transaction list -- negative amount */
-#define COLOR_NEGATIVE QColor(255, 0, 0)
-/* Transaction list -- bare address (without label) */
-#define COLOR_BAREADDRESS QColor(140, 140, 140)
-/* Transaction list -- TX status decoration - open until date */
-#define COLOR_TX_STATUS_OPENUNTILDATE QColor(64, 64, 255)
-/* Transaction list -- TX status decoration - offline */
-#define COLOR_TX_STATUS_OFFLINE QColor(192, 192, 192)
-/* Transaction list -- TX status decoration - danger, tx needs attention */
-#define COLOR_TX_STATUS_DANGER QColor(200, 100, 100)
-/* Transaction list -- TX status decoration - default color */
-#define COLOR_BLACK QColor(0, 0, 0)
 
 /* Tooltips longer than this (in characters) are converted into rich text,
    so that they can be word-wrapped.
@@ -53,5 +35,7 @@ static const int MAX_URI_LENGTH = 255;
 #define QAPP_ORG_DOMAIN "pigeon.org"
 #define QAPP_APP_NAME_DEFAULT "Pigeon-Qt"
 #define QAPP_APP_NAME_TESTNET "Pigeon-Qt-testnet"
+#define QAPP_APP_NAME_DEVNET "Pigeon-Qt-%s"
+#define QAPP_APP_NAME_REGTEST "Pigeon-Qt-regtest"
 
-#endif // PIGEON_QT_GUICONSTANTS_H
+#endif // BITCOIN_QT_GUICONSTANTS_H

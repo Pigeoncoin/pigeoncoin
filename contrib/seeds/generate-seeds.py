@@ -114,7 +114,7 @@ def process_nodes(g, f, structname, defaultport):
 def main():
     if len(sys.argv)<2:
         print(('Usage: %s <path_to_nodes_txt>' % sys.argv[0]), file=sys.stderr)
-        sys.exit(1)
+        exit(1)
     g = sys.stdout
     indir = sys.argv[1]
     g.write('#ifndef PIGEON_CHAINPARAMSSEEDS_H\n')
@@ -127,10 +127,10 @@ def main():
     g.write(' * IPv4 as well as onion addresses are wrapped inside a IPv6 address accordingly.\n')
     g.write(' */\n')
     with open(os.path.join(indir,'nodes_main.txt'),'r') as f:
-        process_nodes(g, f, 'pnSeed6_main', 8757)
+        process_nodes(g, f, 'pnSeed6_main', 9999)
     g.write('\n')
     with open(os.path.join(indir,'nodes_test.txt'),'r') as f:
-        process_nodes(g, f, 'pnSeed6_test', 18757)
+        process_nodes(g, f, 'pnSeed6_test', 19999)
     g.write('#endif // PIGEON_CHAINPARAMSSEEDS_H\n')
             
 if __name__ == '__main__':

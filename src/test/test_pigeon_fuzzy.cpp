@@ -1,5 +1,4 @@
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,8 +48,8 @@ enum TEST_ID {
     TEST_ID_END
 };
 
-bool read_stdin(std::vector<uint8_t> &data) {
-    uint8_t buffer[1024];
+bool read_stdin(std::vector<char> &data) {
+    char buffer[1024];
     ssize_t length=0;
     while((length = read(STDIN_FILENO, buffer, 1024)) > 0) {
         data.insert(data.end(), buffer, buffer+length);
@@ -60,11 +59,15 @@ bool read_stdin(std::vector<uint8_t> &data) {
     return length==0;
 }
 
-int test_one_input(std::vector<uint8_t> buffer) {
+int do_fuzz()
+{
+    std::vector<char> buffer;
+    if (!read_stdin(buffer)) return 0;
+
     if (buffer.size() < sizeof(uint32_t)) return 0;
 
     uint32_t test_id = 0xffffffff;
-    memcpy(&test_id, buffer.data(), sizeof(uint32_t));
+    memcpy(&test_id, &buffer[0], sizeof(uint32_t));
     buffer.erase(buffer.begin(), buffer.begin() + sizeof(uint32_t));
 
     if (test_id >= TEST_ID_END) return 0;
@@ -165,8 +168,8 @@ int test_one_input(std::vector<uint8_t> buffer) {
         {
             try
             {
-                Coin coin;
-                ds >> coin;
+                Coin block;
+                ds >> block;
             } catch (const std::ios_base::failure& e) {return 0;}
             break;
         }
@@ -252,32 +255,9 @@ int test_one_input(std::vector<uint8_t> buffer) {
     return 0;
 }
 
-static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
-void initialize() {
-    globalVerifyHandle = std::unique_ptr<ECCVerifyHandle>(new ECCVerifyHandle());
-}
-
-// This function is used by libFuzzer
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-    test_one_input(std::vector<uint8_t>(data, data + size));
-    return 0;
-}
-
-// This function is used by libFuzzer
-extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
-    initialize();
-    return 0;
-}
-
-// Disabled under WIN32 due to clash with Cygwin's WinMain.
-#ifndef WIN32
-// Declare main(...) "weak" to allow for libFuzzer linking. libFuzzer provides
-// the main(...) function.
-__attribute__((weak))
-#endif
 int main(int argc, char **argv)
 {
-    initialize();
+    ECCVerifyHandle globalVerifyHandle;
 #ifdef __AFL_INIT
     // Enable AFL deferred forkserver mode. Requires compilation using
     // afl-clang-fast++. See fuzzing.md for details.
@@ -287,20 +267,11 @@ int main(int argc, char **argv)
 #ifdef __AFL_LOOP
     // Enable AFL persistent mode. Requires compilation using afl-clang-fast++.
     // See fuzzing.md for details.
-    int ret = 0;
     while (__AFL_LOOP(1000)) {
-        std::vector<uint8_t> buffer;
-        if (!read_stdin(buffer)) {
-            continue;
-        }
-        ret = test_one_input(buffer);
+        do_fuzz();
     }
-    return ret;
+    return 0;
 #else
-    std::vector<uint8_t> buffer;
-    if (!read_stdin(buffer)) {
-        return 0;
-    }
-    return test_one_input(buffer);
+    return do_fuzz();
 #endif
 }
