@@ -149,7 +149,7 @@ unsigned int GetTransactionSigOpCount(const CTransaction& tx, const CCoinsViewCa
     return nSigOps;
 }
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state)
+bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs)
 {
     bool allowEmptyTxInOut = false;
     if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
@@ -184,7 +184,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     std::set<COutPoint> vInOutPoints;
     for (const auto& txin : tx.vin)
     {
-        if (!vInOutPoints.insert(txin.prevout).second)
+        if (!vInOutPoints.insert(txin.prevout).second && fCheckDuplicateInputs)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
     }
 

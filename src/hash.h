@@ -14,21 +14,30 @@
 #include "uint256.h"
 #include "version.h"
 
-#include "crypto/sph_blake.h"
-#include "crypto/sph_bmw.h"
-#include "crypto/sph_groestl.h"
-#include "crypto/sph_jh.h"
-#include "crypto/sph_keccak.h"
-#include "crypto/sph_skein.h"
-#include "crypto/sph_luffa.h"
-#include "crypto/sph_cubehash.h"
-#include "crypto/sph_shavite.h"
-#include "crypto/sph_simd.h"
-#include "crypto/sph_echo.h"
+#include "algo/sph_blake.h"
+#include "algo/sph_bmw.h"
+#include "algo/sph_groestl.h"
+#include "algo/sph_jh.h"
+#include "algo/sph_keccak.h"
+#include "algo/sph_skein.h"
+#include "algo/sph_luffa.h"
+#include "algo/sph_cubehash.h"
+#include "algo/sph_shavite.h"
+#include "algo/sph_simd.h"
+#include "algo/sph_echo.h"
 
 #include <vector>
 
 typedef uint256 ChainCode;
+
+inline int GetHashSelection(const uint256 PrevBlockHash, int index) {
+    assert(index >= 0);
+    assert(index < 16);
+
+    #define START_OF_LAST_16_NIBBLES_OF_HASH 48
+    int hashSelection = PrevBlockHash.GetNibble(START_OF_LAST_16_NIBBLES_OF_HASH + index);
+    return(hashSelection);
+}
 
 /* ----------- Bitcoin Hash ------------------------------------------------- */
 /** A hasher class for Bitcoin's 256-bit hash (double SHA-256). */
