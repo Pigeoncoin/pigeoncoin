@@ -17,7 +17,7 @@ CAmount FounderPayment::getFounderPaymentAmount(int blockHeight, CAmount blockRe
 		 return 0;
 	 }
 	 for(int i = 0; i < rewardStructures.size(); i++) {
-		 FounderRewardStrcuture rewardStructure = rewardStructures[i];
+		 FounderRewardStructure rewardStructure = rewardStructures[i];
 		 if(blockHeight <= rewardStructure.founderFeeEndHeight) {
 			 return blockReward * rewardStructure.rewardPercentage / 100;
 		 }
@@ -83,6 +83,14 @@ bool FounderPayment::IsBlockPayeeValid(const CTransaction& txNew, const int heig
 				return true;
 			}
 		}
+	}
+    for(int blockHeight, i = 0; i < rewardStructures.size(); i++) {
+        FounderRewardStructure rewardStructure = rewardStructures[i];
+        if(blockHeight >= rewardStructure.founderFeeEndHeight){
+            if(founderReward == 0){
+                return true;
+            }
+        }
 	}
 	return false;
 }

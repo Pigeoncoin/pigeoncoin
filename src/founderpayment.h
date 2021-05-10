@@ -15,14 +15,14 @@
 using namespace std;
 
 static const string DEFAULT_FOUNDER_ADDRESS = "n7YVWJjZhUi5ZepC9nQWX8hzhSFRCpzcNY";
-struct FounderRewardStrcuture {
+struct FounderRewardStructure {
 	int founderFeeEndHeight;
 	int rewardPercentage;
 };
 
 class FounderPayment {
 public:
-	FounderPayment(vector<FounderRewardStrcuture> rewardStructures = {}, int startBlock = 0,
+	FounderPayment(vector<FounderRewardStructure> rewardStructures = {}, int startBlock = 0,
 			const string &address = DEFAULT_FOUNDER_ADDRESS, const string &address2 = DEFAULT_FOUNDER_ADDRESS,
 			int founder2StartBlock = 0) {
 		this->founderAddress = address;
@@ -47,7 +47,7 @@ private:
 	string founderAddress2;
 	int address2StartBlock;
 	int startBlock;
-	vector<FounderRewardStrcuture> rewardStructures;
+	vector<FounderRewardStructure> rewardStructures;
 };
 
 

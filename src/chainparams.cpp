@@ -233,8 +233,8 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 2100000; // Note: actual number of blocks per calendar year with DGW v3 is ~200700 (for example 449750 - 249050)
-        consensus.nMasternodePaymentsStartBlock = 100000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
-        consensus.nMasternodePaymentsIncreaseBlock = 158000; // actual historical value
+        consensus.nMasternodePaymentsStartBlock = 2000000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
+        consensus.nMasternodePaymentsIncreaseBlock = 2058000; // actual historical value
         consensus.nMasternodePaymentsIncreasePeriod = 576*30; // 17280 - actual historical value
         consensus.nInstantSendConfirmationsRequired = 6;
         consensus.nInstantSendKeepLock = 24;
@@ -251,7 +251,7 @@ public:
         consensus.BIP34Hash = uint256S("0x00");
         consensus.BIP65Height = 1;
         consensus.BIP66Height = 1;
-        consensus.DIP0001Height = 1000000;
+        consensus.DIP0001Height = 2000000;
         consensus.DIP0003Height = 2487579;
         consensus.DIP0003EnforcementHeight = 2500000;
         consensus.DIP0003EnforcementHash = uint256S("0x00");
@@ -276,28 +276,28 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1517788800; // Feb 5th, 2018
 
         // Deployment of DIP0001
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].bit = 1;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].bit = 3;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].nStartTime = 1508025600; // Oct 15th, 2017
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].nTimeout = 1539561600; // Oct 15th, 2018
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].nWindowSize = 4032;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].nThreshold = 3226; // 80% of 4032
 
         // Deployment of BIP147
-        consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].bit = 2;
+        consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].bit = 4;
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nStartTime = 1524477600; // Apr 23th, 2018
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nTimeout = 1556013600; // Apr 23th, 2019
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nWindowSize = 4032;
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nThreshold = 3226; // 80% of 4032
 
         // Deployment of DIP0003
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].bit = 5;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nStartTime = 1546300800; // Jan 1st, 2019
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nTimeout = 1577836800; // Jan 1st, 2020
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nWindowSize = 4032;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nThreshold = 3226; // 80% of 4032
 
         // Deployment of DIP0008
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].bit = 4;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].bit = 6;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].nStartTime = 1557878400; // May 15th, 2019
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].nTimeout = 1589500800; // May 15th, 2020
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].nWindowSize = 4032;
@@ -307,7 +307,7 @@ public:
         consensus.nMinimumChainWork = uint256S("0x00"); // ~
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x0000000000000009a563e41afbafa4044861f32feb871de41f4c6e401dac1dac"); // 1215000
+        consensus.defaultAssumeValid = uint256S("0x0000000000081d8baa7fb0ddfcedc9f9eaacd8241a47d787756cf4e0ea831f25"); // 1480000
 
         std::vector<FounderRewardStructure> rewardStructures = {  {1420000, 5}// 5% founder/dev fee for blocks between startFounder block and 500k block
 
@@ -335,7 +335,7 @@ public:
         nDefaultPort = 8757;
         nPruneAfterHeight = 100000;
 
-        HFTimestamp = 8757875799; // Disabled until needed
+        HFTimestamp = 1857875799; // Disabled until needed
 
         genesis = CreateGenesisBlock(1521661111, 17434278, 0x1e00ffff, 4, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -384,7 +384,7 @@ public:
 
         checkpointData = (CCheckpointData) {
             {
-                {699153, uint256S("0x00000000002ccebf8a0c2a66ae6b4e03ba0e0247b467fbf68b6fd13d93ebf84e")},
+                {1480000, uint256S("0x0000000000081d8baa7fb0ddfcedc9f9eaacd8241a47d787756cf4e0ea831f25")},
             }
         };
 
