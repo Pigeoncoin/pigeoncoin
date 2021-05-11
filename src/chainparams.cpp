@@ -405,15 +405,15 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 2100;
-        consensus.nMasternodePaymentsStartBlock = 401; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
-        consensus.nMasternodePaymentsIncreaseBlock = 500;
+        consensus.nMasternodePaymentsStartBlock = 7000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
+        consensus.nMasternodePaymentsIncreaseBlock = 7500;
         consensus.nMasternodePaymentsIncreasePeriod = 10;
         consensus.nInstantSendConfirmationsRequired = 2;
         consensus.nInstantSendKeepLock = 6;
-        consensus.nBudgetPaymentsStartBlock = 410;
+        consensus.nBudgetPaymentsStartBlock = 7700;
         consensus.nBudgetPaymentsCycleBlocks = 50;
         consensus.nBudgetPaymentsWindowBlocks = 10;
-        consensus.nSuperblockStartBlock = 420; // NOTE: Should satisfy nSuperblockStartBlock > nBudgetPeymentsStartBlock
+        consensus.nSuperblockStartBlock = 7800; // NOTE: Should satisfy nSuperblockStartBlock > nBudgetPeymentsStartBlock
         consensus.nSuperblockStartHash = uint256(); // do not check this on testnet
         consensus.nSuperblockCycle = 24; // Superblocks can be issued hourly on testnet
         consensus.nGovernanceMinQuorum = 1;
@@ -448,28 +448,28 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1576191600; // Dec 13th, 2019
 
         // Deployment of DIP0001
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].bit = 1;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].bit = 3;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].nStartTime = 1544655600; // Dec 13th, 2018
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].nTimeout = 1576191600; // Dec 13th, 2019
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].nWindowSize = 100;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].nThreshold = 50; // 50% of 100
 
         // Deployment of BIP147
-        consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].bit = 2;
+        consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].bit = 4;
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nStartTime = 1544655600; // Dec 13th, 2018
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nTimeout = 1576191600; // Dec 13th, 2019
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nWindowSize = 100;
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nThreshold = 50; // 50% of 100
 
         // Deployment of DIP0003
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].bit = 5;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nStartTime = 1544655600; // Dec 13th, 2018
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nTimeout = 1576191600; // Dec 13th, 2019
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nWindowSize = 100;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nThreshold = 50; // 50% of 100
 
         // Deployment of DIP0008
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].bit = 4;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].bit = 6;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].nStartTime = 1553126400; // Mar 21st, 2019
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].nTimeout = 1584748800; // Mar 21st, 2020
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].nWindowSize = 100;
@@ -481,18 +481,23 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00"); // New start
 
-        vector<FounderRewardStructure> rewardStructures = {  {500000, 5},
-															 {1000000, 2}
-																		   };
-		consensus.nFounderPayment = FounderPayment(rewardStructures, 3000, "n6yjcgyB6VUJipV9p361QTSCDs3gf8izEh",
-													"nLphepxwA1bNxLDuwB3SLYPXjed6jMwFw4", 4000);
-
+        vector<FounderRewardStrcuture> rewardStructures = { {6000,  5} };
+        consensus.nFounderPayment = FounderPayment(rewardStructures, 250, "n6yjcgyB6VUJipV9p361QTSCDs3gf8izEh",
+                                                    "nLphepxwA1bNxLDuwB3SLYPXjed6jMwFw4", 500);
         consensus.masternodeCollateral = 1000000;
 
-        pchMessageStart[0] = 0xcf;
-        pchMessageStart[1] = 0xe3;
-        pchMessageStart[2] = 0xcb;
-        pchMessageStart[3] = 0xfd;
+         // OG message start
+        pchMessageStart[0] = 0x14;
+        pchMessageStart[1] = 0x67;
+        pchMessageStart[2] = 0x4b;
+        pchMessageStart[3] = 0xa3;
+
+         // New message start
+        pchMessageStartNew[0] = 0x28;
+        pchMessageStartNew[1] = 0x33;
+        pchMessageStartNew[2] = 0x2b;
+        pchMessageStartNew[3] = 0x3c;
+
         nDefaultPort = 18757;
         nPruneAfterHeight = 1000;
 
@@ -527,7 +532,7 @@ public:
         consensus.llmqTypeInstantSend = Consensus::LLMQ_5_60;
 
         fDefaultConsistencyChecks = false;
-        fRequireStandard = false;
+        fRequireStandard = true;
         fRequireRoutableExternalIP = true;
         fMineBlocksOnDemand = false;
         fAllowMultipleAddressesFromGroup = false;

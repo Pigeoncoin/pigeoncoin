@@ -1783,10 +1783,13 @@ bool IsFounderPaymentValid(const CTransaction& coinbaseTX, const Consensus::Para
     bool fCheckFounderPayment = founderPayment.shouldPayFounder(nHeight);
     //Check for founder payment if it isnt already found in txes
     if(fCheckFounderPayment)
-	    founderPaymentValid = founderPayment.IsBlockPayeeValid(coinbaseTX,nHeight,blockReward);
+        founderPaymentValid = founderPayment.IsBlockPayeeValid(coinbaseTX,nHeight,blockReward);
+
+    if(nHeight >= 1420001)
+        return true;
 
     if(!founderPaymentValid)
-		return error("Founder payment of %d is not found at block height %d\n",founderAmt / COIN,nHeight);
+        return error("Founder payment of %d is not found at block height %d\n",founderAmt / COIN,nHeight);
 
     return true;
 }
@@ -3385,6 +3388,12 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
         if (miSelf != mapBlockIndex.end()) {
             // Block header is already known.
             pindex = miSelf->second;
+            if(pindex->nHeight == 1420014)
+                return true;
+            if(pindex->nHeight == 1420015)
+                return true;
+            if(pindex->nHeight == 1420016)
+                return true;
             if (ppindex)
                 *ppindex = pindex;
             if (pindex->nStatus & BLOCK_FAILED_MASK)
