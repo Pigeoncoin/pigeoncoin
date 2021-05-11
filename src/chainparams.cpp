@@ -481,9 +481,10 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00"); // New start
 
-        vector<FounderRewardStrcuture> rewardStructures = { {6000,  5} };
+        std::vector<FounderRewardStructure> rewardStructures = {  {6000, 5}
+        																   };
         consensus.nFounderPayment = FounderPayment(rewardStructures, 250, "n6yjcgyB6VUJipV9p361QTSCDs3gf8izEh",
-                                                    "nLphepxwA1bNxLDuwB3SLYPXjed6jMwFw4", 500);
+	    											"nLphepxwA1bNxLDuwB3SLYPXjed6jMwFw4", 500);
         consensus.masternodeCollateral = 1000000;
 
          // OG message start
