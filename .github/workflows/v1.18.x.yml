@@ -68,7 +68,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y python3-zmq
     - name: Build Dependencies
-      run: make -C depends -j$(nproc)
+      run: |
+        sudo apt-get update
+        make -C depends -j$(nproc)
       working-directory: ${{ env.SOURCE_ARTIFACT }}
     - name: Build Pigeoncore
       run: |
@@ -109,7 +111,9 @@ jobs:
         sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
         sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
     - name: Build Dependencies
-      run: make -C depends -j$(nproc) HOST=x86_64-w64-mingw32
+      run: 
+        sudo apt-get update
+        make -C depends -j$(nproc) HOST=x86_64-w64-mingw32
       working-directory: ${{ env.SOURCE_ARTIFACT }}
     - name: Build Pigeoncore
       run: |
