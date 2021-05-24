@@ -30,9 +30,9 @@ jobs:
         pip3 install --user futoin-cid
     - name: Create Distribution Tarball
       run: |
-        sudo ./autogen.sh
-        sudo ./configure
-        sudo make dist
+        ./autogen.sh
+        ./configure
+        make dist
     - name: Download Dependencies
       run: make -C depends download
     - name: Create Dependencies Tarball
@@ -113,8 +113,8 @@ jobs:
       working-directory: ${{ env.SOURCE_ARTIFACT }}
     - name: Build Pigeoncore
       run: |
-        sudo ./configure --prefix=$(realpath depends/x86_64-w64-mingw32)
-        sudo make -j$(nproc)
+        ./configure --prefix=$(realpath depends/x86_64-w64-mingw32)
+        make -j$(nproc)
       working-directory: ${{ env.SOURCE_ARTIFACT }}
     - name: Prepare Files for Artifact
       run: |
