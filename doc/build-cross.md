@@ -19,7 +19,6 @@ Additionally, the Mac OSX SDK must be downloaded and extracted manually:
 ```bash
 $ mkdir -p depends/sdk-sources
 $ mkdir -p depends/SDKs
-$ curl https://bitcoincore.org/depends-sources/sdks/MacOSX10.11.sdk.tar.gz -o depends/sdk-sources/MacOSX10.11.sdk.tar.gz
 $ tar -C depends/SDKs -xf depends/sdk-sources/MacOSX10.11.sdk.tar.gz
 ```
 
