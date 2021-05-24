@@ -404,7 +404,7 @@ class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
         strNetworkID = "test";
-        consensus.nSubsidyHalvingInterval = 2100;
+        consensus.nSubsidyHalvingInterval = 2100000;
         consensus.nMasternodePaymentsStartBlock = 7000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 7500;
         consensus.nMasternodePaymentsIncreasePeriod = 10;
@@ -423,21 +423,21 @@ public:
         consensus.BIP34Hash = uint256S("0x00");
         consensus.BIP65Height = 2;
         consensus.BIP66Height = 2;
-        consensus.DIP0001Height = 300;
-        consensus.DIP0003Height = 400;
-        consensus.DIP0003EnforcementHeight = 730;
+        consensus.DIP0001Height = 999999;
+        consensus.DIP0003Height = 999999;
+        consensus.DIP0003EnforcementHeight = 999999;
         consensus.DIP0003EnforcementHash = uint256S("0x00");
         consensus.nAfterExploitHeight = 0;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
         consensus.nPowTargetSpacing = 1 * 60; // 1 min
-        consensus.nPowDifficultyRetargetHeight = 201; // blockheight to switch to 360 block retarget rules
+        consensus.nPowDifficultyRetargetHeight = 2017; // blockheight to switch to 360 block retarget rules
         consensus.nPowTargetTimespanShort = 360 * 60; //~6 hours
-        consensus.zawyLWMAHeight = 222; // blockheight to switch to LWMA retarget rules
+        consensus.zawyLWMAHeight = 2222; // blockheight to switch to LWMA retarget rules
         consensus.fPowAllowMinDifficultyBlocks = true;
-        consensus.fPowNoRetargeting = false;
-        consensus.nRuleChangeActivationThreshold = 151; // 75% for testchains
-        consensus.nMinerConfirmationWindow = 201; // nPowTargetTimespan / nPowTargetSpacing
+        consensus.fPowNoRetargeting = true;
+        consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
+        consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
@@ -490,14 +490,14 @@ public:
          // OG message start
         pchMessageStart[0] = 0x14;
         pchMessageStart[1] = 0x67;
-        pchMessageStart[2] = 0x4b;
-        pchMessageStart[3] = 0xa3;
+        pchMessageStart[2] = 0x4B;
+        pchMessageStart[3] = 0xC3;
 
          // New message start
         pchMessageStartNew[0] = 0x28;
         pchMessageStartNew[1] = 0x33;
-        pchMessageStartNew[2] = 0x2b;
-        pchMessageStartNew[3] = 0x3c;
+        pchMessageStartNew[2] = 0x2B;
+        pchMessageStartNew[3] = 0x3C;
 
         nDefaultPort = 18757;
         nPruneAfterHeight = 1000;
@@ -512,7 +512,7 @@ public:
 
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("seed.pigeoncoin.xyz", true);
+        vSeeds.emplace_back("blockcrushers.xyz", true);
 
         // Testnet Pigeon Addresses start with 'y'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,112);
@@ -549,7 +549,6 @@ public:
 
         checkpointData = (CCheckpointData) {
             {
-                {      0, uint256S("0x000000a4d5d20f09a4cd9d47cae7e1bb056d46a1ba841ea19267341109f7b3a1")},
             }
         };
 
