@@ -1,12 +1,12 @@
-Pigeon Core staging tree 0.15
+Pigeoncoin Core staging tree 0.18
 ===========================
 
 `master:` [![Build Status](https://travis-ci.org/pigeonpro/pigeon.svg?branch=master)](https://travis-ci.org/pigeonpro/pigeon) `develop:` [![Build Status](https://travis-ci.org/pigeonpro/pigeon.svg?branch=develop)](https://travis-ci.org/pigeonpro/pigeon/branches)
 
-https://www.pigeon.org
+https://www.pigeoncoin.org
 
 
-What is Pigeon?
+What is Pigeoncoin?
 -------------
 
 Pigeon is an experimental digital currency that enables instant, private
