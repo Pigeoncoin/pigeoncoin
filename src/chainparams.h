@@ -12,7 +12,7 @@
 #include "protocol.h"
 
 #include <memory>
-#include "timedata.h"
+#include <timedata.h>
 #include <vector>
 
 struct CDNSSeedData {
@@ -59,7 +59,9 @@ public:
     };
 
     const Consensus::Params& GetConsensus() const { return consensus; }
-    const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
+    const CMessageHeader::MessageStartChars& MessageStart() const { return GetAdjustedTime() > pchMessageForktime ? MessageStartNew() : MessageStartOld(); }
+    const CMessageHeader::MessageStartChars& MessageStartOld() const {return pchMessageStart;}
+    const CMessageHeader::MessageStartChars& MessageStartNew() const {return pchMessageStartNew;}
     int GetDefaultPort() const { return nDefaultPort; }
 
     const CBlock& GenesisBlock() const { return genesis; }
@@ -125,6 +127,7 @@ protected:
     int nFulfilledRequestExpireTime;
     std::vector<std::string> vSporkAddresses;
     int nMinSporkKeys;
+    int pchMessageForktime;
     bool fBIP9CheckMasternodesUpgraded;
 };
 

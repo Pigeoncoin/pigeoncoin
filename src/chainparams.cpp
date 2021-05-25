@@ -358,6 +358,9 @@ public:
         // Pigeon BIP44 coin type is '5'
         nExtCoinType = 5;
 
+        // PchMsg Fork
+        pchMessageForktime = INT_MAX; // ToDo
+
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
         // long living quorum params
@@ -528,6 +531,9 @@ public:
         // Testnet Pigeon BIP44 coin type is '1' (All coin's testnet default)
         nExtCoinType = 1;
 
+        // PchMsg Fork
+        pchMessageForktime = 1623285246; // Date and time (GMT): Thursday, June 10, 2021 12:34:06 AM
+
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_5_60] = llmq5_60;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_5_60;
@@ -679,6 +685,9 @@ public:
 
         // Testnet Pigeon BIP44 coin type is '1' (All coin's testnet default)
         nExtCoinType = 1;
+
+        // PchMsg Fork
+        pchMessageForktime = 1623285246; // Date and time (GMT): Thursday, June 10, 2021 12:34:06 AM
 
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
@@ -836,6 +845,9 @@ public:
 
         // Regtest Pigeon BIP44 coin type is '1' (All coin's testnet default)
         nExtCoinType = 1;
+
+        // PchMsg Fork
+        pchMessageForktime = 1623285246; // Date and time (GMT): Thursday, June 10, 2021 12:34:06 AM
 
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_5_60] = llmq5_60;
