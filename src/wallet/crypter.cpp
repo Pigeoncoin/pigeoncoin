@@ -243,24 +243,10 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixin
             LogPrintf("The wallet is probably corrupted: Some keys decrypt but not all.\n");
             assert(false);
         }
-        if (keyFail || (!keyPass && cryptedHDChain.IsNull()))
+        if (keyFail || !keyPass)
             return false;
 
         vMasterKey = vMasterKeyIn;
-
-        if(!cryptedHDChain.IsNull()) {
-            bool chainPass = false;
-            // try to decrypt seed and make sure it matches
-            CHDChain hdChainTmp;
-            if (DecryptHDChain(hdChainTmp)) {
-                // make sure seed matches this chain
-                chainPass = cryptedHDChain.GetID() == hdChainTmp.GetSeedHash();
-            }
-            if (!chainPass) {
-                vMasterKey.clear();
-                return false;
-            }
-        }
         fDecryptionThoroughlyChecked = true;
     }
     fOnlyMixingAllowed = fForMixingOnly;
