@@ -408,15 +408,15 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 2100000;
-        consensus.nMasternodePaymentsStartBlock = 25000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
-        consensus.nMasternodePaymentsIncreaseBlock = 25500;
+        consensus.nMasternodePaymentsStartBlock = 45000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
+        consensus.nMasternodePaymentsIncreaseBlock = 45500;
         consensus.nMasternodePaymentsIncreasePeriod = 10;
         consensus.nInstantSendConfirmationsRequired = 2;
         consensus.nInstantSendKeepLock = 6;
-        consensus.nBudgetPaymentsStartBlock = 25000;
+        consensus.nBudgetPaymentsStartBlock = 45000;
         consensus.nBudgetPaymentsCycleBlocks = 50;
         consensus.nBudgetPaymentsWindowBlocks = 10;
-        consensus.nSuperblockStartBlock = 25500; // NOTE: Should satisfy nSuperblockStartBlock > nBudgetPaymentsStartBlock
+        consensus.nSuperblockStartBlock = 45500; // NOTE: Should satisfy nSuperblockStartBlock > nBudgetPaymentsStartBlock
         consensus.nSuperblockStartHash = uint256(); // do not check this on testnet
         consensus.nSuperblockCycle = 24; // Superblocks can be issued hourly on testnet
         consensus.nGovernanceMinQuorum = 1;
@@ -426,9 +426,9 @@ public:
         consensus.BIP34Hash = uint256S("0x00");
         consensus.BIP65Height = 1;
         consensus.BIP66Height = 1;
-        consensus.DIP0001Height = 25000;
-        consensus.DIP0003Height = 25001;
-        consensus.DIP0003EnforcementHeight = 25002;
+        consensus.DIP0001Height = 45000;
+        consensus.DIP0003Height = 45001;
+        consensus.DIP0003EnforcementHeight = 45002;
         consensus.DIP0003EnforcementHash = uint256S("0x00");
         consensus.nAfterExploitHeight = 0;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
