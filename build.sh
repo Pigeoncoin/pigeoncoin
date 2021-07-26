@@ -8,7 +8,7 @@ compileSource()
 
     echo "autogen complete"
 
-    ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu --enable-debug
+    ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu
 
     echo "configure complete"
 

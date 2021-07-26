@@ -168,21 +168,27 @@ struct Params {
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
+    int64_t TargetSpacingAdjustmentInterval() const { return nPowTargetSpacing; }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
 
     int nPowDifficultyRetargetHeight;
+    int nPowTargetSpacingRetargetHeight;
     FounderPayment nFounderPayment;
     int64_t nPowTargetTimespanShort;
+    int64_t nPowTargetSpacingNew;
     int masternodeCollateral;
     int nAfterExploitHeight;
 
     //We need to return the correct values after we adjust the dificulty retarget
     int64_t DifficultyAdjustmentIntervalAtHeight(unsigned nHeight) const { 
-        if(nHeight <= nPowDifficultyRetargetHeight) {
+        if(nHeight <= nPowDifficultyRetargetHeight && nHeight <= nPowTargetSpacingRetargetHeight) {
             return nPowTargetTimespan / nPowTargetSpacing; 
         }
-        return nPowTargetTimespanShort / nPowTargetSpacing; 
+        if(nHeight >> nPowDifficultyRetargetHeight && nHeight <= nPowTargetSpacingRetargetHeight) {
+            return nPowTargetTimespanShort / nPowTargetSpacing;
+        }
+        return nPowTargetTimespanShort / nPowTargetSpacingNew; 
     }
 
     int64_t getPowTargetTimespan(unsigned nHeight) const {
@@ -190,6 +196,14 @@ struct Params {
             return nPowTargetTimespan; 
         }
         return nPowTargetTimespanShort;
+    }
+
+    // After masternodes become active we want to space the blocks out further to accomodate quorums and chainlock mechanisms.
+    int64_t TargetSpacingAdjustmentIntervalAtHeight(unsigned nHeight) const {
+        if(nHeight <= nPowTargetSpacingRetargetHeight) {
+            return nPowTargetSpacing;
+        }
+        return nPowTargetSpacingNew;
     }
 
     /** these parameters are only used on devnet and can be configured from the outside */
