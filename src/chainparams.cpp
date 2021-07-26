@@ -408,15 +408,15 @@ public:
     CTestNetParams() {
         strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 2100000;
-        consensus.nMasternodePaymentsStartBlock = 45000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
-        consensus.nMasternodePaymentsIncreaseBlock = 45500;
+        consensus.nMasternodePaymentsStartBlock = 45; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
+        consensus.nMasternodePaymentsIncreaseBlock = 50;
         consensus.nMasternodePaymentsIncreasePeriod = 10;
         consensus.nInstantSendConfirmationsRequired = 2;
         consensus.nInstantSendKeepLock = 6;
-        consensus.nBudgetPaymentsStartBlock = 45000;
+        consensus.nBudgetPaymentsStartBlock = 65;
         consensus.nBudgetPaymentsCycleBlocks = 50;
         consensus.nBudgetPaymentsWindowBlocks = 10;
-        consensus.nSuperblockStartBlock = 45500; // NOTE: Should satisfy nSuperblockStartBlock > nBudgetPaymentsStartBlock
+        consensus.nSuperblockStartBlock = 68; // NOTE: Should satisfy nSuperblockStartBlock > nBudgetPaymentsStartBlock
         consensus.nSuperblockStartHash = uint256(); // do not check this on testnet
         consensus.nSuperblockCycle = 24; // Superblocks can be issued hourly on testnet
         consensus.nGovernanceMinQuorum = 1;
@@ -426,23 +426,23 @@ public:
         consensus.BIP34Hash = uint256S("0x00");
         consensus.BIP65Height = 1;
         consensus.BIP66Height = 1;
-        consensus.DIP0001Height = 45000;
-        consensus.DIP0003Height = 45001;
+        consensus.DIP0001Height = 46;
+        consensus.DIP0003Height = 49;
         consensus.DIP0003EnforcementHeight = 45002;
         consensus.DIP0003EnforcementHash = uint256S("0x00");
         consensus.nAfterExploitHeight = 0;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
         consensus.nPowTargetSpacing = 1 * 60; // 1 min
-        consensus.nPowTargetSpacingRetargetHeight = 50000;
+        consensus.nPowTargetSpacingRetargetHeight = 80;
         consensus.nPowTargetSpacingNew = 2.5 * 60; // 2.5 min to match Dash
         consensus.nPowDifficultyRetargetHeight = 2017; // blockheight to switch to 360 block retarget rules
         consensus.nPowTargetTimespanShort = 360 * 60; //~6 hours
-        consensus.zawyLWMAHeight = 2222; // blockheight to switch to LWMA retarget rules
+        consensus.zawyLWMAHeight = 22; // blockheight to switch to LWMA retarget rules
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
-        consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
-        consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
+        consensus.nRuleChangeActivationThreshold = 15; // 75% for testchains
+        consensus.nMinerConfirmationWindow = 20; // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
@@ -450,35 +450,35 @@ public:
         // Deployment of BIP68, BIP112, and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1623470763; // Dec 13th, 2018
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1639281963; // Dec 13th, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = INT_MAX; // Dec 13th, 2019
 
         // Deployment of DIP0001
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].bit = 1;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].nStartTime = 1623470763; // Dec 13th, 2018
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].nTimeout = 1639281963; // Dec 13th, 2019
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].nWindowSize = 100;
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].nThreshold = 50; // 50% of 100
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].nTimeout = INT_MAX; // Dec 13th, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].nWindowSize = 20;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0001].nThreshold = 15; // 50% of 100
 
         // Deployment of BIP147
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].bit = 2;
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nStartTime = 1623470763; // Dec 13th, 2018
-        consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nTimeout = 1639281963; // Dec 13th, 2019
-        consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nWindowSize = 100;
-        consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nThreshold = 50; // 50% of 100
+        consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nTimeout = INT_MAX; // Dec 13th, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nWindowSize = 20;
+        consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nThreshold = 15; // 50% of 100
 
         // Deployment of DIP0003
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].bit = 3;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nStartTime = 1623470763; // Dec 13th, 2018
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nTimeout = 1639281963; // Dec 13th, 2019
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nWindowSize = 100;
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nThreshold = 50; // 50% of 100
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nTimeout = INT_MAX; // Dec 13th, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nWindowSize = 20;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nThreshold = 15; // 50% of 100
 
         // Deployment of DIP0008
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].bit = 4;
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].nStartTime = 1623470763; // Mar 21st, 2019
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].nTimeout = 1639281963; // Mar 21st, 2020
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].nWindowSize = 100;
-        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].nThreshold = 50; // 50% of 100
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].nTimeout = INT_MAX; // Mar 21st, 2020
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].nWindowSize = 20;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].nThreshold = 15; // 50% of 100
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00"); // New start
@@ -486,20 +486,20 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x00"); // New start
 
-        std::vector<FounderRewardStructure> rewardStructures = {  {6000, 5}
+        std::vector<FounderRewardStructure> rewardStructures = {  {20, 5}
         																   };
-        consensus.nFounderPayment = FounderPayment(rewardStructures, 250, "n6yjcgyB6VUJipV9p361QTSCDs3gf8izEh",
-	    											"nLphepxwA1bNxLDuwB3SLYPXjed6jMwFw4", 500);
+        consensus.nFounderPayment = FounderPayment(rewardStructures, 2, "n6yjcgyB6VUJipV9p361QTSCDs3gf8izEh",
+	    											"nLphepxwA1bNxLDuwB3SLYPXjed6jMwFw4", 10);
         consensus.masternodeCollateral = 1000000;
 
          // OG message start
-        pchMessageStart[0] = 0x14;
+        pchMessageStart[0] = 0x13;
         pchMessageStart[1] = 0x67;
         pchMessageStart[2] = 0x4B;
         pchMessageStart[3] = 0xC3;
 
          // New message start
-        pchMessageStartNew[0] = 0x28;
+        pchMessageStartNew[0] = 0x27;
         pchMessageStartNew[1] = 0x33;
         pchMessageStartNew[2] = 0x2B;
         pchMessageStartNew[3] = 0x3C;
