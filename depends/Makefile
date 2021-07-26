@@ -6,6 +6,7 @@ SDK_PATH ?= $(BASEDIR)/SDKs
 NO_QT ?=
 NO_WALLET ?=
 NO_UPNP ?=
+FALLBACK_DOWNLOAD_PATH ?= https://bitcoincore.org/depends-sources
 
 BUILD = $(shell ./config.guess)
 HOST ?= $(BUILD)
@@ -167,8 +168,8 @@ install: check-packages $(host_prefix)/share/config.site
 
 download-one: check-sources $(all_sources)
 
-download-osx:
-	@$(MAKE) -s HOST=x86_64-apple-darwin11 download-one
+#download-osx:
+#	@$(MAKE) -s HOST=x86_64-apple-darwin11 download-one
 download-linux:
 	@$(MAKE) -s HOST=x86_64-unknown-linux-gnu download-one
 download-win:
