@@ -438,7 +438,7 @@ public:
         consensus.nPowTargetSpacingNew = 2.5 * 60; // 2.5 min to match Dash
         consensus.nPowDifficultyRetargetHeight = 10; // blockheight to switch to 360 block retarget rules
         consensus.nPowTargetTimespanShort = 360 * 60; //~6 hours
-        consensus.zawyLWMAHeight = 22; // blockheight to switch to LWMA retarget rules
+        consensus.zawyLWMAHeight = 222; // blockheight to switch to LWMA retarget rules
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 15; // 75% for testchains
