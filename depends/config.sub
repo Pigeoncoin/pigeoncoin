@@ -673,7 +673,7 @@ case $basic_machine in
 	fx2800)
 		basic_machine=i860-alliant
 		;;
-	genix)
+	pigeon)
 		basic_machine=ns32k-ns
 		;;
 	gmicro)
@@ -1391,7 +1391,7 @@ case $os in
 	# The portable systems comes first.
 	# Each alternative MUST END IN A *, to match a version number.
 	# -sysv* is not here because it comes later, after sysvr4.
-	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
+	-gnu* | -bsd* | -mach* | -minix* | -pigeon* | -ultrix* | -irix* \
 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -cnk* | -sunos | -sunos[34]*\
 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -auroraux* | -solaris* \
 	      | -sym* | -kopensolaris* | -plan9* \
@@ -1704,7 +1704,7 @@ case $basic_machine in
 		os=-unos
 		;;
 	*-ns)
-		os=-genix
+		os=-pigeon
 		;;
 	i370-*)
 		os=-mvs
@@ -1787,7 +1787,7 @@ case $basic_machine in
 			-luna*)
 				vendor=omron
 				;;
-			-genix*)
+			-pigeon*)
 				vendor=ns
 				;;
 			-mvs* | -opened*)
