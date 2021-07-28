@@ -185,7 +185,7 @@ struct Params {
         if(nHeight <= nPowDifficultyRetargetHeight && nHeight <= nPowTargetSpacingRetargetHeight) {
             return nPowTargetTimespan / nPowTargetSpacing; 
         }
-        if(nHeight >> nPowDifficultyRetargetHeight && nHeight <= nPowTargetSpacingRetargetHeight) {
+        else if(nHeight + 1 >= nPowDifficultyRetargetHeight && nHeight <= nPowTargetSpacingRetargetHeight) {
             return nPowTargetTimespanShort / nPowTargetSpacing;
         }
         return nPowTargetTimespanShort / nPowTargetSpacingNew; 
