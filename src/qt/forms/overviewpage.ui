@@ -508,7 +508,7 @@
                </font>
               </property>
               <property name="text">
-               <string notr="true">0 PIGEON</string>
+               <string notr="true">0 PGN</string>
               </property>
              </widget>
             </item>
@@ -522,7 +522,7 @@
             <item row="3" column="1">
              <widget class="QLabel" name="labelAmountRounds">
               <property name="text">
-               <string>0 PIGEON / 0 Rounds</string>
+               <string>0 PGN / 0 Rounds</string>
               </property>
              </widget>
             </item>

@@ -78,7 +78,7 @@ a minor issue which was not affecting mixing speed or user privacy in any way.
 Removal of support for local masternodes
 ----------------------------------------
 
-Keeping a wallet with 1000 PIGEON unlocked for 24/7 is definitely not a good idea
+Keeping a wallet with 1000 PGN unlocked for 24/7 is definitely not a good idea
 anymore. Because of this fact, it's also no longer reasonable to update and test
 this feature, so it's completely removed now. If for some reason you were still
 using it, please follow one of the guides and setup a remote masternode instead.

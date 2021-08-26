@@ -1,4 +1,4 @@
-TOR SUPPORT IN PIGEON CORE
+TOR SUPPORT IN PGN CORE
 =======================
 
 It is possible to run Pigeon Core as a Tor hidden service, and connect to such services.

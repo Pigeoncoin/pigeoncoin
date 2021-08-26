@@ -47,7 +47,7 @@ https://github.com/pigeonpro/dips/blob/master/dip-0001.md
 Fee reduction
 -------------
 
-All transaction fees are reduced 10x (from 10K per Kb to 1K per Kb), including fees for InstantSend (from 0.001 PIGEON per input to 0.0001 per input)
+All transaction fees are reduced 10x (from 10K per Kb to 1K per Kb), including fees for InstantSend (from 0.001 PGN per input to 0.0001 per input)
 
 InstantSend fix
 ---------------

@@ -248,7 +248,7 @@ public:
         consensus.nGovernanceFilterElements = 20000;
         consensus.nMasternodeMinimumConfirmations = 150;
         consensus.BIP34Height = 1;
-        consensus.BIP34Hash = uint256S("0x00");
+        consensus.BIP34Hash = uint256S("0x000000bf3ab765e3f2c75ae426539633e5f94af22b94c7da67652a1d3f6e770b");
         consensus.BIP65Height = 1;
         consensus.BIP66Height = 1;
         consensus.DIP0001Height = 2000000;
@@ -337,8 +337,6 @@ public:
         nDefaultPort = 8757;
         nPruneAfterHeight = 100000;
 
-        HFTimestamp = 1857875799; // Disabled until needed
-
         genesis = CreateGenesisBlock(1521661111, 17434278, 0x1e00ffff, 4, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x000000f049bef9fec0179131874c54c76c0ff59f695db30a4f0da52072c99492"));
@@ -383,7 +381,7 @@ public:
         nPoolMaxParticipants = 5;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
 
-        vSporkAddresses = {"PDepd3iFrvc8E9fcyJTdQk6SoRbcUZqHEP"};
+        vSporkAddresses = {"PDepd3iFrvc8E9fcyJTdQk6SoRbcUZqHEP"}; // ToDo
         nMinSporkKeys = 1;
         fBIP9CheckMasternodesUpgraded = true;
 

@@ -19,7 +19,7 @@ BitcoinUnits::BitcoinUnits(QObject *parent):
 QList<BitcoinUnits::Unit> BitcoinUnits::availableUnits()
 {
     QList<BitcoinUnits::Unit> unitlist;
-    unitlist.append(PIGEON);
+    unitlist.append(PGN);
     unitlist.append(mPIGEON);
     unitlist.append(uPIGEON);
     unitlist.append(duffs);
@@ -30,7 +30,7 @@ bool BitcoinUnits::valid(int unit)
 {
     switch(unit)
     {
-    case PIGEON:
+    case PGN:
     case mPIGEON:
     case uPIGEON:
     case duffs:
@@ -46,7 +46,7 @@ QString BitcoinUnits::name(int unit)
     {
         switch(unit)
         {
-            case PIGEON: return QString("PIGEON");
+            case PGN: return QString("PGN");
             case mPIGEON: return QString("mPIGEON");
             case uPIGEON: return QString::fromUtf8("μPIGEON");
             case duffs: return QString("duffs");
@@ -57,7 +57,7 @@ QString BitcoinUnits::name(int unit)
     {
         switch(unit)
         {
-            case PIGEON: return QString("tPIGEON");
+            case PGN: return QString("tPIGEON");
             case mPIGEON: return QString("mtPIGEON");
             case uPIGEON: return QString::fromUtf8("μtPIGEON");
             case duffs: return QString("tduffs");
@@ -72,7 +72,7 @@ QString BitcoinUnits::description(int unit)
     {
         switch(unit)
         {
-            case PIGEON: return QString("Pigeon");
+            case PGN: return QString("Pigeon");
             case mPIGEON: return QString("Milli-Pigeon (1 / 1" THIN_SP_UTF8 "000)");
             case uPIGEON: return QString("Micro-Pigeon (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
             case duffs: return QString("Ten Nano-Pigeon (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
@@ -83,7 +83,7 @@ QString BitcoinUnits::description(int unit)
     {
         switch(unit)
         {
-            case PIGEON: return QString("TestPigeons");
+            case PGN: return QString("TestPigeons");
             case mPIGEON: return QString("Milli-TestPigeon (1 / 1" THIN_SP_UTF8 "000)");
             case uPIGEON: return QString("Micro-TestPigeon (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
             case duffs: return QString("Ten Nano-TestPigeon (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
@@ -96,7 +96,7 @@ qint64 BitcoinUnits::factor(int unit)
 {
     switch(unit)
     {
-    case PIGEON:  return 100000000;
+    case PGN:  return 100000000;
     case mPIGEON: return 100000;
     case uPIGEON: return 100;
     case duffs: return 1;
@@ -108,7 +108,7 @@ int BitcoinUnits::decimals(int unit)
 {
     switch(unit)
     {
-    case PIGEON: return 8;
+    case PGN: return 8;
     case mPIGEON: return 5;
     case uPIGEON: return 2;
     case duffs: return 0;

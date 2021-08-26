@@ -349,7 +349,7 @@ bool CSuperblockManager::GetSuperblockPayments(int nBlockHeight, std::vector<CTx
             ExtractDestination(payment.script, address1);
             CBitcoinAddress address2(address1);
 
-            // TODO: PRINT NICE N.N PIGEON OUTPUT
+            // TODO: PRINT NICE N.N PGN OUTPUT
 
             LogPrint(BCLog::GOBJECT, "CSuperblockManager::GetSuperblockPayments -- NEW Superblock: output %d (addr %s, amount %lld)\n",
                         i, address2.ToString(), payment.nAmount);

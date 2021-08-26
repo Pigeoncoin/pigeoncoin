@@ -134,7 +134,7 @@ sure that `privatesendmultisession` is set to `1` via cmd-line or `Enable Privat
 enabled in GUI.
 
 Introducing parallel mixing sessions should speed mixing up which makes it reasonable to add a new
-mixing denom (0.00100001 PIGEON) now while keeping all the old ones too. It also makes sense to allow more
+mixing denom (0.00100001 PGN) now while keeping all the old ones too. It also makes sense to allow more
 mixing rounds now, so the new default number of rounds is 4 and the maximum number of rounds is 16 now.
 
 You can also adjust rounds and amount via `setprivatesendrounds` and `setprivatesendamount` RPC commands

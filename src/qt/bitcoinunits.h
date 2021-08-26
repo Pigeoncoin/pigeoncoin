@@ -57,7 +57,7 @@ public:
      */
     enum Unit
     {
-        PIGEON,
+        PGN,
         mPIGEON,
         uPIGEON,
         duffs
