@@ -72,7 +72,7 @@ void FounderPayment::FillFounderPayment(CMutableTransaction& txNew, int nBlockHe
     		GetFounderPayeeAddr(nBlockHeight));
 }
 
-bool FounderPayment::IsBlockPayeeValid(const CTransaction& txNew, const int height, const CAmount blockReward) {
+bool FounderPayment::IsFounderPayeeValid(const CTransaction& txNew, const int height, const CAmount blockReward) {
 	CAmount founderReward = getFounderPaymentAmount(height, blockReward);
 	CScript payee = GetFounderPayeeScript(height);
 

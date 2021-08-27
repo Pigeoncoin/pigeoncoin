@@ -1783,7 +1783,7 @@ bool IsFounderPaymentValid(const CTransaction& coinbaseTX, const Consensus::Para
     bool fCheckFounderPayment = founderPayment.shouldPayFounder(nHeight);
     //Check for founder payment if it isnt already found in txes
     if(fCheckFounderPayment)
-        founderPaymentValid = founderPayment.IsBlockPayeeValid(coinbaseTX,nHeight,blockReward);
+        founderPaymentValid = founderPayment.IsFounderPayeeValid(coinbaseTX,nHeight,blockReward);
 
     if(nHeight >= 1420001)
         return true;
