@@ -58,8 +58,8 @@ public:
     enum Unit
     {
         PGN,
-        mPIGEON,
-        uPIGEON,
+        mPGN,
+        uPGN,
         duffs
     };
 
