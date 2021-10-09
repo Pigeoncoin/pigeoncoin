@@ -167,10 +167,10 @@ static Consensus::LLMQParams llmq50_60 = {
         .minSize = 40,
         .threshold = 30,
 
-        .dkgInterval = 24, // one DKG per hour
-        .dkgPhaseBlocks = 2,
-        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 18,
+        .dkgInterval = 60, // one DKG per hour
+        .dkgPhaseBlocks = 5,
+        .dkgMiningWindowStart = 25, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 45,
         .dkgBadVotesThreshold = 40,
 
         .signingActiveQuorumCount = 24, // a full day worth of LLMQs
@@ -258,7 +258,7 @@ public:
         consensus.nAfterExploitHeight = 186803;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetSpacing = 1 * 60; // PGN 1min
-        consensus.nPowTargetSpacingRetargetHeight = 1799900;
+        consensus.nPowTargetSpacingRetargetHeight = INT_MAX; // Won't be needed with new LLMQ settings
         consensus.nPowTargetSpacingNew = 2.5 * 60; // 2.5 min to match Dash
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
         consensus.nPowDifficultyRetargetHeight = 87570; // blockheight to switch to 360 block retarget rules
