@@ -185,10 +185,10 @@ static Consensus::LLMQParams llmq400_60 = {
         .minSize = 300,
         .threshold = 240,
 
-        .dkgInterval = 24 * 12, // one DKG every 12 hours
-        .dkgPhaseBlocks = 4,
-        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 28,
+        .dkgInterval = 60 * 12, // one DKG every 12 hours
+        .dkgPhaseBlocks = 10,
+        .dkgMiningWindowStart = 50, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 90,
         .dkgBadVotesThreshold = 300,
 
         .signingActiveQuorumCount = 4, // two days worth of LLMQs
@@ -204,10 +204,10 @@ static Consensus::LLMQParams llmq400_85 = {
         .minSize = 350,
         .threshold = 340,
 
-        .dkgInterval = 24 * 24, // one DKG every 24 hours
-        .dkgPhaseBlocks = 4,
-        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 48, // give it a larger mining window to make sure it is mined
+        .dkgInterval = 60 * 24, // one DKG every 24 hours
+        .dkgPhaseBlocks = 10,
+        .dkgMiningWindowStart = 50, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 90, // give it a larger mining window to make sure it is mined
         .dkgBadVotesThreshold = 300,
 
         .signingActiveQuorumCount = 4, // four days worth of LLMQs
