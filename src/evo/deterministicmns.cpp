@@ -634,7 +634,9 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         }
     });
 
-    DecreasePoSePenalties(newList);
+    if (nHeight % 4 == 0)  {
+        DecreasePoSePenalties(newList);
+    }
 
     // we skip the coinbase
     for (int i = 1; i < (int)block.vtx.size(); i++) {
