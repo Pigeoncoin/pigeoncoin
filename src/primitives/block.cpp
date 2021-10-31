@@ -42,10 +42,10 @@ uint256 CBlockHeader::GetHash() const
 		nTimeToUse = REGTEST_X21SACTIVATIONTIME;
 	}
 	if (nTime >= nTimeToUse) {
-        printf("Using x21s\n");
+        // printf("Using x21s\n");
 		return HashX21S(BEGIN(nVersion), END(nNonce), hashPrevBlock);
 	}
-            printf("Using x16r\n");
+            // printf("Using x16r\n");
 
     return HashX16R(BEGIN(nVersion), END(nNonce), hashPrevBlock);
 }
