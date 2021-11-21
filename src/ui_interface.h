@@ -1,11 +1,10 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2012-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2012-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_UI_INTERFACE_H
-#define PIGEON_UI_INTERFACE_H
+#ifndef BITCOIN_UI_INTERFACE_H
+#define BITCOIN_UI_INTERFACE_H
 
 #include <stdint.h>
 #include <string>
@@ -15,6 +14,7 @@
 
 class CWallet;
 class CBlockIndex;
+class CDeterministicMNList;
 
 /** General change type (added, updated, removed). */
 enum ChangeType
@@ -95,17 +95,23 @@ public:
     /** A wallet has been loaded. */
     boost::signals2::signal<void (CWallet* wallet)> LoadWallet;
 
-    /**
-     * Show progress e.g. for verifychain.
-     * resume_possible indicates shutting down now will result in the current progress action resuming upon restart.
-     */
-    boost::signals2::signal<void (const std::string &title, int nProgress, bool resume_possible)> ShowProgress;
+    /** Show progress e.g. for verifychain */
+    boost::signals2::signal<void (const std::string &title, int nProgress)> ShowProgress;
+
+    /** Set progress break action (possible "cancel button" triggers that action) */
+    boost::signals2::signal<void (std::function<void(void)> action)> SetProgressBreakAction;
 
     /** New block has been accepted */
     boost::signals2::signal<void (bool, const CBlockIndex *)> NotifyBlockTip;
 
     /** Best header has changed */
     boost::signals2::signal<void (bool, const CBlockIndex *)> NotifyHeaderTip;
+
+    /** Masternode list has changed */
+    boost::signals2::signal<void (const CDeterministicMNList&)> NotifyMasternodeListChanged;
+
+    /** Additional data sync progress changed */
+    boost::signals2::signal<void (double nSyncProgress)> NotifyAdditionalDataSyncProgressChanged;
 
     /** Banlist did change. */
     boost::signals2::signal<void (void)> BannedListChanged;
@@ -123,4 +129,4 @@ std::string AmountErrMsg(const char* const optname, const std::string& strValue)
 
 extern CClientUIInterface uiInterface;
 
-#endif // PIGEON_UI_INTERFACE_H
+#endif // BITCOIN_UI_INTERFACE_H

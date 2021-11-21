@@ -1,11 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_SCRIPT_SIGN_H
-#define PIGEON_SCRIPT_SIGN_H
+#ifndef BITCOIN_SCRIPT_SIGN_H
+#define BITCOIN_SCRIPT_SIGN_H
 
 #include "script/interpreter.h"
 
@@ -22,7 +21,7 @@ protected:
     const CKeyStore* keystore;
 
 public:
-    explicit BaseSignatureCreator(const CKeyStore* keystoreIn) : keystore(keystoreIn) {}
+    BaseSignatureCreator(const CKeyStore* keystoreIn) : keystore(keystoreIn) {}
     const CKeyStore& KeyStore() const { return *keystore; };
     virtual ~BaseSignatureCreator() {}
     virtual const BaseSignatureChecker& Checker() const =0;
@@ -41,7 +40,7 @@ class TransactionSignatureCreator : public BaseSignatureCreator {
 
 public:
     TransactionSignatureCreator(const CKeyStore* keystoreIn, const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn=SIGHASH_ALL);
-    const BaseSignatureChecker& Checker() const override { return checker; }
+    const BaseSignatureChecker& Checker() const  override{ return checker; }
     bool CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
 };
 
@@ -49,20 +48,19 @@ class MutableTransactionSignatureCreator : public TransactionSignatureCreator {
     CTransaction tx;
 
 public:
-    MutableTransactionSignatureCreator(const CKeyStore* keystoreIn, const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn) : TransactionSignatureCreator(keystoreIn, &tx, nInIn, amountIn, nHashTypeIn), tx(*txToIn) {}
+    MutableTransactionSignatureCreator(const CKeyStore* keystoreIn, const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amount, int nHashTypeIn) : TransactionSignatureCreator(keystoreIn, &tx, nInIn, amount, nHashTypeIn), tx(*txToIn) {}
 };
 
 /** A signature creator that just produces 72-byte empty signatures. */
 class DummySignatureCreator : public BaseSignatureCreator {
 public:
-    explicit DummySignatureCreator(const CKeyStore* keystoreIn) : BaseSignatureCreator(keystoreIn) {}
+    DummySignatureCreator(const CKeyStore* keystoreIn) : BaseSignatureCreator(keystoreIn) {}
     const BaseSignatureChecker& Checker() const override;
     bool CreateSig(std::vector<unsigned char>& vchSig, const CKeyID& keyid, const CScript& scriptCode, SigVersion sigversion) const override;
 };
 
 struct SignatureData {
     CScript scriptSig;
-    CScriptWitness scriptWitness;
 
     SignatureData() {}
     explicit SignatureData(const CScript& script) : scriptSig(script) {}
@@ -82,4 +80,4 @@ SignatureData CombineSignatures(const CScript& scriptPubKey, const BaseSignature
 SignatureData DataFromTransaction(const CMutableTransaction& tx, unsigned int nIn);
 void UpdateTransaction(CMutableTransaction& tx, unsigned int nIn, const SignatureData& data);
 
-#endif // PIGEON_SCRIPT_SIGN_H
+#endif // BITCOIN_SCRIPT_SIGN_H

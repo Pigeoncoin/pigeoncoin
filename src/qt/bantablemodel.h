@@ -1,10 +1,9 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_QT_BANTABLEMODEL_H
-#define PIGEON_QT_BANTABLEMODEL_H
+#ifndef BITCOIN_QT_BANTABLEMODEL_H
+#define BITCOIN_QT_BANTABLEMODEL_H
 
 #include "net.h"
 
@@ -71,4 +70,4 @@ private:
     std::unique_ptr<BanTablePriv> priv;
 };
 
-#endif // PIGEON_QT_BANTABLEMODEL_H
+#endif // BITCOIN_QT_BANTABLEMODEL_H

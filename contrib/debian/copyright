@@ -1,13 +1,13 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: Pigeon
+Upstream-Name: Bitcoin
 Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
- irc://#pigeon@freenode.net
-Source: https://github.com/PigeonProject/Pigeoncoin
+ irc://#bitcoin@freenode.net
+Source: https://github.com/bitcoin/bitcoin
 
 Files: *
-Copyright: 2009-2017, Pigeon Core Developers
+Copyright: 2009-2017, Bitcoin Core Developers
 License: Expat
-Comment: The Pigeon Core Developers encompasses the current developers listed on pigeon.org,
+Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
          as well as the numerous contributors to the project.
 
 Files: debian/*
@@ -47,10 +47,10 @@ Comment: Site: https://github.com/stephenhutchings/typicons.font
 
 Files: src/qt/res/icons/connect*.png
        src/qt/res/src/connect-*.svg
-       src/qt/res/icons/network_disabled.png
+       src/qt/res/icons/*/network_disabled.png
        src/qt/res/src/network_disabled.svg
 Copyright: Marco Falke
-           Luke Dashjr
+           Luke Pigeonjr
 License: Expat
 Comment: Inspired by Stephan Hutchings Typicons
 
@@ -58,9 +58,9 @@ Files: src/qt/res/icons/tx_mined.png
        src/qt/res/src/mine.svg
        src/qt/res/icons/fontbigger.png
        src/qt/res/icons/fontsmaller.png
-       src/qt/res/icons/hd_disabled.png
+       src/qt/res/icons/*/hd_disabled.png
        src/qt/res/src/hd_disabled.svg
-       src/qt/res/icons/hd_enabled.png
+       src/qt/res/icons/*/hd_enabled.png
        src/qt/res/src/hd_enabled.svg
 Copyright: Jonas Schnelli
 License: Expat
@@ -78,12 +78,12 @@ License: Expat
 Comment: Modifications of Stephan Hutchings Typicons
 
 Files: src/qt/res/icons/about.png
-       src/qt/res/icons/pigeon.*
-       share/pixmaps/pigeon*
-       src/qt/res/src/pigeon.svg
+       src/qt/res/icons/bitcoin.*
+       share/pixmaps/bitcoin*
+       src/qt/res/src/bitcoin.svg
 Copyright: Bitboy, Jonas Schnelli
 License: public-domain
-Comment: Site: https://pigeontalk.org/?topic=1756.0
+Comment: Site: https://bitcointalk.org/?topic=1756.0
 
 
 License: Expat

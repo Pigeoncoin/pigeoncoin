@@ -1,11 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_SCRIPT_SCRIPT_H
-#define PIGEON_SCRIPT_SCRIPT_H
+#ifndef BITCOIN_SCRIPT_SCRIPT_H
+#define BITCOIN_SCRIPT_SCRIPT_H
 
 #include "crypto/common.h"
 #include "prevector.h"
@@ -378,12 +377,6 @@ private:
     int64_t m_value;
 };
 
-/**
- * We use a prevector for the script to reduce the considerable memory overhead
- *  of vectors in cases where they normally contain a small number of small elements.
- * Tests in October 2015 showed use of this reduced dbcache memory usage by 23%
- *  and made an initial sync 13% faster.
- */
 typedef prevector<28, unsigned char> CScriptBase;
 
 /** Serialized script, used inside transaction inputs and outputs */
@@ -421,7 +414,6 @@ public:
 
     CScript& operator+=(const CScript& b)
     {
-        reserve(size() + b.size());
         insert(end(), b.begin(), b.end());
         return *this;
     }
@@ -627,7 +619,7 @@ public:
     }
 
     /**
-     * Pre-version-0.6, Pigeon always counted CHECKMULTISIGs
+     * Pre-version-0.6, Bitcoin always counted CHECKMULTISIGs
      * as 20 sigops. With pay-to-script-hash, that changed:
      * CHECKMULTISIGs serialized in scriptSigs are
      * counted more accurately, assuming they are of the form
@@ -641,16 +633,16 @@ public:
      */
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
+    bool IsPayToPublicKeyHash() const;
+
     bool IsPayToScriptHash() const;
-    bool IsPayToWitnessScriptHash() const;
-    bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
+
+    /** Used for obsolete pay-to-pubkey addresses indexing. */
+    bool IsPayToPublicKey() const;
 
     /** Called by IsStandardTx and P2SH/BIP62 VerifyScript (which makes it consensus-critical). */
     bool IsPushOnly(const_iterator pc) const;
     bool IsPushOnly() const;
-
-    /** Check if the script contains valid OP_CODES */
-    bool HasValidOps() const;
 
     /**
      * Returns whether the script is guaranteed to fail at execution,
@@ -670,22 +662,6 @@ public:
     }
 };
 
-struct CScriptWitness
-{
-    // Note that this encodes the data elements being pushed, rather than
-    // encoding them as a CScript that pushes them.
-    std::vector<std::vector<unsigned char> > stack;
-
-    // Some compilers complain without a default constructor
-    CScriptWitness() { }
-
-    bool IsNull() const { return stack.empty(); }
-
-    void SetNull() { stack.clear(); stack.shrink_to_fit(); }
-
-    std::string ToString() const;
-};
-
 class CReserveScript
 {
 public:
@@ -695,4 +671,4 @@ public:
     virtual ~CReserveScript() {}
 };
 
-#endif // PIGEON_SCRIPT_SCRIPT_H
+#endif // BITCOIN_SCRIPT_SCRIPT_H

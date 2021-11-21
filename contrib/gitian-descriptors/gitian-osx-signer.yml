@@ -1,16 +1,16 @@
 ---
 name: "pigeon-dmg-signer"
 suites:
-- "trusty"
+- "bionic"
 architectures:
 - "amd64"
 packages:
 - "faketime"
 remotes:
-- "url": "https://github.com/pigeoncoin/pigeon-detached-sigs.git"
+- "url": "https://github.com/pigeonpay/pigeon-detached-sigs.git"
   "dir": "signature"
 files:
-- "pigeon-osx-unsigned.tar.gz"
+- "pigeoncore-osx-unsigned.tar.gz"
 script: |
   WRAP_DIR=$HOME/wrapped
   mkdir -p ${WRAP_DIR}
@@ -27,8 +27,8 @@ script: |
     chmod +x ${WRAP_DIR}/${prog}
   done
 
-  UNSIGNED=pigeon-osx-unsigned.tar.gz
-  SIGNED=pigeon-osx-signed.dmg
+  UNSIGNED=pigeoncore-osx-unsigned.tar.gz
+  SIGNED=pigeoncore-osx-signed.dmg
 
   tar -xf ${UNSIGNED}
   OSX_VOLNAME="$(cat osx_volname)"

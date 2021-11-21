@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2017 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool persistence.
 
-By default, pigeond will dump mempool on shutdown and
+By default, bitcoind will dump mempool on shutdown and
 then reload it on startup. This can be overridden with
 the -persistmempool=0 command line option.
 
@@ -29,20 +28,14 @@ Test is as follows:
   - Restart node0 with -persistmempool. Verify that it has 5
     transactions in its mempool. This tests that -persistmempool=0
     does not overwrite a previously valid mempool stored on disk.
-  - Remove node0 mempool.dat and verify savemempool RPC recreates it
-    and verify that node1 can load it and has 5 transaction in its
-    mempool.
-  - Verify that savemempool throws when the RPC is called if
-    node1 can't write to disk.
 
 """
-import os
 import time
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-class MempoolPersistTest(PigeonTestFramework):
+class MempoolPersistTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.extra_args = [[], ["-persistmempool=0"], []]
@@ -84,28 +77,6 @@ class MempoolPersistTest(PigeonTestFramework):
         self.stop_nodes()
         self.start_node(0)
         wait_until(lambda: len(self.nodes[0].getrawmempool()) == 5)
-
-        mempooldat0 = os.path.join(self.options.tmpdir, 'node0', 'regtest', 'mempool.dat')
-        mempooldat1 = os.path.join(self.options.tmpdir, 'node1', 'regtest', 'mempool.dat')
-        self.log.debug("Remove the mempool.dat file. Verify that savemempool to disk via RPC re-creates it")
-        os.remove(mempooldat0)
-        self.nodes[0].savemempool()
-        assert os.path.isfile(mempooldat0)
-
-        self.log.debug("Stop nodes, make node1 use mempool.dat from node0. Verify it has 5 transactions")
-        os.rename(mempooldat0, mempooldat1)
-        self.stop_nodes()
-        self.start_node(1, extra_args=[])
-        wait_until(lambda: len(self.nodes[1].getrawmempool()) == 5)
-
-        self.log.debug("Prevent pigeond from writing mempool.dat to disk. Verify that `savemempool` fails")
-        # to test the exception we are setting bad permissions on a tmp file called mempool.dat.new
-        # which is an implementation detail that could change and break this test
-        mempooldotnew1 = mempooldat1 + '.new'
-        with os.fdopen(os.open(mempooldotnew1, os.O_CREAT, 0o000), 'w'):
-            pass
-        assert_raises_rpc_error(-1, "Unable to dump mempool to disk", self.nodes[1].savemempool)
-        os.remove(mempooldotnew1)
 
 if __name__ == '__main__':
     MempoolPersistTest().main()

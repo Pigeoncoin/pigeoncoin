@@ -1,0 +1,13 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Pigeon Core
+Comment=Pigeon P2P Cryptocurrency
+Comment[de]=Verbinde mit dem Pigeon peer-to-peer Netzwerk
+Comment[fr]=Pigeon, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=Pigeon, eşten eşe kriptografik sanal para birimi
+Exec=pigeon-qt %u
+Terminal=false
+Type=Application
+Icon=pigeon128
+MimeType=x-scheme-handler/pigeon;
+Categories=Office;Finance;

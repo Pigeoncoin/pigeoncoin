@@ -1,10 +1,9 @@
-// Copyright (c) 2014-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_COMPAT_BYTESWAP_H
-#define PIGEON_COMPAT_BYTESWAP_H
+#ifndef BITCOIN_COMPAT_BYTESWAP_H
+#define BITCOIN_COMPAT_BYTESWAP_H
 
 #if defined(HAVE_CONFIG_H)
 #include "config/pigeon-config.h"
@@ -36,7 +35,7 @@
 #if HAVE_DECL_BSWAP_16 == 0
 inline uint16_t bswap_16(uint16_t x)
 {
-    return (x >> 8) | (x << 8);
+    return (x >> 8) | ((x & 0x00ff) << 8);
 }
 #endif // HAVE_DECL_BSWAP16
 
@@ -64,4 +63,4 @@ inline uint64_t bswap_64(uint64_t x)
 
 #endif // defined(__APPLE__)
 
-#endif // PIGEON_COMPAT_BYTESWAP_H
+#endif // BITCOIN_COMPAT_BYTESWAP_H

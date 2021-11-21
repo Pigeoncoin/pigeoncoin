@@ -1,11 +1,10 @@
 // Copyright (c) 2012 Pieter Wuille
-// Copyright (c) 2012-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2012-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_ADDRMAN_H
-#define PIGEON_ADDRMAN_H
+#ifndef BITCOIN_ADDRMAN_H
+#define BITCOIN_ADDRMAN_H
 
 #include "netaddress.h"
 #include "protocol.h"
@@ -193,7 +192,7 @@ private:
     std::map<int, CAddrInfo> mapInfo;
 
     //! find an nId based on its network address
-    std::map<CNetAddr, int> mapAddr;
+    std::map<CService, int> mapAddr;
 
     //! randomly-ordered vector of all nIds
     std::vector<int> vRandom;
@@ -213,6 +212,9 @@ private:
     //! last time Good was called (memory only)
     int64_t nLastGood;
 
+    // discriminate entries based on port. Should be false on mainnet/testnet and can be true on devnet/regtest
+    bool discriminatePorts;
+
 protected:
     //! secret key to randomize bucket select with
     uint256 nKey;
@@ -221,7 +223,7 @@ protected:
     FastRandomContext insecure_rand;
 
     //! Find an entry.
-    CAddrInfo* Find(const CNetAddr& addr, int *pnId = nullptr);
+    CAddrInfo* Find(const CService& addr, int *pnId = nullptr);
 
     //! find an entry, creating it if necessary.
     //! nTime and nServices of the found node are updated, if necessary.
@@ -267,6 +269,9 @@ protected:
 
     //! Update an entry's service bits.
     void SetServices_(const CService &addr, ServiceFlags nServices);
+
+    //! Get address info for address
+    CAddrInfo GetAddressInfo_(const CService& addr);
 
 public:
     /**
@@ -477,7 +482,8 @@ public:
         mapAddr.clear();
     }
 
-    CAddrMan()
+    CAddrMan(bool _discriminatePorts = false) :
+        discriminatePorts(_discriminatePorts)
     {
         Clear();
     }
@@ -520,8 +526,6 @@ public:
         }
         return fRet;
     }
-
-    CAddrInfo* ById(unsigned long nId);
 
     //! Add multiple addresses.
     bool Add(const std::vector<CAddress> &vAddr, const CNetAddr& source, int64_t nTimePenalty = 0)
@@ -601,6 +605,18 @@ public:
         Check();
     }
 
+    CAddrInfo GetAddressInfo(const CService& addr)
+    {
+        CAddrInfo addrRet;
+        {
+            LOCK(cs);
+            Check();
+            addrRet = GetAddressInfo_(addr);
+            Check();
+        }
+        return addrRet;
+    }
+
 };
 
-#endif // PIGEON_ADDRMAN_H
+#endif // BITCOIN_ADDRMAN_H

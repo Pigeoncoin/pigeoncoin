@@ -11,26 +11,23 @@
   </array>
 
   <key>CFBundleIconFile</key>
-  <string>pigeon.icns</string>
+  <string>bitcoin.icns</string>
 
   <key>CFBundlePackageType</key>
   <string>APPL</string>
 
-  <key>CFBundleGetInfoString</key>
-  <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@, Copyright © 2009-@COPYRIGHT_YEAR@ @COPYRIGHT_HOLDERS_FINAL@</string>
-
   <key>CFBundleShortVersionString</key>
-  <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@</string>
+  <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@.@CLIENT_VERSION_BUILD@</string>
 
   <key>CFBundleVersion</key>
-  <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@</string>
+  <string>@CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@.@CLIENT_VERSION_BUILD@</string>
 
   <key>CFBundleSignature</key>
   <string>????</string>
 
   <key>CFBundleExecutable</key>
   <string>Pigeon-Qt</string>
-  
+
   <key>CFBundleName</key>
   <string>Pigeon-Qt</string>
 
@@ -38,7 +35,7 @@
   <true/>
 
   <key>CFBundleIdentifier</key>
-  <string>org.pigeonfoundation.Pigeon-Qt</string>
+  <string>org.pigeon.Pigeon-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>
@@ -71,7 +68,7 @@
         <string>application/x-pigeon-payment-request</string>
         <key>public.filename-extension</key>
         <array>
-          <string>pigeonpaymentrequest</string>
+          <string>pigeonpromentrequest</string>
         </array>
       </dict>
     </dict>
@@ -97,9 +94,12 @@
   <key>NSHighResolutionCapable</key>
     <string>True</string>
 
-  <key>LSAppNapIsDisabled</key>
+  <key>NSRequiresAquaSystemAppearance</key>
     <string>True</string>
-  
+
+  <key>NSHumanReadableCopyright</key>
+  <string>Copyright © 2009-@COPYRIGHT_YEAR@ The Bitcoin Core developers, 2014-@COPYRIGHT_YEAR@ @COPYRIGHT_HOLDERS_FINAL@</string>
+
   <key>LSApplicationCategoryType</key>
     <string>public.app-category.finance</string>
 </dict>

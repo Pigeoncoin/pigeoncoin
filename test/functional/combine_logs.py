@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Combine logs from multiple pigeon nodes as well as the test_framework log.
+"""Combine logs from multiple bitcoin nodes as well as the test_framework log.
 
 This streams the combined log output to stdout. Use combine_logs.py > outputfile
 to write to an outputfile."""
@@ -106,7 +106,7 @@ def print_logs(log_events, color=False, html=False):
         except ImportError:
             print("jinja2 not found. Try `pip install jinja2`")
             sys.exit(1)
-        print(jinja2.Environment(loader=jinja2.FileSystemLoader('./'))
+        print(jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(os.path.abspath(__file__))))
                     .get_template('combined_log_template.html')
                     .render(title="Combined Logs from testcase", log_events=[event._asdict() for event in log_events]))
 

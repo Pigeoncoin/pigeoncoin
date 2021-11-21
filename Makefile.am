@@ -1,5 +1,5 @@
 # Copyright (c) 2013-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
+# Copyright (c) 2014-2018 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,15 +13,15 @@ endif
 GZIP_ENV="-9n"
 export PYTHONPATH
 
-if BUILD_PIGEON_LIBS
+if BUILD_BITCOIN_LIBS
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libpigeonconsensus.pc
 endif
 
-PIGEOND_BIN=$(top_builddir)/src/$(PIGEON_DAEMON_NAME)$(EXEEXT)
-PIGEON_QT_BIN=$(top_builddir)/src/qt/$(PIGEON_GUI_NAME)$(EXEEXT)
-PIGEON_CLI_BIN=$(top_builddir)/src/$(PIGEON_CLI_NAME)$(EXEEXT)
-PIGEON_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win$(WINDOWS_BITS)-setup$(EXEEXT)
+BITCOIND_BIN=$(top_builddir)/src/$(BITCOIN_DAEMON_NAME)$(EXEEXT)
+BITCOIN_QT_BIN=$(top_builddir)/src/qt/$(BITCOIN_GUI_NAME)$(EXEEXT)
+BITCOIN_CLI_BIN=$(top_builddir)/src/$(BITCOIN_CLI_NAME)$(EXEEXT)
+BITCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win$(WINDOWS_BITS)-setup$(EXEEXT)
 
 empty :=
 space := $(empty) $(empty)
@@ -35,16 +35,15 @@ OSX_BACKGROUND_IMAGE_DPIS=36 72
 OSX_DSSTORE_GEN=$(top_srcdir)/contrib/macdeploy/custom_dsstore.py
 OSX_DEPLOY_SCRIPT=$(top_srcdir)/contrib/macdeploy/macdeployqtplus
 OSX_FANCY_PLIST=$(top_srcdir)/contrib/macdeploy/fancy.plist
-OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/pigeon.icns
+OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/bitcoin.icns
 OSX_PLIST=$(top_builddir)/share/qt/Info.plist #not installed
 OSX_QT_TRANSLATIONS = da,de,es,hu,ru,uk,zh_CN,zh_TW
 
 DIST_DOCS = $(wildcard doc/*.md) $(wildcard doc/release-notes/*.md)
-DIST_CONTRIB = $(top_srcdir)/contrib/bitcoin-cli.bash-completion \
-	       $(top_srcdir)/contrib/bitcoin-tx.bash-completion \
-	       $(top_srcdir)/contrib/bitcoind.bash-completion \
-	       $(top_srcdir)/contrib/init \
-	       $(top_srcdir)/contrib/rpm
+DIST_CONTRIB = $(top_srcdir)/contrib/pigeon-cli.bash-completion \
+	       $(top_srcdir)/contrib/pigeon-tx.bash-completion \
+	       $(top_srcdir)/contrib/pigeond.bash-completion \
+	       $(top_srcdir)/contrib/init
 DIST_SHARE = \
   $(top_srcdir)/share/genbuild.sh \
   $(top_srcdir)/share/rpcuser
@@ -52,7 +51,7 @@ DIST_SHARE = \
 BIN_CHECKS=$(top_srcdir)/contrib/devtools/symbol-check.py \
            $(top_srcdir)/contrib/devtools/security-check.py
 
-WINDOWS_PACKAGING = $(top_srcdir)/share/pixmaps/pigeon.ico \
+WINDOWS_PACKAGING = $(top_srcdir)/share/pixmaps/bitcoin.ico \
   $(top_srcdir)/share/pixmaps/nsis-header.bmp \
   $(top_srcdir)/share/pixmaps/nsis-wizard.bmp \
   $(top_srcdir)/doc/README_windows.txt
@@ -71,11 +70,11 @@ COVERAGE_INFO = baseline.info \
 dist-hook:
 	-$(GIT) archive --format=tar HEAD -- src/clientversion.cpp | $(AMTAR) -C $(top_distdir) -xf -
 
-$(PIGEON_WIN_INSTALLER): all-recursive
+$(BITCOIN_WIN_INSTALLER): all-recursive
 	$(MKDIR_P) $(top_builddir)/release
-	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(PIGEOND_BIN) $(top_builddir)/release
-	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(PIGEON_QT_BIN) $(top_builddir)/release
-	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(PIGEON_CLI_BIN) $(top_builddir)/release
+	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIND_BIN) $(top_builddir)/release
+	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIN_QT_BIN) $(top_builddir)/release
+	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIN_CLI_BIN) $(top_builddir)/release
 	@test -f $(MAKENSIS) && $(MAKENSIS) -V2 $(top_builddir)/share/setup.nsi || \
 	  echo error: could not build $@
 	@echo built $@
@@ -92,11 +91,11 @@ $(OSX_APP)/Contents/Info.plist: $(OSX_PLIST)
 	$(MKDIR_P) $(@D)
 	$(INSTALL_DATA) $< $@
 
-$(OSX_APP)/Contents/Resources/pigeon.icns: $(OSX_INSTALLER_ICONS)
+$(OSX_APP)/Contents/Resources/bitcoin.icns: $(OSX_INSTALLER_ICONS)
 	$(MKDIR_P) $(@D)
 	$(INSTALL_DATA) $< $@
 
-$(OSX_APP)/Contents/MacOS/Pigeon-Qt: $(PIGEON_QT_BIN)
+$(OSX_APP)/Contents/MacOS/Pigeon-Qt: $(BITCOIN_QT_BIN)
 	$(MKDIR_P) $(@D)
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM)  $< $@
 
@@ -105,7 +104,7 @@ $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings:
 	echo '{	CFBundleDisplayName = "$(PACKAGE_NAME)"; CFBundleName = "$(PACKAGE_NAME)"; }' > $@
 
 OSX_APP_BUILT=$(OSX_APP)/Contents/PkgInfo $(OSX_APP)/Contents/Resources/empty.lproj \
-  $(OSX_APP)/Contents/Resources/pigeon.icns $(OSX_APP)/Contents/Info.plist \
+  $(OSX_APP)/Contents/Resources/bitcoin.icns $(OSX_APP)/Contents/Info.plist \
   $(OSX_APP)/Contents/MacOS/Pigeon-Qt $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings
 
 osx_volname:
@@ -157,16 +156,16 @@ appbundle: $(OSX_APP_BUILT)
 deploy: $(OSX_DMG)
 endif
 if TARGET_WINDOWS
-deploy: $(PIGEON_WIN_INSTALLER)
+deploy: $(BITCOIN_WIN_INSTALLER)
 endif
 
-$(PIGEON_QT_BIN): FORCE
+$(BITCOIN_QT_BIN): FORCE
 	$(MAKE) -C src qt/$(@F)
 
-$(PIGEOND_BIN): FORCE
+$(BITCOIND_BIN): FORCE
 	$(MAKE) -C src $(@F)
 
-$(PIGEON_CLI_BIN): FORCE
+$(BITCOIN_CLI_BIN): FORCE
 	$(MAKE) -C src $(@F)
 
 if USE_LCOV
@@ -220,8 +219,7 @@ dist_noinst_SCRIPTS = autogen.sh
 EXTRA_DIST = $(DIST_SHARE) test/functional/test_runner.py test/functional $(DIST_CONTRIB) $(DIST_DOCS) $(WINDOWS_PACKAGING) $(OSX_PACKAGING) $(BIN_CHECKS)
 
 EXTRA_DIST += \
-    src/crypto/md_helper.c \
-    test/util/pigeon-util-test.py \
+    test/util/bitcoin-util-test.py \
     test/util/data/bitcoin-util-test.json \
     test/util/data/blanktxv1.hex \
     test/util/data/blanktxv1.json \
@@ -250,30 +248,17 @@ EXTRA_DIST += \
     test/util/data/txcreatemultisig1.json \
     test/util/data/txcreatemultisig2.hex \
     test/util/data/txcreatemultisig2.json \
-    test/util/data/txcreatemultisig3.hex \
-    test/util/data/txcreatemultisig3.json \
-    test/util/data/txcreatemultisig4.hex \
-    test/util/data/txcreatemultisig4.json \
-    test/util/data/txcreatemultisig5.json \
     test/util/data/txcreateoutpubkey1.hex \
     test/util/data/txcreateoutpubkey1.json \
-    test/util/data/txcreateoutpubkey2.hex \
-    test/util/data/txcreateoutpubkey2.json \
-    test/util/data/txcreateoutpubkey3.hex \
-    test/util/data/txcreateoutpubkey3.json \
     test/util/data/txcreatescript1.hex \
     test/util/data/txcreatescript1.json \
     test/util/data/txcreatescript2.hex \
     test/util/data/txcreatescript2.json \
-    test/util/data/txcreatescript3.hex \
-    test/util/data/txcreatescript3.json \
-    test/util/data/txcreatescript4.hex \
-    test/util/data/txcreatescript4.json \
     test/util/data/txcreatesignv1.hex \
     test/util/data/txcreatesignv1.json \
     test/util/data/txcreatesignv2.hex
 
-CLEANFILES = $(OSX_DMG) $(PIGEON_WIN_INSTALLER)
+CLEANFILES = $(OSX_DMG) $(BITCOIN_WIN_INSTALLER)
 
 .INTERMEDIATE: $(COVERAGE_INFO)
 

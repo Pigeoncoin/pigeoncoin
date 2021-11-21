@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 # Copyright (c) 2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the dumpwallet RPC."""
-
 import os
+import sys
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (assert_equal, assert_raises_rpc_error)
 
 
@@ -56,17 +55,24 @@ def read_dump(file_name, addrs, hd_master_addr_old):
         return found_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret
 
 
-class WalletDumpTest(PigeonTestFramework):
+class WalletDumpTest(BitcoinTestFramework):
     def set_test_params(self):
+        self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [["-keypool=90"]]
+        self.extra_args = [["-keypool=90", "-usehd=1"]]
 
-    def setup_network(self, split=False):
+    def setup_network(self):
+        # TODO remove this when usehd=1 becomes the default
+        # use our own cache and -usehd=1 as extra arg as the default cache is run with -usehd=0
+        self.options.tmpdir = os.path.join(self.options.tmpdir, 'hd')
+        self.options.cachedir = os.path.join(self.options.cachedir, 'hd')
+        self._initialize_chain(extra_args=self.extra_args[0], stderr=sys.stdout)
+        self.set_cache_mocktime()
         # Use 1 minute timeout because the initial getnewaddress RPC can take
         # longer than the default 30 seconds due to an expensive
         # CWallet::TopUpKeyPool call, and the encryptwallet RPC made later in
         # the test often takes even longer.
-        self.add_nodes(self.num_nodes, self.extra_args, timewait=60)
+        self.add_nodes(self.num_nodes, self.extra_args, timewait=60, stderr=sys.stdout)
         self.start_nodes()
 
     def run_test (self):
@@ -83,28 +89,28 @@ class WalletDumpTest(PigeonTestFramework):
         self.nodes[0].keypoolrefill()
 
         # dump unencrypted wallet
-        result = self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.unencrypted.dump")
-        assert_equal(result['filename'], os.path.abspath(tmpdir + "/node0/wallet.unencrypted.dump"))
+        self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.unencrypted.dump")
 
         found_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
             read_dump(tmpdir + "/node0/wallet.unencrypted.dump", addrs, None)
         assert_equal(found_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_addr_chg, 50)  # 50 blocks where mined
-        assert_equal(found_addr_rsv, 90*2) # 90 keys plus 100% internal keys
+        assert_equal(found_addr_rsv, 180)  # keypool size (external+internal)
 
         #encrypt wallet, restart, unlock and dump
         self.nodes[0].node_encrypt_wallet('test')
         self.start_node(0)
-        self.nodes[0].walletpassphrase('test', 10)
+        self.nodes[0].walletpassphrase('test', 30)
         # Should be a no-op:
         self.nodes[0].keypoolrefill()
         self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.encrypted.dump")
 
-        found_addr, found_addr_chg, found_addr_rsv, _ = \
+        found_addr, found_addr_chg, found_addr_rsv, hd_master_addr_enc = \
             read_dump(tmpdir + "/node0/wallet.encrypted.dump", addrs, hd_master_addr_unenc)
         assert_equal(found_addr, test_addr_count)
-        assert_equal(found_addr_chg, 90*2 + 50)  # old reserve keys are marked as change now
-        assert_equal(found_addr_rsv, 90*2) 
+        # TODO clarify if we want the behavior that is tested below in Pigeon (only when HD seed was generated and not user-provided)
+        # assert_equal(found_addr_chg, 180 + 50)  # old reserve keys are marked as change now
+        assert_equal(found_addr_rsv, 180)  # keypool size
 
         # Overwriting should fail
         assert_raises_rpc_error(-8, "already exists", self.nodes[0].dumpwallet, tmpdir + "/node0/wallet.unencrypted.dump")

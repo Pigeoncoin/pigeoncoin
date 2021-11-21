@@ -1,5 +1,4 @@
-// Copyright (c) 2012-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2012-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,11 +15,11 @@
 #include <stdint.h>
 #include <algorithm>
 
-class CPigeonLevelDBLogger : public leveldb::Logger {
+class CBitcoinLevelDBLogger : public leveldb::Logger {
 public:
     // This code is adapted from posix_logger.h, which is why it is using vsprintf.
     // Please do not do this in normal code
-    void Logv(const char * format, va_list ap) override {
+    virtual void Logv(const char * format, va_list ap) override {
             if (!LogAcceptCategory(BCLog::LEVELDB)) {
                 return;
             }
@@ -43,7 +42,7 @@ public:
                 if (p < limit) {
                     va_list backup_ap;
                     va_copy(backup_ap, ap);
-                    // Do not use vsnprintf elsewhere in pigeon source code, see above.
+                    // Do not use vsnprintf elsewhere in bitcoin source code, see above.
                     p += vsnprintf(p, limit - p, format, backup_ap);
                     va_end(backup_ap);
                 }
@@ -82,7 +81,7 @@ static leveldb::Options GetOptions(size_t nCacheSize)
     options.filter_policy = leveldb::NewBloomFilterPolicy(10);
     options.compression = leveldb::kNoCompression;
     options.max_open_files = 64;
-    options.info_log = new CPigeonLevelDBLogger();
+    options.info_log = new CBitcoinLevelDBLogger();
     if (leveldb::kMajorVersion > 1 || (leveldb::kMajorVersion == 1 && leveldb::kMinorVersion >= 16)) {
         // LevelDB versions before 1.16 consider short writes to be corruption. Only trigger error
         // on corruption in later versions.
@@ -191,7 +190,7 @@ bool CDBWrapper::IsEmpty()
 }
 
 CDBIterator::~CDBIterator() { delete piter; }
-bool CDBIterator::Valid() const { return piter->Valid(); }
+bool CDBIterator::Valid() { return piter->Valid(); }
 void CDBIterator::SeekToFirst() { piter->SeekToFirst(); }
 void CDBIterator::Next() { piter->Next(); }
 

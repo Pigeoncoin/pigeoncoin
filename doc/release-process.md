@@ -1,11 +1,9 @@
 Release Process
 ====================
 
-Before every release candidate:
+* Update translations, see [translation_process.md](https://github.com/pigeonpro/pigeon/blob/master/doc/translation_process.md#synchronising-translations).
 
-* Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/PigeonProject/Pigeoncoin/blob/master/doc/translation_process.md#synchronising-translations).
-
-* Update manpages, see [gen-manpages.sh](https://github.com/PigeonProject/Pigeoncoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
+* Update manpages, see [gen-manpages.sh](https://github.com/pigeonpro/pigeon/blob/master/contrib/devtools/README.md#gen-manpagessh).
 
 Before every minor and major release:
 
@@ -21,31 +19,28 @@ Before every minor and major release:
 
 Before every major release:
 
-* Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/PigeonProject/Pigeoncoin/pull/7415) for an example.
+* Update hardcoded [seeds](/contrib/seeds/README.md). TODO: Give example PR for Pigeon
 * Update [`BLOCK_CHAIN_SIZE`](/src/qt/intro.cpp) to the current size plus some overhead.
 * Update `src/chainparams.cpp` chainTxData with statistics about the transaction count and rate.
 * Update version of `contrib/gitian-descriptors/*.yml`: usually one'd want to do this on master after branching off the release - but be sure to at least do it before a new major release
 
 ### First time / New builders
 
-If you're using the automated script (found in [contrib/gitian-build.sh](/contrib/gitian-build.sh)), then at this point you should run it with the "--setup" command. Otherwise ignore this.
+If you're using the automated script (found in [contrib/gitian-build.py](/contrib/gitian-build.py)), then at this point you should run it with the "--setup" command. Otherwise ignore this.
 
 Check out the source code in the following directory hierarchy.
 
-    cd /path/to/your/toplevel/build
-    git clone https://github.com/pigeon-core/gitian.sigs.git
-    git clone https://github.com/pigeon-core/pigeon-detached-sigs.git
-    git clone https://github.com/devrandom/gitian-builder.git
-    git clone https://github.com/PigeonProject/Pigeoncoin.git
+	cd /path/to/your/toplevel/build
+	git clone https://github.com/pigeonpro/gitian.sigs.git
+	git clone https://github.com/pigeonpro/pigeon-detached-sigs.git
+	git clone https://github.com/devrandom/gitian-builder.git
+	git clone https://github.com/pigeonpro/pigeon.git
 
-### Pigeon maintainers/release engineers, suggestion for writing release notes
+### Pigeon Core maintainers/release engineers, suggestion for writing release notes
 
 Write release notes. git shortlog helps a lot, for example:
 
-    git shortlog --no-merges v(current version, e.g. 0.7.2)..v(new version, e.g. 0.8.0)
-
-(or ping @wumpus on IRC, he has specific tooling to generate the list of merged pulls
-and sort them into categories based on labels)
+    git shortlog --no-merges v(current version, e.g. 0.12.2)..v(new version, e.g. 0.12.3)
 
 Generate list of authors:
 
@@ -53,17 +48,17 @@ Generate list of authors:
 
 Tag version (or release candidate) in git
 
-    git tag -s v(new version, e.g. 0.8.0)
+    git tag -s v(new version, e.g. 0.12.3)
 
 ### Setup and perform Gitian builds
 
-If you're using the automated script (found in [contrib/gitian-build.sh](/contrib/gitian-build.sh)), then at this point you should run it with the "--build" command. Otherwise ignore this.
+If you're using the automated script (found in [contrib/gitian-build.py](/contrib/gitian-build.py)), then at this point you should run it with the "--build" command. Otherwise ignore this.
 
 Setup Gitian descriptors:
 
     pushd ./pigeon
     export SIGNER=(your Gitian key, ie bluematt, sipa, etc)
-    export VERSION=(new version, e.g. 0.8.0)
+    export VERSION=(new version, e.g. 0.12.3)
     git fetch
     git checkout v${VERSION}
     popd
@@ -80,12 +75,13 @@ Ensure gitian-builder is up-to-date:
     git pull
     popd
 
+
 ### Fetch and create inputs: (first time, or when dependency versions change)
 
     pushd ./gitian-builder
     mkdir -p inputs
-    wget -P inputs https://pigeoncoin.org/cfields/osslsigncode-Backports-to-1.7.1.patch
-    wget -P inputs http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
+    wget -O inputs/osslsigncode-2.0.tar.gz https://github.com/mtrojnar/osslsigncode/archive/2.0.tar.gz
+    echo '5a60e0a4b3e0b4d655317b2f12a810211c50242138322b16e7e01c6fbb89d92f inputs/osslsigncode-2.0.tar.gz' | sha256sum -c
     popd
 
 Create the OS X SDK tarball, see the [OS X readme](README_osx.md) for details, and copy it into the inputs directory.
@@ -167,22 +163,22 @@ Codesigner only: Create Windows/OS X detached signatures:
 
 Codesigner only: Sign the osx binary:
 
-    transfer pigeon-osx-unsigned.tar.gz to osx for signing
-    tar xf pigeon-osx-unsigned.tar.gz
-    ./detached-sig-create.sh -s "Key ID"
+    transfer pigeoncore-osx-unsigned.tar.gz to osx for signing
+    tar xf pigeoncore-osx-unsigned.tar.gz
+    ./detached-sig-create.sh -s "Key ID" -o runtime
     Enter the keychain password and authorize the signature
     Move signature-osx.tar.gz back to the gitian host
 
 Codesigner only: Sign the windows binaries:
 
-    tar xf pigeon-win-unsigned.tar.gz
+    tar xf pigeoncore-win-unsigned.tar.gz
     ./detached-sig-create.sh -key /path/to/codesign.key
     Enter the passphrase for the key when prompted
     signature-win.tar.gz will be created
 
 Codesigner only: Commit the detached codesign payloads:
 
-    cd ~/pigeon-detached-sigs
+    cd ~/pigeoncore-detached-sigs
     checkout the appropriate branch for this release series
     rm -rf *
     tar xf signature-osx.tar.gz
@@ -195,7 +191,7 @@ Codesigner only: Commit the detached codesign payloads:
 Non-codesigners: wait for Windows/OS X detached signatures:
 
 - Once the Windows/OS X builds each have 3 matching signatures, they will be signed with their respective release keys.
-- Detached signatures will then be committed to the [pigeon-detached-sigs](https://github.com/pigeon-core/pigeon-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
+- Detached signatures will then be committed to the [pigeon-detached-sigs](https://github.com/pigeonpro/pigeon-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
 
 Create (and optionally verify) the signed OS X binary:
 
@@ -251,7 +247,7 @@ The `*-debug*` files generated by the gitian build contain debug symbols
 for troubleshooting by developers. It is assumed that anyone that is interested
 in debugging can run gitian to generate the files for themselves. To avoid
 end-user confusion about which file to pick, as well as save storage
-space *do not upload these to the pigeon.org server, nor put them in the torrent*.
+space *do not upload these to the pigeon.org server*.
 
 - GPG-sign it, delete the unsigned file:
 ```
@@ -262,48 +258,19 @@ rm SHA256SUMS
 Note: check that SHA256SUMS itself doesn't end up in SHA256SUMS, which is a spurious/nonsensical entry.
 
 - Upload zips and installers, as well as `SHA256SUMS.asc` from last step, to the pigeon.org server
-  into `/var/www/bin/pigeon-core-${VERSION}`
 
-- A `.torrent` will appear in the directory after a few minutes. Optionally help seed this torrent. To get the `magnet:` URI use:
-```bash
-transmission-show -m <torrent file>
-```
-Insert the magnet URI into the announcement sent to mailing lists. This permits
-people without access to `pigeon.org` to download the binary distribution.
-Also put it into the `optional_magnetlink:` slot in the YAML file for
-pigeon.org (see below for pigeon.org update instructions).
-
-- Update pigeon.org version
-
-  - First, check to see if the Pigeon.org maintainers have prepared a
-    release: https://github.com/pigeon-dot-org/pigeon.org/labels/Releases
-
-      - If they have, it will have previously failed their Travis CI
-        checks because the final release files weren't uploaded.
-        Trigger a Travis CI rebuild---if it passes, merge.
-
-  - If they have not prepared a release, follow the Pigeon.org release
-    instructions: https://github.com/pigeon-dot-org/pigeon.org#release-notes
-
-  - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
-    as update the OS download links. Ping @saivann/@harding (saivann/harding on Freenode) in case anything goes wrong
+- Update pigeon.org
 
 - Announce the release:
 
-  - pigeon-dev and pigeon-core-dev mailing list
+  - Release on Pigeon forum: https://www.pigeon.org/forum/topic/official-announcements.54/
 
-  - Pigeon Core announcements list https://pigeoncoin.org/en/list/announcements/join/
+  - Optionally Discord, twitter, reddit /r/Pigeonpay, ... but this will usually sort out itself
 
-  - pigeoncore.org blog post
-
-  - Update title of #pigeon on Freenode IRC
-
-  - Optionally twitter, reddit /r/Pigeon, ... but this will usually sort out itself
-
-  - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~pigeon/+archive/ubuntu/pigeon)
+  - Notify flare so that he can start building [the PPAs](https://launchpad.net/~pigeon.org/+archive/ubuntu/pigeon)
 
   - Archive release notes for the new version to `doc/release-notes/` (branch `master` and branch of the release)
 
-  - Create a [new GitHub release](https://github.com/PigeonProject/Pigeoncoin/releases/new) with a link to the archived release notes.
+  - Create a [new GitHub release](https://github.com/pigeonpro/pigeon/releases/new) with a link to the archived release notes.
 
   - Celebrate

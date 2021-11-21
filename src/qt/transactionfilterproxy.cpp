@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,11 +18,12 @@ const QDateTime TransactionFilterProxy::MAX_DATE = QDateTime::fromTime_t(0xFFFFF
 
 TransactionFilterProxy::TransactionFilterProxy(QObject *parent) :
     QSortFilterProxyModel(parent),
-    dateFrom(MIN_DATE),
-    dateTo(MAX_DATE),
+    dateFrom(MIN_DATE.toTime_t()),
+    dateTo(MAX_DATE.toTime_t()),
     addrPrefix(),
-    typeFilter(ALL_TYPES),
+    typeFilter(COMMON_TYPES),
     watchOnlyFilter(WatchOnlyFilter_All),
+    instantsendFilter(InstantSendFilter_All),
     minAmount(0),
     limitRows(-1),
     showInactive(true)
@@ -35,8 +35,9 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
     QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
 
     int type = index.data(TransactionTableModel::TypeRole).toInt();
-    QDateTime datetime = index.data(TransactionTableModel::DateRole).toDateTime();
+    qint64 datetime = index.data(TransactionTableModel::DateRoleInt).toLongLong();
     bool involvesWatchAddress = index.data(TransactionTableModel::WatchonlyRole).toBool();
+    bool lockedByInstantSend = index.data(TransactionTableModel::InstantSendRole).toBool();
     QString address = index.data(TransactionTableModel::AddressRole).toString();
     QString label = index.data(TransactionTableModel::LabelRole).toString();
     qint64 amount = llabs(index.data(TransactionTableModel::AmountRole).toLongLong());
@@ -50,6 +51,10 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
         return false;
     if (!involvesWatchAddress && watchOnlyFilter == WatchOnlyFilter_Yes)
         return false;
+    if (lockedByInstantSend && instantsendFilter == InstantSendFilter_No)
+        return false;
+    if (!lockedByInstantSend && instantsendFilter == InstantSendFilter_Yes)
+        return false;
     if(datetime < dateFrom || datetime > dateTo)
         return false;
     if (!address.contains(addrPrefix, Qt::CaseInsensitive) && !label.contains(addrPrefix, Qt::CaseInsensitive))
@@ -62,8 +67,8 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &
 
 void TransactionFilterProxy::setDateRange(const QDateTime &from, const QDateTime &to)
 {
-    this->dateFrom = from;
-    this->dateTo = to;
+    this->dateFrom = from.toTime_t();
+    this->dateTo = to.toTime_t();
     invalidateFilter();
 }
 
@@ -88,6 +93,12 @@ void TransactionFilterProxy::setMinAmount(const CAmount& minimum)
 void TransactionFilterProxy::setWatchOnlyFilter(WatchOnlyFilter filter)
 {
     this->watchOnlyFilter = filter;
+    invalidateFilter();
+}
+
+void TransactionFilterProxy::setInstantSendFilter(InstantSendFilter filter)
+{
+    this->instantsendFilter = filter;
     invalidateFilter();
 }
 

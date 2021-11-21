@@ -1,15 +1,14 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_WALLET_WALLETDB_H
-#define PIGEON_WALLET_WALLETDB_H
+#ifndef BITCOIN_WALLET_WALLETDB_H
+#define BITCOIN_WALLET_WALLETDB_H
 
 #include "amount.h"
-#include "primitives/transaction.h"
 #include "wallet/db.h"
+#include "hdchain.h"
 #include "key.h"
 
 #include <list>
@@ -57,56 +56,18 @@ enum DBErrors
     DB_NEED_REWRITE
 };
 
-/* simple HD chain data model */
-class CHDChain
-{
-public:
-    uint32_t nExternalChainCounter;
-    uint32_t nInternalChainCounter;
-    CKeyID masterKeyID; //!< master key hash160
-
-    static const int VERSION_HD_BASE        = 1;
-    static const int VERSION_HD_CHAIN_SPLIT = 2;
-    static const int CURRENT_VERSION        = VERSION_HD_CHAIN_SPLIT;
-    int nVersion;
-
-    CHDChain() { SetNull(); }
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(this->nVersion);
-        READWRITE(nExternalChainCounter);
-        READWRITE(masterKeyID);
-        if (this->nVersion >= VERSION_HD_CHAIN_SPLIT)
-            READWRITE(nInternalChainCounter);
-    }
-
-    void SetNull()
-    {
-        nVersion = CHDChain::CURRENT_VERSION;
-        nExternalChainCounter = 0;
-        nInternalChainCounter = 0;
-        masterKeyID.SetNull();
-    }
-};
-
 class CKeyMetadata
 {
 public:
-    static const int VERSION_BASIC=1;
-    static const int VERSION_WITH_HDDATA=10;
-    static const int CURRENT_VERSION=VERSION_WITH_HDDATA;
+    static const int CURRENT_VERSION=1;
     int nVersion;
     int64_t nCreateTime; // 0 means unknown
-    std::string hdKeypath; //optional HD/bip32 keypath
-    CKeyID hdMasterKeyID; //id of the HD masterkey used to derive this key
 
     CKeyMetadata()
     {
         SetNull();
     }
-    explicit CKeyMetadata(int64_t nCreateTime_)
+    CKeyMetadata(int64_t nCreateTime_)
     {
         SetNull();
         nCreateTime = nCreateTime_;
@@ -118,19 +79,12 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(this->nVersion);
         READWRITE(nCreateTime);
-        if (this->nVersion >= VERSION_WITH_HDDATA)
-        {
-            READWRITE(hdKeypath);
-            READWRITE(hdMasterKeyID);
-        }
     }
 
     void SetNull()
     {
         nVersion = CKeyMetadata::CURRENT_VERSION;
         nCreateTime = 0;
-        hdKeypath.clear();
-        hdMasterKeyID.SetNull();
     }
 };
 
@@ -163,13 +117,11 @@ private:
     }
 
 public:
-    explicit CWalletDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool _fFlushOnClose = true) :
+    CWalletDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool _fFlushOnClose = true) :
         batch(dbw, pszMode, _fFlushOnClose),
         m_dbw(dbw)
     {
     }
-    CWalletDB(const CWalletDB&) = delete;
-    CWalletDB& operator=(const CWalletDB&) = delete;
 
     bool WriteName(const std::string& strAddress, const std::string& strName);
     bool EraseName(const std::string& strAddress);
@@ -193,6 +145,8 @@ public:
     bool ReadBestBlock(CBlockLocator& locator);
 
     bool WriteOrderPosNext(int64_t nOrderPosNext);
+
+    bool WriteDefaultKey(const CPubKey& vchPubKey);
 
     bool ReadPool(int64_t nPool, CKeyPool& keypool);
     bool WritePool(int64_t nPool, const CKeyPool& keypool);
@@ -233,6 +187,8 @@ public:
 
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);
+    bool WriteCryptedHDChain(const CHDChain& chain);
+    bool WriteHDPubKey(const CHDPubKey& hdPubKey, const CKeyMetadata& keyMeta);
 
     //! Begin a new transaction
     bool TxnBegin();
@@ -247,9 +203,12 @@ public:
 private:
     CDB batch;
     CWalletDBWrapper& m_dbw;
+
+    CWalletDB(const CWalletDB&);
+    void operator=(const CWalletDB&);
 };
 
 //! Compacts BDB state so that wallet.dat is self-contained (if there are changes)
 void MaybeCompactWalletDB();
 
-#endif // PIGEON_WALLET_WALLETDB_H
+#endif // BITCOIN_WALLET_WALLETDB_H

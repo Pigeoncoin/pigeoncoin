@@ -1,11 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_PUBKEY_H
-#define PIGEON_PUBKEY_H
+#ifndef BITCOIN_PUBKEY_H
+#define BITCOIN_PUBKEY_H
 
 #include "hash.h"
 #include "serialize.h"
@@ -31,7 +30,7 @@ class CKeyID : public uint160
 {
 public:
     CKeyID() : uint160() {}
-    explicit CKeyID(const uint160& in) : uint160(in) {}
+    CKeyID(const uint160& in) : uint160(in) {}
 };
 
 typedef uint256 ChainCode;
@@ -89,7 +88,7 @@ public:
     }
 
     //! Construct a public key from a byte vector.
-    explicit CPubKey(const std::vector<unsigned char>& _vch)
+    CPubKey(const std::vector<unsigned char>& _vch)
     {
         Set(_vch.begin(), _vch.end());
     }
@@ -248,4 +247,4 @@ public:
     ~ECCVerifyHandle();
 };
 
-#endif // PIGEON_PUBKEY_H
+#endif // BITCOIN_PUBKEY_H

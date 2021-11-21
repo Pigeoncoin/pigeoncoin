@@ -1,14 +1,16 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_QT_WALLETMODEL_H
-#define PIGEON_QT_WALLETMODEL_H
+#ifndef BITCOIN_QT_WALLETMODEL_H
+#define BITCOIN_QT_WALLETMODEL_H
 
 #include "paymentrequestplus.h"
 #include "walletmodeltransaction.h"
 
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h"
+#endif // ENABLE_WALLET
 #include "support/allocators/secure.h"
 
 #include <map>
@@ -95,7 +97,7 @@ public:
     }
 };
 
-/** Interface to Pigeon wallet from Qt view code. */
+/** Interface to Bitcoin wallet from Qt view code. */
 class WalletModel : public QObject
 {
     Q_OBJECT
@@ -120,9 +122,10 @@ public:
 
     enum EncryptionStatus
     {
-        Unencrypted,  // !wallet->IsCrypted()
-        Locked,       // wallet->IsCrypted() && wallet->IsLocked()
-        Unlocked      // wallet->IsCrypted() && !wallet->IsLocked()
+        Unencrypted,            // !wallet->IsCrypted()
+        Locked,                 // wallet->IsCrypted() && wallet->IsLocked(true)
+        UnlockedForMixingOnly,  // wallet->IsCrypted() && !wallet->IsLocked(true) && wallet->IsLocked()
+        Unlocked,               // wallet->IsCrypted() && !wallet->IsLocked()
     };
 
     OptionsModel *getOptionsModel();
@@ -133,6 +136,7 @@ public:
     CAmount getBalance(const CCoinControl *coinControl = nullptr) const;
     CAmount getUnconfirmedBalance() const;
     CAmount getImmatureBalance() const;
+    CAmount getAnonymizedBalance() const;
     bool haveWatchOnly() const;
     CAmount getWatchBalance() const;
     CAmount getWatchUnconfirmedBalance() const;
@@ -163,8 +167,9 @@ public:
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
     // Passphrase only needed when unlocking
-    bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString());
+    bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString(), bool fMixing=false);
     bool changePassphrase(const SecureString &oldPass, const SecureString &newPass);
+
     // Wallet backup
     bool backupWallet(const QString &filename);
 
@@ -172,7 +177,7 @@ public:
     class UnlockContext
     {
     public:
-        UnlockContext(WalletModel *wallet, bool valid, bool relock);
+        UnlockContext(WalletModel *wallet, bool valid, bool was_locked, bool was_mixing);
         ~UnlockContext();
 
         bool isValid() const { return valid; }
@@ -183,15 +188,17 @@ public:
     private:
         WalletModel *wallet;
         bool valid;
-        mutable bool relock; // mutable, as it can be set to false by copying
+        mutable bool was_locked; // mutable, as it can be set to false by copying
+        mutable bool was_mixing; // mutable, as it can be set to false by copying
 
         void CopyFrom(const UnlockContext& rhs);
     };
 
-    UnlockContext requestUnlock();
+    UnlockContext requestUnlock(bool fForMixingOnly=false);
 
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
     bool IsSpendable(const CTxDestination& dest) const;
+    bool IsSpendable(const CScript& script) const;
     bool getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const;
     void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
     bool isSpent(const COutPoint& outpoint) const;
@@ -202,22 +209,20 @@ public:
     void unlockCoin(COutPoint& output);
     void listLockedCoins(std::vector<COutPoint>& vOutpts);
 
+    void listProTxCoins(std::vector<COutPoint>& vOutpts);
+
     void loadReceiveRequests(std::vector<std::string>& vReceiveRequests);
     bool saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest);
 
     bool transactionCanBeAbandoned(uint256 hash) const;
     bool abandonTransaction(uint256 hash) const;
 
-    bool transactionCanBeBumped(uint256 hash) const;
-    bool bumpFee(uint256 hash);
-
     static bool isWalletEnabled();
 
     bool hdEnabled() const;
 
     int getDefaultConfirmTarget() const;
-
-    bool getDefaultWalletRbf() const;
+    int getNumISLocks() const;
 
 private:
     CWallet *wallet;
@@ -236,11 +241,14 @@ private:
     CAmount cachedBalance;
     CAmount cachedUnconfirmedBalance;
     CAmount cachedImmatureBalance;
+    CAmount cachedAnonymizedBalance;
     CAmount cachedWatchOnlyBalance;
     CAmount cachedWatchUnconfBalance;
     CAmount cachedWatchImmatureBalance;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
+    int cachedNumISLocks;
+    int cachedPrivateSendRounds;
 
     QTimer *pollTimer;
 
@@ -250,7 +258,7 @@ private:
 
 Q_SIGNALS:
     // Signal that balance in wallet changed
-    void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
+    void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance,
                         const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
     // Encryption status of wallet changed
@@ -259,7 +267,7 @@ Q_SIGNALS:
     // Signal emitted when wallet needs to be unlocked
     // It is valid behaviour for listeners to keep the wallet locked after this signal;
     // this means that the unlocking failed or was cancelled.
-    void requireUnlock();
+    void requireUnlock(bool fForMixingOnly=false);
 
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
@@ -278,6 +286,10 @@ public Q_SLOTS:
     void updateStatus();
     /* New transaction, or transaction changed status */
     void updateTransaction();
+    /* IS-Lock received */
+    void updateNumISLocks();
+    /* ChainLock received */
+    void updateChainLockHeight(int chainLockHeight);
     /* New, updated or removed address book entry */
     void updateAddressBook(const QString &address, const QString &label, bool isMine, const QString &purpose, int status);
     /* Watch-only added */
@@ -286,4 +298,4 @@ public Q_SLOTS:
     void pollBalanceChanged();
 };
 
-#endif // PIGEON_QT_WALLETMODEL_H
+#endif // BITCOIN_QT_WALLETMODEL_H

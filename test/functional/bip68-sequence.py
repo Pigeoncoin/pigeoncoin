@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP68 implementation."""
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.blocktools import *
 
@@ -17,7 +16,7 @@ SEQUENCE_LOCKTIME_MASK = 0x0000ffff
 # RPC error for non-BIP68 final transactions
 NOT_FINAL_ERROR = "64: non-BIP68-final"
 
-class BIP68Test(PigeonTestFramework):
+class BIP68Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [[], ["-acceptnonstdtxn=0"]]
@@ -27,6 +26,21 @@ class BIP68Test(PigeonTestFramework):
 
         # Generate some coins
         self.nodes[0].generate(110)
+
+        self.log.info("Running test disable flag")
+        self.test_disable_flag()
+
+        self.log.info("Running test sequence-lock-confirmed-inputs")
+        self.test_sequence_lock_confirmed_inputs()
+
+        self.log.info("Running test sequence-lock-unconfirmed-inputs")
+        self.test_sequence_lock_unconfirmed_inputs()
+
+        self.log.info("Running test BIP68 not consensus before versionbits activation")
+        self.test_bip68_not_consensus()
+
+        self.log.info("Activating BIP68 (and 112/113)")
+        self.activateCSV()
 
         self.log.info("Verifying nVersion=2 transactions are standard.")
         self.log.info("Note that nVersion=2 transactions are always standard (independent of BIP68 activation status).")
@@ -39,7 +53,7 @@ class BIP68Test(PigeonTestFramework):
     def test_disable_flag(self):
         # Create some unconfirmed inputs
         new_addr = self.nodes[0].getnewaddress()
-        self.nodes[0].sendtoaddress(new_addr, 2) # send 2 PGN
+        self.nodes[0].sendtoaddress(new_addr, 2) # send 2 BTC
 
         utxos = self.nodes[0].listunspent(0, 0)
         assert(len(utxos) > 0)
@@ -225,8 +239,8 @@ class BIP68Test(PigeonTestFramework):
 
         # Now mine some blocks, but make sure tx2 doesn't get mined.
         # Use prioritisetransaction to lower the effective feerate to 0
-        self.nodes[0].prioritisetransaction(txid=tx2.hash, fee_delta=int(-self.relayfee*COIN))
-        cur_time = int(time.time())
+        self.nodes[0].prioritisetransaction(tx2.hash, int(-self.relayfee*COIN))
+        cur_time = self.mocktime
         for i in range(10):
             self.nodes[0].setmocktime(cur_time + 600)
             self.nodes[0].generate(1)
@@ -238,7 +252,7 @@ class BIP68Test(PigeonTestFramework):
         test_nonzero_locks(tx2, self.nodes[0], self.relayfee, use_height_lock=False)
 
         # Mine tx2, and then try again
-        self.nodes[0].prioritisetransaction(txid=tx2.hash, fee_delta=int(self.relayfee*COIN))
+        self.nodes[0].prioritisetransaction(tx2.hash, int(self.relayfee*COIN))
 
         # Advance the time on the node so that we can test timelocks
         self.nodes[0].setmocktime(cur_time+600)
@@ -302,7 +316,7 @@ class BIP68Test(PigeonTestFramework):
         assert(tx2.hash in mempool)
 
         # Reset the chain and get rid of the mocktimed-blocks
-        self.nodes[0].setmocktime(0)
+        self.nodes[0].setmocktime(self.mocktime)
         self.nodes[0].invalidateblock(self.nodes[0].getblockhash(cur_height+1))
         self.nodes[0].generate(10)
 
@@ -343,7 +357,7 @@ class BIP68Test(PigeonTestFramework):
 
         # make a block that violates bip68; ensure that the tip updates
         tip = int(self.nodes[0].getbestblockhash(), 16)
-        block = create_block(tip, create_coinbase(self.nodes[0].getblockcount()+1))
+        block = create_block(tip, create_coinbase(self.nodes[0].getblockcount()+1), self.mocktime + 600)
         block.nVersion = 3
         block.vtx.extend([tx1, tx2, tx3])
         block.hashMerkleRoot = block.calc_merkle_root()
@@ -374,7 +388,7 @@ class BIP68Test(PigeonTestFramework):
         tx = FromHex(CTransaction(), rawtxfund)
         tx.nVersion = 2
         tx_signed = self.nodes[1].signrawtransaction(ToHex(tx))["hex"]
-        self.nodes[1].sendrawtransaction(tx_signed)
+        tx_id = self.nodes[1].sendrawtransaction(tx_signed)
 
 if __name__ == '__main__':
     BIP68Test().main()

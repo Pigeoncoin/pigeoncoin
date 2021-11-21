@@ -1,5 +1,5 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2019 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -29,6 +29,7 @@
 #include <wallet/wallet.h>
 #endif
 
+#include <QDir>
 #include <QDesktopWidget>
 #include <QKeyEvent>
 #include <QMenu>
@@ -50,18 +51,27 @@
 // TODO: receive errors and debug messages through ClientModel
 
 const int CONSOLE_HISTORY = 50;
-const int INITIAL_TRAFFIC_GRAPH_MINS = 30;
 const QSize FONT_RANGE(4, 40);
 const char fontSizeSettingsKey[] = "consoleFontSize";
+
+const TrafficGraphData::GraphRange INITIAL_TRAFFIC_GRAPH_SETTING = TrafficGraphData::Range_30m;
+
+// Repair parameters
+const QString SALVAGEWALLET("-salvagewallet");
+const QString RESCAN("-rescan");
+const QString ZAPTXES1("-zapwallettxes=1 -persistmempool=0");
+const QString ZAPTXES2("-zapwallettxes=2 -persistmempool=0");
+const QString UPGRADEWALLET("-upgradewallet");
+const QString REINDEX("-reindex");
 
 const struct {
     const char *url;
     const char *source;
 } ICON_MAPPING[] = {
-    {"cmd-request", ":/icons/tx_input"},
-    {"cmd-reply", ":/icons/tx_output"},
-    {"cmd-error", ":/icons/tx_output"},
-    {"misc", ":/icons/tx_inout"},
+    {"cmd-request", "tx_input"},
+    {"cmd-reply", "tx_output"},
+    {"cmd-error", "tx_output"},
+    {"misc", "tx_inout"},
     {nullptr, nullptr}
 };
 
@@ -118,8 +128,8 @@ class QtRPCTimerInterface: public RPCTimerInterface
 {
 public:
     ~QtRPCTimerInterface() {}
-    const char *Name() { return "Qt"; }
-    RPCTimerBase* NewTimer(std::function<void(void)>& func, int64_t millis)
+    const char *Name() override { return "Qt"; }
+    RPCTimerBase* NewTimer(std::function<void(void)>& func, int64_t millis) override
     {
         return new QtRPCTimerBase(func, millis);
     }
@@ -430,6 +440,10 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
     consoleFontSize(0)
 {
     ui->setupUi(this);
+
+    /* Open CSS when configured */
+    this->setStyleSheet(GUIUtil::loadStyleSheet());
+
     QSettings settings;
     if (!restoreGeometry(settings.value("RPCConsoleWindowGeometry").toByteArray())) {
         // Restore failed (perhaps missing setting), center the window
@@ -439,11 +453,12 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
     ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(tr(PACKAGE_NAME)));
 
     if (platformStyle->getImagesOnButtons()) {
-        ui->openDebugLogfileButton->setIcon(platformStyle->SingleColorIcon(":/icons/export"));
+        ui->openDebugLogfileButton->setIcon(QIcon(":/icons/export"));
     }
-    ui->clearButton->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
-    ui->fontBiggerButton->setIcon(platformStyle->SingleColorIcon(":/icons/fontbigger"));
-    ui->fontSmallerButton->setIcon(platformStyle->SingleColorIcon(":/icons/fontsmaller"));
+    // Needed on Mac also
+    ui->clearButton->setIcon(QIcon(":/icons/console_remove"));
+    ui->fontBiggerButton->setIcon(QIcon(":/icons/fontbigger"));
+    ui->fontSmallerButton->setIcon(QIcon(":/icons/fontsmaller"));
 
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
@@ -454,9 +469,22 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
     connect(ui->fontSmallerButton, SIGNAL(clicked()), this, SLOT(fontSmaller()));
     connect(ui->btnClearTrafficGraph, SIGNAL(clicked()), ui->trafficGraph, SLOT(clear()));
 
+    // Wallet Repair Buttons
+    // connect(ui->btn_salvagewallet, SIGNAL(clicked()), this, SLOT(walletSalvage()));
+    // Disable salvage option in GUI, it's way too powerful and can lead to funds loss
+    ui->btn_salvagewallet->setEnabled(false);
+    connect(ui->btn_rescan, SIGNAL(clicked()), this, SLOT(walletRescan()));
+    connect(ui->btn_zapwallettxes1, SIGNAL(clicked()), this, SLOT(walletZaptxes1()));
+    connect(ui->btn_zapwallettxes2, SIGNAL(clicked()), this, SLOT(walletZaptxes2()));
+    connect(ui->btn_upgradewallet, SIGNAL(clicked()), this, SLOT(walletUpgrade()));
+    connect(ui->btn_reindex, SIGNAL(clicked()), this, SLOT(walletReindex()));
+
     // set library version labels
 #ifdef ENABLE_WALLET
     ui->berkeleyDBVersion->setText(DbEnv::version(0, 0, 0));
+    std::string walletPath = GetDataDir().string();
+    walletPath += QDir::separator().toLatin1() + gArgs.GetArg("-wallet", "wallet.dat");
+    ui->wallet_path->setText(QString::fromStdString(walletPath));
 #else
     ui->label_berkeleyDBVersion->hide();
     ui->berkeleyDBVersion->hide();
@@ -467,9 +495,8 @@ RPCConsole::RPCConsole(const PlatformStyle *_platformStyle, QWidget *parent) :
     // based timer interface
     RPCSetTimerInterfaceIfUnset(rpcTimerInterface);
 
-    setTrafficGraphRange(INITIAL_TRAFFIC_GRAPH_MINS);
+    setTrafficGraphRange(INITIAL_TRAFFIC_GRAPH_SETTING);
 
-    ui->detailWidget->hide();
     ui->peerHeading->setText(tr("Select a peer to view detailed information."));
 
     consoleFontSize = settings.value(fontSizeSettingsKey, QFontInfo(QFont()).pointSize()).toInt();
@@ -508,6 +535,7 @@ bool RPCConsole::eventFilter(QObject* obj, QEvent *event)
         case Qt::Key_Enter:
             // forward these events to lineEdit
             if(obj == autoCompleter->popup()) {
+                autoCompleter->popup()->hide();
                 QApplication::postEvent(ui->lineEdit, new QKeyEvent(*keyevt));
                 return true;
             }
@@ -544,10 +572,14 @@ void RPCConsole::setClientModel(ClientModel *model)
         updateNetworkState();
         connect(model, SIGNAL(networkActiveChanged(bool)), this, SLOT(setNetworkActive(bool)));
 
+        connect(model, SIGNAL(masternodeListChanged()), this, SLOT(updateMasternodeCount()));
+        clientModel->refreshMasternodeList();
+
         updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
         connect(model, SIGNAL(bytesChanged(quint64,quint64)), this, SLOT(updateTrafficStats(quint64, quint64)));
 
         connect(model, SIGNAL(mempoolSizeChanged(long,size_t)), this, SLOT(setMempoolSize(long,size_t)));
+        connect(model, SIGNAL(islockCountChanged(size_t)), this, SLOT(setInstantSendLockCount(size_t)));
 
         // set up peer table
         ui->peerWidget->setModel(model->getPeerTableModel());
@@ -708,6 +740,64 @@ void RPCConsole::setFontSize(int newSize)
     ui->messagesWidget->verticalScrollBar()->setValue(oldPosFactor * ui->messagesWidget->verticalScrollBar()->maximum());
 }
 
+/** Restart wallet with "-salvagewallet" */
+void RPCConsole::walletSalvage()
+{
+    buildParameterlist(SALVAGEWALLET);
+}
+
+/** Restart wallet with "-rescan" */
+void RPCConsole::walletRescan()
+{
+    buildParameterlist(RESCAN);
+}
+
+/** Restart wallet with "-zapwallettxes=1" */
+void RPCConsole::walletZaptxes1()
+{
+    buildParameterlist(ZAPTXES1);
+}
+
+/** Restart wallet with "-zapwallettxes=2" */
+void RPCConsole::walletZaptxes2()
+{
+    buildParameterlist(ZAPTXES2);
+}
+
+/** Restart wallet with "-upgradewallet" */
+void RPCConsole::walletUpgrade()
+{
+    buildParameterlist(UPGRADEWALLET);
+}
+
+/** Restart wallet with "-reindex" */
+void RPCConsole::walletReindex()
+{
+    buildParameterlist(REINDEX);
+}
+
+/** Build command-line parameter list for restart */
+void RPCConsole::buildParameterlist(QString arg)
+{
+    // Get command-line arguments and remove the application name
+    QStringList args = QApplication::arguments();
+    args.removeFirst();
+
+    // Remove existing repair-options
+    args.removeAll(SALVAGEWALLET);
+    args.removeAll(RESCAN);
+    args.removeAll(ZAPTXES1);
+    args.removeAll(ZAPTXES2);
+    args.removeAll(UPGRADEWALLET);
+    args.removeAll(REINDEX);
+
+    // Append repair parameter to command line.
+    args.append(arg);
+
+    // Send command-line arguments to BitcoinGUI::handleRestart()
+    Q_EMIT handleRestart(args);
+}
+
 void RPCConsole::clear(bool clearHistory)
 {
     ui->messagesWidget->clear();
@@ -721,12 +811,16 @@ void RPCConsole::clear(bool clearHistory)
 
     // Add smoothly scaled icon images.
     // (when using width/height on an img, Qt uses nearest instead of linear interpolation)
+    QString iconPath = ":/icons/";
+    QString iconName = "";
+
     for(int i=0; ICON_MAPPING[i].url; ++i)
     {
+        iconName = ICON_MAPPING[i].source;
         ui->messagesWidget->document()->addResource(
                     QTextDocument::ImageResource,
                     QUrl(ICON_MAPPING[i].url),
-                    platformStyle->SingleColorImage(ICON_MAPPING[i].source).scaled(QSize(consoleFontSize*2, consoleFontSize*2), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+                    QImage(iconPath + iconName).scaled(QSize(consoleFontSize*2, consoleFontSize*2), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
     }
 
     // Set default style sheet
@@ -734,12 +828,10 @@ void RPCConsole::clear(bool clearHistory)
     ui->messagesWidget->document()->setDefaultStyleSheet(
         QString(
                 "table { }"
-                "td.time { color: #808080; font-size: %2; padding-top: 3px; } "
-                "td.message { font-family: %1; font-size: %2; white-space:pre-wrap; } "
-                "td.cmd-request { color: #006060; } "
-                "td.cmd-error { color: red; } "
-                ".secwarning { color: red; }"
-                "b { color: #006060; } "
+                "td.time { " + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_SECONDARY) + " font-size: %2; padding-top: 3px; } "
+                "td.message { " + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_PRIMARY) + " font-family: %1; font-size: %2; white-space:pre-wrap; } "
+                "td.cmd-request, b { " + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_COMMAND) + " } "
+                "td.cmd-error, .secwarning { " + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + " }"
             ).arg(fixedFontInfo.family(), QString("%1pt").arg(consoleFontSize))
         );
 
@@ -816,6 +908,18 @@ void RPCConsole::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     }
 }
 
+void RPCConsole::updateMasternodeCount()
+{
+    if (!clientModel) {
+        return;
+    }
+    auto mnList = clientModel->getMasternodeList();
+    QString strMasternodeCount = tr("Total: %1 (Enabled: %2)")
+        .arg(QString::number(mnList.GetAllMNsCount()))
+        .arg(QString::number(mnList.GetValidMNsCount()));
+    ui->masternodeCount->setText(strMasternodeCount);
+}
+
 void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)
 {
     ui->mempoolNumberTxs->setText(QString::number(numberOfTxs));
@@ -824,6 +928,11 @@ void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)
         ui->mempoolSize->setText(QString::number(dynUsage/1000.0, 'f', 2) + " KB");
     else
         ui->mempoolSize->setText(QString::number(dynUsage/1000000.0, 'f', 2) + " MB");
+}
+
+void RPCConsole::setInstantSendLockCount(size_t count)
+{
+    ui->instantSendLockCount->setText(QString::number(count));
 }
 
 void RPCConsole::on_lineEdit_returnPressed()
@@ -931,21 +1040,31 @@ void RPCConsole::scrollToEnd()
 
 void RPCConsole::on_sldGraphRange_valueChanged(int value)
 {
-    const int multiplier = 5; // each position on the slider represents 5 min
-    int mins = value * multiplier;
-    setTrafficGraphRange(mins);
+    setTrafficGraphRange(static_cast<TrafficGraphData::GraphRange>(value));
 }
 
-void RPCConsole::setTrafficGraphRange(int mins)
+QString RPCConsole::FormatBytes(quint64 bytes)
 {
-    ui->trafficGraph->setGraphRangeMins(mins);
-    ui->lblGraphRange->setText(GUIUtil::formatDurationStr(mins * 60));
+    if(bytes < 1024)
+        return QString(tr("%1 B")).arg(bytes);
+    if(bytes < 1024 * 1024)
+        return QString(tr("%1 KB")).arg(bytes / 1024);
+    if(bytes < 1024 * 1024 * 1024)
+        return QString(tr("%1 MB")).arg(bytes / 1024 / 1024);
+
+    return QString(tr("%1 GB")).arg(bytes / 1024 / 1024 / 1024);
+}
+
+void RPCConsole::setTrafficGraphRange(TrafficGraphData::GraphRange range)
+{
+    ui->trafficGraph->setGraphRangeMins(range);
+    ui->lblGraphRange->setText(GUIUtil::formatDurationStr(TrafficGraphData::RangeMinutes[range] * 60));
 }
 
 void RPCConsole::updateTrafficStats(quint64 totalBytesIn, quint64 totalBytesOut)
 {
-    ui->lblBytesIn->setText(GUIUtil::formatBytes(totalBytesIn));
-    ui->lblBytesOut->setText(GUIUtil::formatBytes(totalBytesOut));
+    ui->lblBytesIn->setText(FormatBytes(totalBytesIn));
+    ui->lblBytesOut->setText(FormatBytes(totalBytesOut));
 }
 
 void RPCConsole::peerSelected(const QItemSelection &selected, const QItemSelection &deselected)
@@ -1039,8 +1158,8 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
     ui->peerServices->setText(GUIUtil::formatServicesStr(stats->nodeStats.nServices));
     ui->peerLastSend->setText(stats->nodeStats.nLastSend ? GUIUtil::formatDurationStr(GetSystemTimeInSeconds() - stats->nodeStats.nLastSend) : tr("never"));
     ui->peerLastRecv->setText(stats->nodeStats.nLastRecv ? GUIUtil::formatDurationStr(GetSystemTimeInSeconds() - stats->nodeStats.nLastRecv) : tr("never"));
-    ui->peerBytesSent->setText(GUIUtil::formatBytes(stats->nodeStats.nSendBytes));
-    ui->peerBytesRecv->setText(GUIUtil::formatBytes(stats->nodeStats.nRecvBytes));
+    ui->peerBytesSent->setText(FormatBytes(stats->nodeStats.nSendBytes));
+    ui->peerBytesRecv->setText(FormatBytes(stats->nodeStats.nRecvBytes));
     ui->peerConnTime->setText(GUIUtil::formatDurationStr(GetSystemTimeInSeconds() - stats->nodeStats.nTimeConnected));
     ui->peerPingTime->setText(GUIUtil::formatPingTime(stats->nodeStats.dPingTime));
     ui->peerPingWait->setText(GUIUtil::formatPingTime(stats->nodeStats.dPingWait));

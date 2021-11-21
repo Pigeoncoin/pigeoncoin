@@ -1,5 +1,4 @@
 // Copyright (c) 2011-2013 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,14 +18,14 @@
 extern void qt_mac_set_dock_menu(QMenu *);
 #endif
 
-static MacDockIconHandler *s_instance = nullptr;
+static MacDockIconHandler *s_instance = NULL;
 
 bool dockClickHandler(id self,SEL _cmd,...) {
     Q_UNUSED(self)
     Q_UNUSED(_cmd)
-
+    
     s_instance->handleDockIconClickEvent();
-
+    
     // Return NO (false) to suppress the default OS X actions
     return false;
 }
@@ -34,8 +33,8 @@ bool dockClickHandler(id self,SEL _cmd,...) {
 void setupDockClickHandler() {
     Class cls = objc_getClass("NSApplication");
     id appInst = objc_msgSend((id)cls, sel_registerName("sharedApplication"));
-
-    if (appInst != nullptr) {
+    
+    if (appInst != NULL) {
         id delegate = objc_msgSend(appInst, sel_registerName("delegate"));
         Class delClass = (Class)objc_msgSend(delegate,  sel_registerName("class"));
         SEL shouldHandle = sel_registerName("applicationShouldHandleReopen:hasVisibleWindows:");
@@ -54,7 +53,7 @@ MacDockIconHandler::MacDockIconHandler() : QObject()
     setupDockClickHandler();
     this->m_dummyWidget = new QWidget();
     this->m_dockMenu = new QMenu(this->m_dummyWidget);
-    this->setMainWindow(nullptr);
+    this->setMainWindow(NULL);
 #if QT_VERSION < 0x050000
     qt_mac_set_dock_menu(this->m_dockMenu);
 #elif QT_VERSION >= 0x050200
@@ -70,7 +69,7 @@ void MacDockIconHandler::setMainWindow(QMainWindow *window) {
 MacDockIconHandler::~MacDockIconHandler()
 {
     delete this->m_dummyWidget;
-    this->setMainWindow(nullptr);
+    this->setMainWindow(NULL);
 }
 
 QMenu *MacDockIconHandler::dockMenu()
@@ -86,7 +85,7 @@ void MacDockIconHandler::setIcon(const QIcon &icon)
         image = [[NSImage imageNamed:@"NSApplicationIcon"] retain];
     else {
         // generate NSImage from QIcon and use this as dock icon.
-        QSize size = icon.actualSize(QSize(512, 512));
+        QSize size = icon.actualSize(QSize(128, 128));
         QPixmap pixmap = icon.pixmap(size);
 
         // Write image into a R/W buffer from raw pixmap, then save the image.

@@ -1,5 +1,4 @@
 // Copyright (c) 2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,11 +9,33 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
     {
         /*.name =*/ "testdummy",
         /*.gbt_force =*/ true,
+        /*.check_mn_protocol =*/ false,
+    },
+    {
+        /*.name =*/ "csv",
+        /*.gbt_force =*/ true,
+        /*.check_mn_protocol =*/ false,
+    },
+    {
+        /*.name =*/ "dip0001",
+        /*.gbt_force =*/ true,
+        /*.check_mn_protocol =*/ true,
+    },
+    {
+        /*.name =*/ "bip147",
+        /*.gbt_force =*/ true,
+        /*.check_mn_protocol =*/ false,
+    },
+    {
+        /*.name =*/ "dip0003",
+        /*.gbt_force =*/ true,
+        /*.check_mn_protocol =*/ false,
+    },
+    {
+        /*.name =*/ "dip0008",
+        /*.gbt_force =*/ true,
+        /*.check_mn_protocol =*/ false,
     }
-//	{
-//		/*.name =*/ "segwit",
-//		/*.gbt_force =*/ true,
-//	}
 };
 
 ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const
@@ -173,8 +194,8 @@ private:
 protected:
     int64_t BeginTime(const Consensus::Params& params) const override { return params.vDeployments[id].nStartTime; }
     int64_t EndTime(const Consensus::Params& params) const override { return params.vDeployments[id].nTimeout; }
-    int Period(const Consensus::Params& params) const override { return params.nMinerConfirmationWindow; }
-    int Threshold(const Consensus::Params& params) const override { return params.nRuleChangeActivationThreshold; }
+    int Period(const Consensus::Params& params) const override { return params.vDeployments[id].nWindowSize ? params.vDeployments[id].nWindowSize : params.nMinerConfirmationWindow; }
+    int Threshold(const Consensus::Params& params) const override { return params.vDeployments[id].nThreshold ? params.vDeployments[id].nThreshold : params.nRuleChangeActivationThreshold; }
 
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override
     {
@@ -182,7 +203,7 @@ protected:
     }
 
 public:
-    explicit VersionBitsConditionChecker(Consensus::DeploymentPos id_) : id(id_) {}
+    VersionBitsConditionChecker(Consensus::DeploymentPos id_) : id(id_) {}
     uint32_t Mask(const Consensus::Params& params) const { return ((uint32_t)1) << params.vDeployments[id].bit; }
 };
 

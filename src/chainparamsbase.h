@@ -1,10 +1,9 @@
 // Copyright (c) 2014-2015 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_CHAINPARAMSBASE_H
-#define PIGEON_CHAINPARAMSBASE_H
+#ifndef BITCOIN_CHAINPARAMSBASE_H
+#define BITCOIN_CHAINPARAMSBASE_H
 
 #include <memory>
 #include <string>
@@ -20,11 +19,11 @@ public:
     /** BIP70 chain name strings (main, test or regtest) */
     static const std::string MAIN;
     static const std::string TESTNET;
+    static const std::string DEVNET;
     static const std::string REGTEST;
 
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }
- 
 
 protected:
     CBaseChainParams() {}
@@ -61,4 +60,6 @@ void SelectBaseParams(const std::string& chain);
  */
 std::string ChainNameFromCommandLine();
 
-#endif // PIGEON_CHAINPARAMSBASE_H
+std::string GetDevNetName();
+
+#endif // BITCOIN_CHAINPARAMSBASE_H

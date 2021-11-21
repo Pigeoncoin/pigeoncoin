@@ -28,7 +28,7 @@
 #include "sph_tiger.h"
 #include "lyra2.h"
 #include "gost_streebog.h"
-
+#include "hash.h"
 #ifndef QT_NO_DEBUG
 #include <string>
 #endif

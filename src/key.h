@@ -1,11 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_KEY_H
-#define PIGEON_KEY_H
+#ifndef BITCOIN_KEY_H
+#define BITCOIN_KEY_H
 
 #include "pubkey.h"
 #include "serialize.h"
@@ -55,6 +54,11 @@ public:
     {
         // Important: vch must be 32 bytes in length to not break serialization
         keydata.resize(32);
+    }
+
+    //! Destructor (again necessary because of memlocking).
+    ~CKey()
+    {
     }
 
     friend bool operator==(const CKey& a, const CKey& b)
@@ -184,4 +188,4 @@ void ECC_Stop(void);
 /** Check that required EC support is available at runtime. */
 bool ECC_InitSanityCheck(void);
 
-#endif // PIGEON_KEY_H
+#endif // BITCOIN_KEY_H

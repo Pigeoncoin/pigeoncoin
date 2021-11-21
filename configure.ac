@@ -1,23 +1,29 @@
 dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
-define(_CLIENT_VERSION_MAJOR, 0)
-define(_CLIENT_VERSION_MINOR, 17)
-define(_CLIENT_VERSION_REVISION, 00)
-define(_CLIENT_VERSION_BUILD, 3)
+define(_CLIENT_VERSION_MAJOR, 1)
+define(_CLIENT_VERSION_MINOR, 18)
+define(_CLIENT_VERSION_REVISION, 0)
+define(_CLIENT_VERSION_BUILD, 4)
 define(_CLIENT_VERSION_IS_RELEASE, true)
-define(_COPYRIGHT_YEAR, 2018)
+define(_COPYRIGHT_YEAR, 2021)
 define(_COPYRIGHT_HOLDERS,[The %s developers])
-define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Pigeon Core]])
-AC_INIT([Pigeon Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[https://github.com/PigeonProject/Pigeoncoin/issues],[pigeon],[https://pigeoncoin.org/])
+define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Pigeoncoin Core]])
+AC_INIT([Pigeoncoin Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[https://github.com/pigeoncoin/pigeoncoin/issues],[pigeoncore],[https://pigeoncoin.org/])
 AC_CONFIG_SRCDIR([src/validation.cpp])
 AC_CONFIG_HEADERS([src/config/pigeon-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
-PIGEON_DAEMON_NAME=pigeond
-PIGEON_GUI_NAME=pigeon-qt
-PIGEON_CLI_NAME=pigeon-cli
-PIGEON_TX_NAME=pigeon-tx
+AC_CONFIG_LINKS([src/algo/md_helper.c:src/algo/md_helper.c])
+AC_CONFIG_LINKS([src/algo/hamsi_helper.c:src/algo/hamsi_helper.c])
+AC_CONFIG_LINKS([src/algo/sph_md_helper.c:src/algo/sph_md_helper.c])
+AC_CONFIG_LINKS([src/algo/aes_helper.c:src/algo/aes_helper.c])
+AC_CONFIG_LINKS([src/algo/haval_helper.c:src/algo/haval_helper.c])
+
+BITCOIN_DAEMON_NAME=pigeond
+BITCOIN_GUI_NAME=pigeon-qt
+BITCOIN_CLI_NAME=pigeon-cli
+BITCOIN_TX_NAME=pigeon-tx
 
 dnl Unless the user specified ARFLAGS, force it to be cr
 AC_ARG_VAR(ARFLAGS, [Flags for the archiver, defaults to <cr> if not set])
@@ -60,8 +66,8 @@ case $host in
      lt_cv_deplibs_check_method="pass_all"
   ;;
 esac
-dnl Require C++11 compiler (no GNU extensions)
-AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory], [nodefault])
+dnl Require C++14 compiler (no GNU extensions)
+AX_CXX_COMPILE_STDCXX([14], [noext], [mandatory], [nodefault])
 dnl Check if -latomic is required for <std::atomic>
 CHECK_ATOMIC
 
@@ -83,7 +89,7 @@ AC_PATH_TOOL(RANLIB, ranlib)
 AC_PATH_TOOL(STRIP, strip)
 AC_PATH_TOOL(GCOV, gcov)
 AC_PATH_PROG(LCOV, lcov)
-dnl Python 3.x is supported from 3.4 on (see https://github.com/PigeonProject/Pigeoncoin/issues/7893)
+dnl Python 3.x is supported from 3.4 on (see https://github.com/bitcoin/bitcoin/issues/7893)
 AC_PATH_PROGS([PYTHON], [python3.6 python3.5 python3.4 python3 python2.7 python2 python])
 AC_PATH_PROG(GENHTML, genhtml)
 AC_PATH_PROG([GIT], [git])
@@ -93,6 +99,7 @@ AC_PATH_PROG(HEXDUMP,hexdump)
 AC_PATH_TOOL(READELF, readelf)
 AC_PATH_TOOL(CPPFILT, c++filt)
 AC_PATH_TOOL(OBJCOPY, objcopy)
+AC_PATH_TOOL(DSYMUTIL, dsymutil)
 
 AC_ARG_VAR(PYTHONPATH, Augments the default search path for python module files)
 
@@ -178,8 +185,8 @@ AC_ARG_ENABLE([glibc-back-compat],
   [use_glibc_compat=no])
 
 AC_ARG_ENABLE([asm],
-  [AS_HELP_STRING([--enable-asm],
-  [Enable assembly routines (default is yes)])],
+  [AS_HELP_STRING([--disable-asm],
+  [disable assembly routines (enabled by default)])],
   [use_asm=$enableval],
   [use_asm=yes])
 
@@ -214,6 +221,24 @@ AC_ARG_ENABLE([debug],
     [enable_debug=$enableval],
     [enable_debug=no])
 
+# Enable crash hooks
+AC_ARG_ENABLE([crash-hooks],
+    [AS_HELP_STRING([--enable-crash-hooks],
+                    [hook into exception/signal/assert handling to gather stack traces (default is no)])],
+    [enable_crashhooks=$enableval],
+    [enable_crashhooks=no])
+
+# Enable in-wallet miner
+AC_ARG_ENABLE([miner],
+    [AS_HELP_STRING([--enable-miner],
+                    [enable in-wallet miner (default is yes)])],
+    [enable_miner=$enableval],
+    [enable_miner=yes])
+AM_CONDITIONAL([ENABLE_MINER], [test x$enable_miner = xyes])
+if test "x$enable_miner" = xyes; then
+    AC_DEFINE(ENABLE_MINER, 1, [Define this symbol if in-wallet miner should be enabled])
+fi
+
 # Turn warnings into errors
 AC_ARG_ENABLE([werror],
     [AS_HELP_STRING([--enable-werror],
@@ -225,7 +250,7 @@ AC_LANG_PUSH([C++])
 AX_CHECK_COMPILE_FLAG([-Werror],[CXXFLAG_WERROR="-Werror"],[CXXFLAG_WERROR=""])
 
 if test "x$enable_debug" = xyes; then
-    CPPFLAGS="$CPPFLAGS -DDEBUG -DDEBUG_LOCKORDER"
+    CPPFLAGS="$CPPFLAGS -DDEBUG"
     if test "x$GCC" = xyes; then
         CFLAGS="$CFLAGS -g3 -O0"
     fi
@@ -233,7 +258,32 @@ if test "x$enable_debug" = xyes; then
     if test "x$GXX" = xyes; then
         CXXFLAGS="$CXXFLAGS -g3 -O0"
     fi
+else
+    # We always enable at at least -g1 debug info to support proper stacktraces in crash infos
+    # Stacktraces will be suboptimal due to optimization, but better than nothing. Also, -fno-omit-frame-pointer
+    # mitigates this a little bit
+    if test "x$GCC" = xyes; then
+        CFLAGS="$CFLAGS -g1 -fno-omit-frame-pointer"
+    fi
+
+    if test "x$GXX" = xyes; then
+        CXXFLAGS="$CXXFLAGS -g1 -fno-omit-frame-pointer"
+    fi
 fi
+
+AM_CONDITIONAL([ENABLE_CRASH_HOOKS], [test x$enable_crashhooks = xyes])
+if test "x$enable_crashhooks" = xyes; then
+    AC_DEFINE(ENABLE_CRASH_HOOKS, 1, [Define this symbol if crash hooks should be enabled])
+fi
+AX_CHECK_LINK_FLAG([-Wl,-wrap=__cxa_allocate_exception], [LINK_WRAP_SUPPORTED=yes],,,)
+AM_CONDITIONAL([CRASH_HOOKS_WRAPPED_CXX_ABI],[test x$LINK_WRAP_SUPPORTED = xyes])
+
+if test x$LINK_WRAP_SUPPORTED = "xyes"; then
+  AC_DEFINE(CRASH_HOOKS_WRAPPED_CXX_ABI, 1, [Define this symbol to use wrapped CXX ABIs for exception stacktraces])
+fi
+
+# Needed for MinGW targets when debug symbols are enabled as compiled objects get very large
+AX_CHECK_COMPILE_FLAG([-Wa,-mbig-obj], [CXXFLAGS="$CXXFLAGS -Wa,-mbig-obj"],,,)
 
 ERROR_CXXFLAGS=
 if test "x$enable_werror" = "xyes"; then
@@ -260,10 +310,20 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
   AX_CHECK_COMPILE_FLAG([-Wimplicit-fallthrough],[CXXFLAGS="$CXXFLAGS -Wno-implicit-fallthrough"],,[[$CXXFLAG_WERROR]])
 fi
 
+enable_hwcrc32=no
+enable_sse41=no
+enable_avx2=no
+enable_shani=no
+
+if test "x$use_asm" = "xyes"; then
+
 # Check for optional instruction set support. Enabling these does _not_ imply that all code will
 # be compiled with them, rather that specific objects/libs may use them after checking for runtime
 # compatibility.
 AX_CHECK_COMPILE_FLAG([-msse4.2],[[SSE42_CXXFLAGS="-msse4.2"]],,[[$CXXFLAG_WERROR]])
+AX_CHECK_COMPILE_FLAG([-msse4.1],[[SSE41_CXXFLAGS="-msse4.1"]],,[[$CXXFLAG_WERROR]])
+AX_CHECK_COMPILE_FLAG([-mavx -mavx2],[[AVX2_CXXFLAGS="-mavx -mavx2"]],,[[$CXXFLAG_WERROR]])
+AX_CHECK_COMPILE_FLAG([-msse4 -msha],[[SHANI_CXXFLAGS="-msse4 -msha"]],,[[$CXXFLAG_WERROR]])
 
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS $SSE42_CXXFLAGS"
@@ -287,25 +347,74 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 )
 CXXFLAGS="$TEMP_CXXFLAGS"
 
+TEMP_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$CXXFLAGS $SSE41_CXXFLAGS"
+AC_MSG_CHECKING(for SSE4.1 intrinsics)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <stdint.h>
+    #include <immintrin.h>
+  ]],[[
+    __m128i l = _mm_set1_epi32(0);
+    return _mm_extract_epi32(l, 3);
+  ]])],
+ [ AC_MSG_RESULT(yes); enable_sse41=yes; AC_DEFINE(ENABLE_SSE41, 1, [Define this symbol to build code that uses SSE4.1 intrinsics]) ],
+ [ AC_MSG_RESULT(no)]
+)
+CXXFLAGS="$TEMP_CXXFLAGS"
+
+TEMP_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$CXXFLAGS $AVX2_CXXFLAGS"
+AC_MSG_CHECKING(for AVX2 intrinsics)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <stdint.h>
+    #include <immintrin.h>
+  ]],[[
+    __m256i l = _mm256_set1_epi32(0);
+    return _mm256_extract_epi32(l, 7);
+  ]])],
+ [ AC_MSG_RESULT(yes); enable_avx2=yes; AC_DEFINE(ENABLE_AVX2, 1, [Define this symbol to build code that uses AVX2 intrinsics]) ],
+ [ AC_MSG_RESULT(no)]
+)
+CXXFLAGS="$TEMP_CXXFLAGS"
+
+TEMP_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$CXXFLAGS $SHANI_CXXFLAGS"
+AC_MSG_CHECKING(for SHA-NI intrinsics)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <stdint.h>
+    #include <immintrin.h>
+  ]],[[
+    __m128i i = _mm_set1_epi32(0);
+    __m128i j = _mm_set1_epi32(1);
+    __m128i k = _mm_set1_epi32(2);
+    return _mm_extract_epi32(_mm_sha256rnds2_epu32(i, i, k), 0);
+  ]])],
+ [ AC_MSG_RESULT(yes); enable_shani=yes; AC_DEFINE(ENABLE_SHANI, 1, [Define this symbol to build code that uses SHA-NI intrinsics]) ],
+ [ AC_MSG_RESULT(no)]
+)
+CXXFLAGS="$TEMP_CXXFLAGS"
+
+fi
+
 CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
   [build pigeon-cli pigeon-tx (default=yes)])],
-  [build_pigeon_utils=$withval],
-  [build_pigeon_utils=yes])
+  [build_bitcoin_utils=$withval],
+  [build_bitcoin_utils=yes])
 
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
   [build libraries (default=yes)])],
-  [build_pigeon_libs=$withval],
-  [build_pigeon_libs=yes])
+  [build_bitcoin_libs=$withval],
+  [build_bitcoin_libs=yes])
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
   [build pigeond daemon (default=yes)])],
-  [build_pigeond=$withval],
-  [build_pigeond=yes])
+  [build_bitcoind=$withval],
+  [build_bitcoind=yes])
 
 use_pkgconfig=yes
 case $host in
@@ -440,8 +549,6 @@ case $host in
    *linux*)
      TARGET_OS=linux
      LEVELDB_TARGET_FLAGS="-DOS_LINUX"
-     CXXFLAGS="$TEMP_CXXFLAGS -fPIC"
-     CPPFLAGS="$CPPFLAGS -fPIC"
      ;;
    *freebsd*)
      LEVELDB_TARGET_FLAGS="-DOS_FREEBSD"
@@ -589,7 +696,7 @@ if test x$TARGET_OS = xdarwin; then
   AX_CHECK_LINK_FLAG([[-Wl,-dead_strip]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip"])
 fi
 
-AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h])
+AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h execinfo.h])
 
 AC_CHECK_DECLS([strnlen])
 
@@ -626,19 +733,19 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/socket.h>]],
  [ AC_MSG_RESULT(no)]
 )
 
-dnl Check for malloc_info (for memory statistics information in getmemoryinfo)
-AC_MSG_CHECKING(for getmemoryinfo)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
- [[ int f = malloc_info(0, NULL); ]])],
- [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_MALLOC_INFO, 1,[Define this symbol if you have malloc_info]) ],
- [ AC_MSG_RESULT(no)]
-)
-
 dnl Check for mallopt(M_ARENA_MAX) (to set glibc arenas)
 AC_MSG_CHECKING(for mallopt M_ARENA_MAX)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
  [[ mallopt(M_ARENA_MAX, 1); ]])],
  [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_MALLOPT_ARENA_MAX, 1,[Define this symbol if you have mallopt with M_ARENA_MAX]) ],
+ [ AC_MSG_RESULT(no)]
+)
+
+dnl Check for malloc_info (for memory statistics information in getmemoryinfo)
+AC_MSG_CHECKING(for getmemoryinfo)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
+ [[ int f = malloc_info(0, NULL); ]])],
+ [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_MALLOC_INFO, 1,[Define this symbol if you have malloc_info]) ],
  [ AC_MSG_RESULT(no)]
 )
 
@@ -693,6 +800,13 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
  [ AC_MSG_RESULT(no)]
 )
 
+# ensure backtrace() is found, check -lexecinfo if necessary
+if test x$TARGET_OS != xwindows; then
+  AC_SEARCH_LIBS([backtrace], [execinfo], [], [
+    AC_MSG_ERROR([Unable to find backtrace()])
+  ])
+fi
+
 # Check for reduced exports
 if test x$use_reduce_exports = xyes; then
   AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],[RE_CXXFLAGS="-fvisibility=hidden"],
@@ -709,7 +823,7 @@ AC_SUBST(LIBMEMENV)
 
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
-    PIGEON_FIND_BDB48
+    BITCOIN_FIND_BDB48
 fi
 
 dnl Check for libminiupnpc (optional)
@@ -721,12 +835,12 @@ if test x$use_upnp != xno; then
   )
 fi
 
-PIGEON_QT_INIT
+BITCOIN_QT_INIT
 
-dnl sets $pigeon_enable_qt, $pigeon_enable_qt_test, $pigeon_enable_qt_dbus
-PIGEON_QT_CONFIGURE([$use_pkgconfig], [qt5])
+dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
+BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt5])
 
-if test x$build_pigeon_utils$build_pigeond$pigeon_enable_qt$use_tests$use_bench = xnonononono; then
+if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononono; then
     use_boost=no
 else
     use_boost=yes
@@ -829,14 +943,14 @@ TEMP_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
 AC_MSG_CHECKING([for mismatched boost c++11 scoped enums])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-  #include <boost/config.hpp>
-  #include <boost/version.hpp>
+  #include "boost/config.hpp"
+  #include "boost/version.hpp"
   #if !defined(BOOST_NO_SCOPED_ENUMS) && !defined(BOOST_NO_CXX11_SCOPED_ENUMS) && BOOST_VERSION < 105700
   #define BOOST_NO_SCOPED_ENUMS
   #define BOOST_NO_CXX11_SCOPED_ENUMS
   #define CHECK
   #endif
-  #include <boost/filesystem.hpp>
+  #include "boost/filesystem.hpp"
   ]],[[
   #if defined(CHECK)
     boost::filesystem::copy_file("foo", "bar");
@@ -908,11 +1022,11 @@ if test x$use_pkgconfig = xyes; then
     [
       PKG_CHECK_MODULES([SSL], [libssl],, [AC_MSG_ERROR(openssl  not found.)])
       PKG_CHECK_MODULES([CRYPTO], [libcrypto],,[AC_MSG_ERROR(libcrypto  not found.)])
-      PIGEON_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [PIGEON_QT_FAIL(libprotobuf not found)])])
+      BITCOIN_QT_CHECK([PKG_CHECK_MODULES([PROTOBUF], [protobuf], [have_protobuf=yes], [BITCOIN_QT_FAIL(libprotobuf not found)])])
       if test x$use_qr != xno; then
-        PIGEON_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
+        BITCOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
       fi
-      if test x$build_pigeon_utils$build_pigeond$pigeon_enable_qt$use_tests != xnononono; then
+      if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests != xnononono; then
         PKG_CHECK_MODULES([EVENT], [libevent],, [AC_MSG_ERROR(libevent not found.)])
         if test x$TARGET_OS != xwindows; then
           PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads],, [AC_MSG_ERROR(libevent_pthreads not found.)])
@@ -937,7 +1051,7 @@ else
   AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
   AC_CHECK_LIB([ssl],         [main],SSL_LIBS=-lssl, AC_MSG_ERROR(libssl missing))
 
-  if test x$build_pigeon_utils$build_pigeond$pigeon_enable_qt$use_tests != xnononono; then
+  if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests != xnononono; then
     AC_CHECK_HEADER([event2/event.h],, AC_MSG_ERROR(libevent headers missing),)
     AC_CHECK_LIB([event],[main],EVENT_LIBS=-levent,AC_MSG_ERROR(libevent missing))
     if test x$TARGET_OS != xwindows; then
@@ -968,10 +1082,10 @@ else
     esac
   fi
 
-  PIGEON_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], PIGEON_QT_FAIL(libprotobuf not found)))
+  BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], BITCOIN_QT_FAIL(libprotobuf not found)))
   if test x$use_qr != xno; then
-    PIGEON_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
-    PIGEON_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
+    BITCOIN_QT_CHECK([AC_CHECK_LIB([qrencode], [main],[QR_LIBS=-lqrencode], [have_qrencode=no])])
+    BITCOIN_QT_CHECK([AC_CHECK_HEADER([qrencode.h],, have_qrencode=no)])
   fi
 fi
 
@@ -986,7 +1100,7 @@ dnl univalue check
 
 need_bundled_univalue=yes
 
-if test x$build_pigeon_utils$build_pigeond$pigeon_enable_qt$use_tests$use_bench = xnonononono; then
+if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononono; then
   need_bundled_univalue=no
 else
 
@@ -1030,23 +1144,23 @@ AM_CONDITIONAL([EMBEDDED_UNIVALUE],[test x$need_bundled_univalue = xyes])
 AC_SUBST(UNIVALUE_CFLAGS)
 AC_SUBST(UNIVALUE_LIBS)
 
-PIGEON_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
+BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
 
 AC_MSG_CHECKING([whether to build pigeond])
-AM_CONDITIONAL([BUILD_PIGEOND], [test x$build_pigeond = xyes])
-AC_MSG_RESULT($build_pigeond)
+AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitcoind = xyes])
+AC_MSG_RESULT($build_bitcoind)
 
 AC_MSG_CHECKING([whether to build utils (pigeon-cli pigeon-tx)])
-AM_CONDITIONAL([BUILD_PIGEON_UTILS], [test x$build_pigeon_utils = xyes])
-AC_MSG_RESULT($build_pigeon_utils)
+AM_CONDITIONAL([BUILD_BITCOIN_UTILS], [test x$build_bitcoin_utils = xyes])
+AC_MSG_RESULT($build_bitcoin_utils)
 
 AC_MSG_CHECKING([whether to build libraries])
-AM_CONDITIONAL([BUILD_PIGEON_LIBS], [test x$build_pigeon_libs = xyes])
-if test x$build_pigeon_libs = xyes; then
+AM_CONDITIONAL([BUILD_BITCOIN_LIBS], [test x$build_bitcoin_libs = xyes])
+if test x$build_bitcoin_libs = xyes; then
   AC_DEFINE(HAVE_CONSENSUS_LIB, 1, [Define this symbol if the consensus lib has been built])
   AC_CONFIG_FILES([libpigeonconsensus.pc:libpigeonconsensus.pc.in])
 fi
-AC_MSG_RESULT($build_pigeon_libs)
+AC_MSG_RESULT($build_bitcoin_libs)
 
 AC_LANG_POP
 
@@ -1108,13 +1222,13 @@ fi
 
 dnl these are only used when qt is enabled
 BUILD_TEST_QT=""
-if test x$pigeon_enable_qt != xno; then
+if test x$bitcoin_enable_qt != xno; then
   dnl enable dbus support
   AC_MSG_CHECKING([whether to build GUI with support for D-Bus])
-  if test x$pigeon_enable_qt_dbus != xno; then
+  if test x$bitcoin_enable_qt_dbus != xno; then
     AC_DEFINE([USE_DBUS],[1],[Define if dbus support should be compiled in])
   fi
-  AC_MSG_RESULT($pigeon_enable_qt_dbus)
+  AC_MSG_RESULT($bitcoin_enable_qt_dbus)
 
   dnl enable qr support
   AC_MSG_CHECKING([whether to build GUI with support for QR codes])
@@ -1138,7 +1252,7 @@ if test x$pigeon_enable_qt != xno; then
   fi
 
   AC_MSG_CHECKING([whether to build test_pigeon-qt])
-  if test x$use_gui_tests$pigeon_enable_qt_test = xyesyes; then
+  if test x$use_gui_tests$bitcoin_enable_qt_test = xyesyes; then
     AC_MSG_RESULT([yes])
     BUILD_TEST_QT="yes"
   else
@@ -1164,7 +1278,19 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test x$build_pigeon_utils$build_pigeon_libs$build_pigeond$pigeon_enable_qt$use_bench$use_tests = xnononononono; then
+# When compiled natively on MacOS, we need to specify -flat to avoid producing a dSYM bundle
+# When cross-compiled on linux, we're using a different version of the tool that only supports flat symbol files
+AC_MSG_CHECKING([whether dsymutil needs -flat])
+if test x$DSYMUTIL != x && ($DSYMUTIL --help | grep -q \\-flat); then
+AC_MSG_RESULT([yes])
+	DSYMUTIL_FLAT="$DSYMUTIL -flat"
+else
+	AC_MSG_RESULT([no])
+	DSYMUTIL_FLAT="$DSYMUTIL"
+fi
+AC_MSG_RESULT($dsymutil_needs_flat)
+
+if test x$build_bitcoin_utils$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests = xnononononono; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
 fi
 
@@ -1173,7 +1299,7 @@ AM_CONDITIONAL([BUILD_DARWIN], [test x$BUILD_OS = xdarwin])
 AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
 AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet = xyes])
 AM_CONDITIONAL([ENABLE_TESTS],[test x$BUILD_TEST = xyes])
-AM_CONDITIONAL([ENABLE_QT],[test x$pigeon_enable_qt = xyes])
+AM_CONDITIONAL([ENABLE_QT],[test x$bitcoin_enable_qt = xyes])
 AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$BUILD_TEST_QT = xyes])
 AM_CONDITIONAL([ENABLE_BENCH],[test x$use_bench = xyes])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
@@ -1181,6 +1307,9 @@ AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
 AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
 AM_CONDITIONAL([HARDEN],[test x$use_hardening = xyes])
 AM_CONDITIONAL([ENABLE_HWCRC32],[test x$enable_hwcrc32 = xyes])
+AM_CONDITIONAL([ENABLE_SSE41],[test x$enable_sse41 = xyes])
+AM_CONDITIONAL([ENABLE_AVX2],[test x$enable_avx2 = xyes])
+AM_CONDITIONAL([ENABLE_SHANI],[test x$enable_shani = xyes])
 AM_CONDITIONAL([USE_ASM],[test x$use_asm = xyes])
 
 AC_DEFINE(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR, [Major version])
@@ -1202,10 +1331,10 @@ AC_SUBST(COPYRIGHT_YEAR, _COPYRIGHT_YEAR)
 AC_SUBST(COPYRIGHT_HOLDERS, "_COPYRIGHT_HOLDERS")
 AC_SUBST(COPYRIGHT_HOLDERS_SUBSTITUTION, "_COPYRIGHT_HOLDERS_SUBSTITUTION")
 AC_SUBST(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL")
-AC_SUBST(PIGEON_DAEMON_NAME)
-AC_SUBST(PIGEON_GUI_NAME)
-AC_SUBST(PIGEON_CLI_NAME)
-AC_SUBST(PIGEON_TX_NAME)
+AC_SUBST(BITCOIN_DAEMON_NAME)
+AC_SUBST(BITCOIN_GUI_NAME)
+AC_SUBST(BITCOIN_CLI_NAME)
+AC_SUBST(BITCOIN_TX_NAME)
 
 AC_SUBST(RELDFLAGS)
 AC_SUBST(ERROR_CXXFLAGS)
@@ -1215,6 +1344,9 @@ AC_SUBST(HARDENED_LDFLAGS)
 AC_SUBST(PIC_FLAGS)
 AC_SUBST(PIE_FLAGS)
 AC_SUBST(SSE42_CXXFLAGS)
+AC_SUBST(SSE41_CXXFLAGS)
+AC_SUBST(AVX2_CXXFLAGS)
+AC_SUBST(SHANI_CXXFLAGS)
 AC_SUBST(LIBTOOL_APP_LDFLAGS)
 AC_SUBST(USE_UPNP)
 AC_SUBST(USE_QRCODE)
@@ -1230,12 +1362,13 @@ AC_SUBST(EVENT_PTHREADS_LIBS)
 AC_SUBST(ZMQ_LIBS)
 AC_SUBST(PROTOBUF_LIBS)
 AC_SUBST(QR_LIBS)
+AC_SUBST(DSYMUTIL_FLAT)
 AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile share/setup.nsi share/qt/Info.plist test/config.ini])
 AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
 AC_CONFIG_FILES([doc/Doxyfile])
 AC_CONFIG_LINKS([contrib/filter-lcov.py:contrib/filter-lcov.py])
 AC_CONFIG_LINKS([test/functional/test_runner.py:test/functional/test_runner.py])
-AC_CONFIG_LINKS([test/util/pigeon-util-test.py:test/util/pigeon-util-test.py])
+AC_CONFIG_LINKS([test/util/bitcoin-util-test.py:test/util/bitcoin-util-test.py])
 
 dnl boost's m4 checks do something really nasty: they export these vars. As a
 dnl result, they leak into secp256k1's configure and crazy things happen.
@@ -1290,28 +1423,30 @@ esac
 
 echo 
 echo "Options used to compile and link:"
-echo "  with wallet   = $enable_wallet"
-echo "  with gui / qt = $pigeon_enable_qt"
-if test x$pigeon_enable_qt != xno; then
-    echo "    qt version  = $pigeon_qt_got_major_vers"
-    echo "    with qr     = $use_qr"
+echo "  with wallet         = $enable_wallet"
+echo "  with gui / qt       = $bitcoin_enable_qt"
+if test x$bitcoin_enable_qt != xno; then
+    echo "    qt version        = $bitcoin_qt_got_major_vers"
+    echo "    with qr           = $use_qr"
 fi
-echo "  with zmq      = $use_zmq"
-echo "  with test     = $use_tests"
-echo "  with bench    = $use_bench"
-echo "  with upnp     = $use_upnp"
-echo "  use asm       = $use_asm"
-echo "  debug enabled = $enable_debug"
-echo "  werror        = $enable_werror"
+echo "  with zmq            = $use_zmq"
+echo "  with test           = $use_tests"
+echo "  with bench          = $use_bench"
+echo "  with upnp           = $use_upnp"
+echo "  use asm             = $use_asm"
+echo "  debug enabled       = $enable_debug"
+echo "  crash hooks enabled = $enable_crashhooks"
+echo "  miner enabled       = $enable_miner"
+echo "  werror              = $enable_werror"
 echo 
-echo "  target os     = $TARGET_OS"
-echo "  build os      = $BUILD_OS"
+echo "  target os           = $TARGET_OS"
+echo "  build os            = $BUILD_OS"
 echo
-echo "  CC            = $CC"
-echo "  CFLAGS        = $CFLAGS"
-echo "  CPPFLAGS      = $CPPFLAGS"
-echo "  CXX           = $CXX"
-echo "  CXXFLAGS      = $CXXFLAGS"
-echo "  LDFLAGS       = $LDFLAGS"
-echo "  ARFLAGS       = $ARFLAGS"
+echo "  CC                  = $CC"
+echo "  CFLAGS              = $CFLAGS"
+echo "  CPPFLAGS            = $CPPFLAGS"
+echo "  CXX                 = $CXX"
+echo "  CXXFLAGS            = $CXXFLAGS"
+echo "  LDFLAGS             = $LDFLAGS"
+echo "  ARFLAGS             = $ARFLAGS"
 echo 

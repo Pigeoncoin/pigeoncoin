@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 # Copyright (c) 2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Wallet encryption"""
 
 import time
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
 
-class WalletEncryptionTest(PigeonTestFramework):
+class WalletEncryptionTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -40,7 +39,7 @@ class WalletEncryptionTest(PigeonTestFramework):
         assert_equal(privkey, self.nodes[0].dumpprivkey(address))
 
         # Check that the timeout is right
-        time.sleep(2)
+        time.sleep(4)  # Wait a little bit longer to make sure wallet gets locked
         assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].dumpprivkey, address)
 
         # Test wrong passphrase

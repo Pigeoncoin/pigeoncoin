@@ -1,21 +1,16 @@
-// Copyright (c) 2013-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2013-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "hash.h"
 #include "utilstrencodings.h"
 #include "test/test_pigeon.h"
-#include "consensus/merkle.h"
 
 #include <vector>
-#include<iostream>
 
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(hash_tests, BasicTestingSetup)
-
-
 
 BOOST_AUTO_TEST_CASE(murmurhash3)
 {
@@ -24,7 +19,7 @@ BOOST_AUTO_TEST_CASE(murmurhash3)
 
     // Test MurmurHash3 with various inputs. Of course this is retested in the
     // bloom filter tests - they would fail if MurmurHash3() had any problems -
-    // but is useful for those trying to implement Pigeon libraries as a
+    // but is useful for those trying to implement Bitcoin libraries as a
     // source of test data for their MurmurHash3() primitive during
     // development.
     //
@@ -82,29 +77,6 @@ uint64_t siphash_4_2_testvec[] = {
     0x6ca4ecb15c5f91e1, 0x9f626da15c9625f3, 0xe51b38608ef25f57, 0x958a324ceb064572
 };
 
-BOOST_AUTO_TEST_CASE(hash16R)
-{
-	CBlock block;
-	block.nVersion = 42;
-	std::string hashHex = "19bcdaa780349350b210ca84d73dc1c08fbae659990b47a9d28655e7e9be3970";
-
-	//decimal order of hash16R is d28655e7e9be3970 hex converted to 13 2 8 6 5 5 14 7 14 9 11 14 3 9 7 0
-
-	int expectedPositions[16] = {13, 2, 8, 6, 5, 5, 14, 7, 14, 9, 11, 14, 3, 9, 7, 0};
-
-	uint256* hash = new uint256();
-	hash->SetHex(hashHex);
-    uint256 hash256 = hash[0];
-
-    BOOST_CHECK_EQUAL(hash256.GetHex(), hashHex);
-    for(int i=0; i<15; i++) {
-    		int pos = GetHashSelection(hash256, i);
-        std::cout << "pos" << i << " " << pos << std::endl;
-        BOOST_CHECK_EQUAL(expectedPositions[i], pos);
-    }
-
-};
-
 BOOST_AUTO_TEST_CASE(siphash)
 {
     CSipHasher hasher(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL);
@@ -155,10 +127,10 @@ BOOST_AUTO_TEST_CASE(siphash)
     // and the test would be affected by default tx version bumps if not fixed.
     tx.nVersion = 1;
     ss << tx;
-    BOOST_CHECK_EQUAL(SipHashUint256(1, 2, ss.GetHash()), 0x79751e980c2a0a35ULL);
 
     // Check consistency between CSipHasher and SipHashUint256[Extra].
-    FastRandomContext ctx;
+    // TODO reenable when backporting Bitcoin #10321
+    /*FastRandomContext ctx;
     for (int i = 0; i < 16; ++i) {
         uint64_t k1 = ctx.rand64();
         uint64_t k2 = ctx.rand64();
@@ -172,7 +144,9 @@ BOOST_AUTO_TEST_CASE(siphash)
         sip288.Write(nb, 4);
         BOOST_CHECK_EQUAL(SipHashUint256(k1, k2, x), sip256.Finalize());
         BOOST_CHECK_EQUAL(SipHashUint256Extra(k1, k2, x, n), sip288.Finalize());
-    }
+    }*/
+
+    BOOST_CHECK_EQUAL(SipHashUint256(1, 2, ss.GetHash()), 0x79751e980c2a0a35ULL);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

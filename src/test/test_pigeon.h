@@ -1,10 +1,10 @@
-// Copyright (c) 2015-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2015 The Bitcoin Core developers
+// Copyright (c) 2014-2019 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_TEST_TEST_PIGEON_H
-#define PIGEON_TEST_TEST_PIGEON_H
+#ifndef BITCOIN_TEST_TEST_PIGEON_H
+#define BITCOIN_TEST_TEST_PIGEON_H
 
 #include "chainparamsbase.h"
 #include "fs.h"
@@ -42,7 +42,7 @@ static inline bool InsecureRandBool() { return insecure_rand_ctx.randbool(); }
 struct BasicTestingSetup {
     ECCVerifyHandle globalVerifyHandle;
 
-    explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
+    BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~BasicTestingSetup();
 };
 
@@ -50,6 +50,12 @@ struct BasicTestingSetup {
  * Included are data directory, coins database, script check threads setup.
  */
 class CConnman;
+class CNode;
+struct CConnmanTest {
+    static void AddNode(CNode& node);
+    static void ClearNodes();
+};
+
 class PeerLogicValidation;
 struct TestingSetup: public BasicTestingSetup {
     CCoinsViewDB *pcoinsdbview;
@@ -59,7 +65,7 @@ struct TestingSetup: public BasicTestingSetup {
     CScheduler scheduler;
     std::unique_ptr<PeerLogicValidation> peerLogic;
 
-    explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
+    TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();
 };
 
@@ -67,22 +73,42 @@ class CBlock;
 struct CMutableTransaction;
 class CScript;
 
-//
-// Testing fixture that pre-creates a
-// 100-block REGTEST-mode block chain
-//
-struct TestChain100Setup : public TestingSetup {
-    TestChain100Setup();
+struct TestChainSetup : public TestingSetup
+{
+    TestChainSetup(int blockCount);
+    ~TestChainSetup();
 
     // Create a new block with just given transactions, coinbase paying to
     // scriptPubKey, and try to add it to the current chain.
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
                                  const CScript& scriptPubKey);
-
-    ~TestChain100Setup();
+    CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
+                                 const CKey& scriptKey);
+    CBlock CreateBlock(const std::vector<CMutableTransaction>& txns,
+                       const CScript& scriptPubKey);
+    CBlock CreateBlock(const std::vector<CMutableTransaction>& txns,
+                       const CKey& scriptKey);
 
     std::vector<CTransaction> coinbaseTxns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
+};
+
+//
+// Testing fixture that pre-creates a
+// 100-block REGTEST-mode block chain
+//
+struct TestChain100Setup : public TestChainSetup {
+    TestChain100Setup() : TestChainSetup(100) {}
+};
+
+struct TestChainDIP3Setup : public TestChainSetup
+{
+    TestChainDIP3Setup() : TestChainSetup(431) {}
+};
+
+struct TestChainDIP3BeforeActivationSetup : public TestChainSetup
+{
+    TestChainDIP3BeforeActivationSetup() : TestChainSetup(430) {}
 };
 
 class CTxMemPoolEntry;
@@ -94,13 +120,13 @@ struct TestMemPoolEntryHelper
     int64_t nTime;
     unsigned int nHeight;
     bool spendsCoinbase;
-    unsigned int sigOpCost;
+    unsigned int sigOpCount;
     LockPoints lp;
 
     TestMemPoolEntryHelper() :
         nFee(0), nTime(0), nHeight(1),
-        spendsCoinbase(false), sigOpCost(4) { }
-
+        spendsCoinbase(false), sigOpCount(4) { }
+    
     CTxMemPoolEntry FromTx(const CMutableTransaction &tx);
     CTxMemPoolEntry FromTx(const CTransaction &tx);
 
@@ -109,9 +135,6 @@ struct TestMemPoolEntryHelper
     TestMemPoolEntryHelper &Time(int64_t _time) { nTime = _time; return *this; }
     TestMemPoolEntryHelper &Height(unsigned int _height) { nHeight = _height; return *this; }
     TestMemPoolEntryHelper &SpendsCoinbase(bool _flag) { spendsCoinbase = _flag; return *this; }
-    TestMemPoolEntryHelper &SigOpsCost(unsigned int _sigopsCost) { sigOpCost = _sigopsCost; return *this; }
+    TestMemPoolEntryHelper &SigOps(unsigned int _sigops) { sigOpCount = _sigops; return *this; }
 };
-
-CBlock getBlock13b8a();
-
 #endif

@@ -1,11 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_STREAMS_H
-#define PIGEON_STREAMS_H
+#ifndef BITCOIN_STREAMS_H
+#define BITCOIN_STREAMS_H
 
 #include "support/allocators/zeroafterfree.h"
 #include "serialize.h"
@@ -23,53 +22,6 @@
 #include <utility>
 #include <vector>
 
-template<typename Stream>
-class OverrideStream
-{
-    Stream* stream;
-
-    const int nType;
-    const int nVersion;
-
-public:
-    OverrideStream(Stream* stream_, int nType_, int nVersion_) : stream(stream_), nType(nType_), nVersion(nVersion_) {}
-
-    template<typename T>
-    OverrideStream<Stream>& operator<<(const T& obj)
-    {
-        // Serialize to this stream
-        ::Serialize(*this, obj);
-        return (*this);
-    }
-
-    template<typename T>
-    OverrideStream<Stream>& operator>>(T& obj)
-    {
-        // Unserialize from this stream
-        ::Unserialize(*this, obj);
-        return (*this);
-    }
-
-    void write(const char* pch, size_t nSize)
-    {
-        stream->write(pch, nSize);
-    }
-
-    void read(char* pch, size_t nSize)
-    {
-        stream->read(pch, nSize);
-    }
-
-    int GetVersion() const { return nVersion; }
-    int GetType() const { return nType; }
-};
-
-template<typename S>
-OverrideStream<S> WithOrVersion(S* s, int nVersionFlag)
-{
-    return OverrideStream<S>(s, s->GetType(), s->GetVersion() | nVersionFlag);
-}
-
 /* Minimal stream for overwriting and/or appending to an existing byte vector
  *
  * The referenced vector will grow as necessary
@@ -83,7 +35,7 @@ class CVectorWriter
  * @param[in]  nVersionIn Serialization Version (including any flags)
  * @param[in]  vchDataIn  Referenced byte vector to overwrite/append
  * @param[in]  nPosIn Starting position. Vector index where writes should start. The vector will initially
- *                    grow as necessary to  max(nPosIn, vec.size()). So to append, use vec.size().
+ *                    grow as necessary to  max(index, vec.size()). So to append, use vec.size().
 */
     CVectorWriter(int nTypeIn, int nVersionIn, std::vector<unsigned char>& vchDataIn, size_t nPosIn) : nType(nTypeIn), nVersion(nVersionIn), vchData(vchDataIn), nPos(nPosIn)
     {
@@ -92,7 +44,7 @@ class CVectorWriter
     }
 /*
  * (other params same as above)
- * @param[in]  args  A list of items to serialize starting at nPosIn.
+ * @param[in]  args  A list of items to serialize starting at nPos.
 */
     template <typename... Args>
     CVectorWriter(int nTypeIn, int nVersionIn, std::vector<unsigned char>& vchDataIn, size_t nPosIn, Args&&... args) : CVectorWriter(nTypeIn, nVersionIn, vchDataIn, nPosIn)
@@ -131,6 +83,10 @@ class CVectorWriter
         nPos += nSize;
         if(nPos > vchData.size())
             vchData.resize(nPos);
+    }
+    size_t size() const
+    {
+        return vchData.size() - nPos;
     }
 private:
     const int nType;
@@ -333,7 +289,7 @@ public:
     //
     bool eof() const             { return size() == 0; }
     CDataStream* rdbuf()         { return this; }
-    int in_avail() const         { return size(); }
+    int in_avail()               { return size(); }
 
     void SetType(int n)          { nType = n; }
     int GetType() const          { return nType; }
@@ -456,6 +412,10 @@ public:
 class CAutoFile
 {
 private:
+    // Disallow copies
+    CAutoFile(const CAutoFile&);
+    CAutoFile& operator=(const CAutoFile&);
+
     const int nType;
     const int nVersion;
 
@@ -471,10 +431,6 @@ public:
     {
         fclose();
     }
-
-    // Disallow copies
-    CAutoFile(const CAutoFile&) = delete;
-    CAutoFile& operator=(const CAutoFile&) = delete;
 
     void fclose()
     {
@@ -565,6 +521,10 @@ public:
 class CBufferedFile
 {
 private:
+    // Disallow copies
+    CBufferedFile(const CBufferedFile&);
+    CBufferedFile& operator=(const CBufferedFile&);
+
     const int nType;
     const int nVersion;
 
@@ -606,10 +566,6 @@ public:
         fclose();
     }
 
-    // Disallow copies
-    CBufferedFile(const CBufferedFile&) = delete;
-    CBufferedFile& operator=(const CBufferedFile&) = delete;
-
     int GetVersion() const { return nVersion; }
     int GetType() const { return nType; }
 
@@ -649,7 +605,7 @@ public:
     }
 
     // return the current reading position
-    uint64_t GetPos() const {
+    uint64_t GetPos() {
         return nReadPos;
     }
 
@@ -707,4 +663,4 @@ public:
     }
 };
 
-#endif // PIGEON_STREAMS_H
+#endif // BITCOIN_STREAMS_H

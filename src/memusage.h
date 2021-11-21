@@ -1,10 +1,9 @@
-// Copyright (c) 2015-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_MEMUSAGE_H
-#define PIGEON_MEMUSAGE_H
+#ifndef BITCOIN_MEMUSAGE_H
+#define BITCOIN_MEMUSAGE_H
 
 #include "indirectmap.h"
 
@@ -167,4 +166,4 @@ static inline size_t DynamicUsage(const std::unordered_map<X, Y, Z>& m)
 
 }
 
-#endif // PIGEON_MEMUSAGE_H
+#endif // BITCOIN_MEMUSAGE_H

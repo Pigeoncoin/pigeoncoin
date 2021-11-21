@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # Copyright (c) 2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test account RPCs.
@@ -14,14 +13,14 @@ RPCs tested are:
     - move (with account arguments)
 """
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
-class WalletAccountsTest(PigeonTestFramework):
+class WalletAccountsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [[]]
+        self.extra_args = [["-paytxfee=0.0001"]]
 
     def run_test(self):
         node = self.nodes[0]
@@ -29,13 +28,13 @@ class WalletAccountsTest(PigeonTestFramework):
         assert_equal(len(node.listunspent()), 0)
 
         # Note each time we call generate, all generated coins go into
-        # the same address, so we call twice to get two addresses w/50 each
+        # the same address, so we call twice to get two addresses w/500 each
         node.generate(1)
         node.generate(101)
-        assert_equal(node.getbalance(), 10000)
+        assert_equal(node.getbalance(), 1000)
 
         # there should be 2 address groups
-        # each with 1 address with a balance of 50 Pigeons
+        # each with 1 address with a balance of 500 Pigeon
         address_groups = node.listaddressgroupings()
         assert_equal(len(address_groups), 2)
         # the addresses aren't linked now, but will be after we send to the
@@ -44,18 +43,20 @@ class WalletAccountsTest(PigeonTestFramework):
         for address_group in address_groups:
             assert_equal(len(address_group), 1)
             assert_equal(len(address_group[0]), 2)
-            assert_equal(address_group[0][1], 5000)
+            assert_equal(address_group[0][1], 500)
             linked_addresses.add(address_group[0][0])
 
-        # send 50 from each address to a third address not in this wallet
+        # send 500 from each address to a third address not in this wallet
         # There's some fee that will come back to us when the miner reward
         # matures.
-        common_address = "msf4WtN1YQKXvNtvdFYt9JBnUD2FB41kjr"
+        common_address = "yd5KMREs3GLMe6mTJYr3YrH1juwNwrFCfB"
         txid = node.sendmany(
             fromaccount="",
-            amounts={common_address: 10000},
-            subtractfeefrom=[common_address],
+            amounts={common_address: 1000},
             minconf=1,
+            addlocked=False,
+            comment="",
+            subtractfeefrom=[common_address],
         )
         tx_details = node.gettransaction(txid)
         fee = -tx_details['details'][0]['fee']
@@ -104,13 +105,13 @@ class WalletAccountsTest(PigeonTestFramework):
 
         node.generate(101)
         
-        expected_account_balances = {"": 520000}
+        expected_account_balances = {"": 52000}
         for account in accounts:
             expected_account_balances[account] = 0
         
         assert_equal(node.listaccounts(), expected_account_balances)
         
-        assert_equal(node.getbalance(""), 520000)
+        assert_equal(node.getbalance(""), 52000)
         
         for account in accounts:
             address = node.getaccountaddress("")

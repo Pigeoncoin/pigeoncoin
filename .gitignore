@@ -1,4 +1,8 @@
-*.dmg
+*.sublime-project
+*.sublime-workspace
+todo.txt
+reset-files.bash
+
 *.tar.gz
 
 *.exe
@@ -9,9 +13,7 @@ src/pigeon-tx
 src/test/test_pigeon
 src/test/test_pigeon_fuzzy
 src/qt/test/test_pigeon-qt
-src/qt/pigeon-qt
-.vscode
-output.txt
+src/bench/bench_pigeon
 
 # autoreconf
 Makefile.in
@@ -47,11 +49,7 @@ src/qt/moc_*.cpp
 src/qt/forms/ui_*.h
 
 src/qt/test/moc*.cpp
-
-.settings
-.cproject
-.project
-.vscode
+libconftest.dylib*
 
 .deps
 .dirstamp
@@ -65,12 +63,14 @@ src/qt/test/moc*.cpp
 *.o
 *.o-*
 *.patch
+!depends/patches/*/*.patch
 *.a
 *.pb.cc
 *.pb.h
 
 *.log
 *.trs
+*.dmg
 
 *.json.h
 *.raw.h
@@ -82,7 +82,9 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
+pigeon-qt
 Pigeon-Qt.app
+!/depends/Makefile
 
 # Unit-tests
 Makefile.test
@@ -112,8 +114,24 @@ test/cache/*
 
 !src/leveldb*/Makefile
 
+.cproject
+.project
+.autotools
 /doc/doxygen/
 
 libpigeonconsensus.pc
 contrib/devtools/split-debug.sh
+src/qt/pigeon-qt.bash
+qa/pull-tester/tests-config.sh
 
+#development symlinks
+pigeon-cli
+pigeond
+pigeon-qt
+make
+
+/docker/bin
+
+# CLion
+.idea
+cmake-build-debug

@@ -1,13 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "primitives/block.h"
+#include "algo/hashx21s.h"
 
 #include "hash.h"
-#include "algo/hashx21s.h"
+#include "streams.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
 #include "crypto/common.h"
@@ -15,7 +15,6 @@
 static const uint32_t MAINNET_X21SACTIVATIONTIME = 1571097600;//10-15-2019 00:00:00GMT
 static const uint32_t TESTNET_X21SACTIVATIONTIME = 1568851200;//09-19-2019 00:00:00GMT
 static const uint32_t REGTEST_X21SACTIVATIONTIME = 1568951200;
-
 
 BlockNetwork bNetwork = BlockNetwork();
 
@@ -36,15 +35,18 @@ void BlockNetwork::SetNetwork(const std::string& net)
 
 uint256 CBlockHeader::GetHash() const
 {
-	 uint32_t nTimeToUse = MAINNET_X21SACTIVATIONTIME;
+    uint32_t nTimeToUse = MAINNET_X21SACTIVATIONTIME;
 	if (bNetwork.fOnTestnet) {
 		nTimeToUse = TESTNET_X21SACTIVATIONTIME;
 	} else if (bNetwork.fOnRegtest) {
 		nTimeToUse = REGTEST_X21SACTIVATIONTIME;
 	}
 	if (nTime >= nTimeToUse) {
+        // printf("Using x21s\n");
 		return HashX21S(BEGIN(nVersion), END(nNonce), hashPrevBlock);
 	}
+            // printf("Using x16r\n");
+
     return HashX16R(BEGIN(nVersion), END(nNonce), hashPrevBlock);
 }
 

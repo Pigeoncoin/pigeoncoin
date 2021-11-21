@@ -1,10 +1,9 @@
 // Copyright (c) 2017-2017 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_CONSENSUS_TX_VERIFY_H
-#define PIGEON_CONSENSUS_TX_VERIFY_H
+#ifndef BITCOIN_CONSENSUS_TX_VERIFY_H
+#define BITCOIN_CONSENSUS_TX_VERIFY_H
 
 #include "amount.h"
 
@@ -19,7 +18,7 @@ class CValidationState;
 /** Transaction validation functions */
 
 /** Context-independent validity checks */
-bool CheckTransaction(const CTransaction& tx, CValidationState& state, bool fCheckDuplicateInputs=true);
+bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs=true);
 
 namespace Consensus {
 /**
@@ -50,13 +49,13 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx);
 unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& mapInputs);
 
 /**
- * Compute total signature operation cost of a transaction.
- * @param[in] tx     Transaction for which we are computing the cost
+ * Count total signature operations for a transaction.
+ * @param[in] tx     Transaction for which we are counting sigops
  * @param[in] inputs Map of previous transactions that have outputs we're spending
  * @param[out] flags Script verification flags
- * @return Total signature operation cost of tx
+ * @return Total signature operation count for a tx
  */
-int64_t GetTransactionSigOpCost(const CTransaction& tx, const CCoinsViewCache& inputs, int flags);
+unsigned int GetTransactionSigOpCount(const CTransaction& tx, const CCoinsViewCache& inputs, int flags);
 
 /**
  * Check if transaction is final and can be included in a block with the
@@ -79,4 +78,4 @@ bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> loc
  */
 bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block);
 
-#endif // PIGEON_CONSENSUS_TX_VERIFY_H
+#endif // BITCOIN_CONSENSUS_TX_VERIFY_H

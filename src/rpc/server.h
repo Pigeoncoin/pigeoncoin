@@ -1,11 +1,10 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_RPCSERVER_H
-#define PIGEON_RPCSERVER_H
+#ifndef BITCOIN_RPCSERVER_H
+#define BITCOIN_RPCSERVER_H
 
 #include "amount.h"
 #include "rpc/protocol.h"
@@ -18,20 +17,19 @@
 
 #include <univalue.h>
 
-static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
-
 class CRPCCommand;
 
 namespace RPCServer
 {
     void OnStarted(std::function<void ()> slot);
     void OnStopped(std::function<void ()> slot);
+    void OnPreCommand(std::function<void (const CRPCCommand&)> slot);
 }
 
 /** Wrapper for UniValue::VType, which includes typeAny:
  * Used to denote don't care type. Only used by RPCTypeCheckObj */
 struct UniValueType {
-    explicit UniValueType(UniValue::VType _type) : typeAny(false), type(_type) {}
+    UniValueType(UniValue::VType _type) : typeAny(false), type(_type) {}
     UniValueType() : typeAny(true) {}
     bool typeAny;
     UniValue::VType type;
@@ -134,6 +132,7 @@ public:
     std::string category;
     std::string name;
     rpcfn_type actor;
+    bool okSafeMode;
     std::vector<std::string> argNames;
 };
 
@@ -147,7 +146,7 @@ private:
 public:
     CRPCTable();
     const CRPCCommand* operator[](const std::string& name) const;
-    std::string help(const std::string& name, const JSONRPCRequest& helpreq) const;
+    std::string help(const std::string& name, const std::string& strSubCommand, const JSONRPCRequest& helpreq) const;
 
     /**
      * Execute a method.
@@ -163,7 +162,6 @@ public:
     */
     std::vector<std::string> listCommands() const;
 
-
     /**
      * Appends a CRPCCommand to the dispatch table.
      * Returns false if RPC server is already running (dump concurrency protection).
@@ -171,8 +169,6 @@ public:
      */
     bool appendCommand(const std::string& name, const CRPCCommand* pcmd);
 };
-
-bool IsDeprecatedRPCEnabled(const std::string& method);
 
 extern CRPCTable tableRPC;
 
@@ -185,6 +181,11 @@ extern uint256 ParseHashO(const UniValue& o, std::string strKey);
 extern std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName);
 extern std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey);
 
+extern int32_t ParseInt32V(const UniValue& v, const std::string &strName);
+extern int64_t ParseInt64V(const UniValue& v, const std::string &strName);
+extern double ParseDoubleV(const UniValue& v, const std::string &strName);
+extern bool ParseBoolV(const UniValue& v, const std::string &strName);
+
 extern CAmount AmountFromValue(const UniValue& value);
 extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);
 extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
@@ -194,7 +195,4 @@ void InterruptRPC();
 void StopRPC();
 std::string JSONRPCExecBatch(const JSONRPCRequest& jreq, const UniValue& vReq);
 
-// Retrieves any serialization flags requested in command line argument
-int RPCSerializationFlags();
-
-#endif // PIGEON_RPCSERVER_H
+#endif // BITCOIN_RPCSERVER_H

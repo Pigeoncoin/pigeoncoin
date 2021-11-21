@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the getchaintips RPC.
@@ -11,10 +10,10 @@
 - verify that getchaintips now returns two chain tips.
 """
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
-class GetChainTipsTest (PigeonTestFramework):
+class GetChainTipsTest (BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
 
@@ -55,8 +54,11 @@ class GetChainTipsTest (PigeonTestFramework):
 
         assert_equal (tips[1]['branchlen'], 10)
         assert_equal (tips[1]['status'], 'valid-fork')
+        # We already checked that the long tip is the active one,
+        # update data to verify that the short tip matches the expected one.
         tips[1]['branchlen'] = 0
         tips[1]['status'] = 'active'
+        tips[1]['forkpoint'] = tips[1]['hash']
         assert_equal (tips[1], shortTip)
 
 if __name__ == '__main__':

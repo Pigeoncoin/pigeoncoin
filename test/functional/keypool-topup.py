@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # Copyright (c) 2017 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test HD Wallet keypool restore function.
@@ -12,19 +11,21 @@ Two nodes. Node1 is under test. Node0 is providing transactions and generating b
 - Stop node1, clear the datadir, move wallet file back into the datadir and restart node1.
 - connect node1 to node0. Verify that they sync and node1 receives its funds."""
 import shutil
+import sys
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     connect_nodes_bi,
     sync_blocks,
 )
 
-class KeypoolRestoreTest(PigeonTestFramework):
+class KeypoolRestoreTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
-        self.extra_args = [[], ['-keypool=100', '-keypoolmin=20']]
+        self.extra_args = [['-usehd=0'], ['-usehd=1', '-keypool=100', '-keypoolmin=20']]
+        self.stderr = sys.stdout
 
     def run_test(self):
         self.tmpdir = self.options.tmpdir
@@ -69,7 +70,7 @@ class KeypoolRestoreTest(PigeonTestFramework):
         assert_equal(self.nodes[1].listtransactions()[0]['category'], "receive")
 
         # Check that we have marked all keys up to the used keypool key as used
-        assert_equal(self.nodes[1].validateaddress(self.nodes[1].getnewaddress())['hdkeypath'], "m/0'/0'/110'")
+        assert_equal(self.nodes[1].validateaddress(self.nodes[1].getnewaddress())['hdkeypath'], "m/44'/1'/0'/0/111")
 
 if __name__ == '__main__':
     KeypoolRestoreTest().main()

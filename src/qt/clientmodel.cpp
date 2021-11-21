@@ -1,5 +1,5 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2019 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,6 +20,11 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "warnings.h"
+
+#include "masternode/masternode-sync.h"
+#include "privatesend/privatesend.h"
+
+#include "llmq/quorums_instantsend.h"
 
 #include <stdint.h>
 
@@ -68,6 +73,28 @@ int ClientModel::getNumConnections(unsigned int flags) const
     if(g_connman)
          return g_connman->GetNodeCount(connections);
     return 0;
+}
+
+void ClientModel::setMasternodeList(const CDeterministicMNList& mnList)
+{
+    LOCK(cs_mnlinst);
+    if (mnListCached.GetBlockHash() == mnList.GetBlockHash()) {
+        return;
+    }
+    mnListCached = mnList;
+    Q_EMIT masternodeListChanged();
+}
+
+CDeterministicMNList ClientModel::getMasternodeList() const
+{
+    LOCK(cs_mnlinst);
+    return mnListCached;
+}
+
+void ClientModel::refreshMasternodeList()
+{
+    LOCK(cs_mnlinst);
+    setMasternodeList(deterministicMNManager->GetListAtChainTip());
 }
 
 int ClientModel::getNumBlocks() const
@@ -136,6 +163,14 @@ size_t ClientModel::getMempoolDynamicUsage() const
     return mempool.DynamicMemoryUsage();
 }
 
+size_t ClientModel::getInstantSentLockCount() const
+{
+    if (!llmq::quorumInstantSendManager) {
+        return 0;
+    }
+    return llmq::quorumInstantSendManager->GetInstantSendLockCount();
+}
+
 double ClientModel::getVerificationProgress(const CBlockIndex *tipIn) const
 {
     CBlockIndex *tip = const_cast<CBlockIndex *>(tipIn);
@@ -152,6 +187,7 @@ void ClientModel::updateTimer()
     // no locking required at this point
     // the following calls will acquire the required lock
     Q_EMIT mempoolSizeChanged(getMempoolSize(), getMempoolDynamicUsage());
+    Q_EMIT islockCountChanged(getInstantSentLockCount());
     Q_EMIT bytesChanged(getTotalBytesRecv(), getTotalBytesSent());
 }
 
@@ -314,6 +350,17 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, const CB
     }
 }
 
+static void NotifyMasternodeListChanged(ClientModel *clientmodel, const CDeterministicMNList& newList)
+{
+    clientmodel->setMasternodeList(newList);
+}
+
+static void NotifyAdditionalDataSyncProgressChanged(ClientModel *clientmodel, double nSyncProgress)
+{
+    QMetaObject::invokeMethod(clientmodel, "additionalDataSyncProgressChanged", Qt::QueuedConnection,
+                              Q_ARG(double, nSyncProgress));
+}
+
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
@@ -324,6 +371,8 @@ void ClientModel::subscribeToCoreSignals()
     uiInterface.BannedListChanged.connect(boost::bind(BannedListChanged, this));
     uiInterface.NotifyBlockTip.connect(boost::bind(BlockTipChanged, this, _1, _2, false));
     uiInterface.NotifyHeaderTip.connect(boost::bind(BlockTipChanged, this, _1, _2, true));
+    uiInterface.NotifyMasternodeListChanged.connect(boost::bind(NotifyMasternodeListChanged, this, _1));
+    uiInterface.NotifyAdditionalDataSyncProgressChanged.connect(boost::bind(NotifyAdditionalDataSyncProgressChanged, this, _1));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -336,4 +385,6 @@ void ClientModel::unsubscribeFromCoreSignals()
     uiInterface.BannedListChanged.disconnect(boost::bind(BannedListChanged, this));
     uiInterface.NotifyBlockTip.disconnect(boost::bind(BlockTipChanged, this, _1, _2, false));
     uiInterface.NotifyHeaderTip.disconnect(boost::bind(BlockTipChanged, this, _1, _2, true));
+    uiInterface.NotifyMasternodeListChanged.disconnect(boost::bind(NotifyMasternodeListChanged, this, _1));
+    uiInterface.NotifyAdditionalDataSyncProgressChanged.disconnect(boost::bind(NotifyAdditionalDataSyncProgressChanged, this, _1));
 }

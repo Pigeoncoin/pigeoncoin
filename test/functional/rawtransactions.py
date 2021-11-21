@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test the rawtransaction RPCs.
+"""Test the rawtranscation RPCs.
 
 Test the following RPCs:
    - createrawtransaction
@@ -13,11 +12,11 @@ Test the following RPCs:
    - getrawtransaction
 """
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 # Create one-input, one-output, no-fee transaction:
-class RawTransactionsTest(PigeonTestFramework):
+class RawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
@@ -62,11 +61,12 @@ class RawTransactionsTest(PigeonTestFramework):
         addr2Obj = self.nodes[2].validateaddress(addr2)
 
         mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])
+        mSigObjValid = self.nodes[2].validateaddress(mSigObj)
 
         #use balance deltas instead of absolute values
         bal = self.nodes[2].getbalance()
 
-        # send 1.2 PGN to msig adr
+        # send 1.2 BTC to msig adr
         txId = self.nodes[0].sendtoaddress(mSigObj, 1.2)
         self.sync_all()
         self.nodes[0].generate(1)
@@ -85,6 +85,7 @@ class RawTransactionsTest(PigeonTestFramework):
         addr3Obj = self.nodes[2].validateaddress(addr3)
 
         mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey']])
+        mSigObjValid = self.nodes[2].validateaddress(mSigObj)
 
         txId = self.nodes[0].sendtoaddress(mSigObj, 2.2)
         decTx = self.nodes[0].gettransaction(txId)
@@ -119,7 +120,7 @@ class RawTransactionsTest(PigeonTestFramework):
         self.sync_all()
         self.nodes[0].generate(1)
         self.sync_all()
-        assert_equal(self.nodes[0].getbalance(), bal+Decimal('5000.00000000')+Decimal('2.19000000')) #block reward + tx
+        assert_equal(self.nodes[0].getbalance(), bal+Decimal('500.00000000')+Decimal('2.19000000')) #block reward + tx
 
         # 2of2 test for combining transactions
         bal = self.nodes[2].getbalance()
@@ -168,11 +169,11 @@ class RawTransactionsTest(PigeonTestFramework):
         self.sync_all()
         self.nodes[0].generate(1)
         self.sync_all()
-        assert_equal(self.nodes[0].getbalance(), bal+Decimal('5000.00000000')+Decimal('2.19000000')) #block reward + tx
+        assert_equal(self.nodes[0].getbalance(), bal+Decimal('500.00000000')+Decimal('2.19000000')) #block reward + tx
 
         # getrawtransaction tests
         # 1. valid parameters - only supply txid
-        txHash = rawTx["hash"]
+        txHash = rawTx["txid"]
         assert_equal(self.nodes[0].getrawtransaction(txHash), rawTxSigned['hex'])
 
         # 2. valid parameters - supply txid and 0 for non-verbose
