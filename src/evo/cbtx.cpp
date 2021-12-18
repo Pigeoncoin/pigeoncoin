@@ -1,4 +1,5 @@
-// Copyright (c) 2017-2019 The Pigeon Core developers
+// Copyright (c) 2017-2019 The Dash Core developers
+// Copyright (c) 2021-2022 The Pigeoncoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -39,7 +40,8 @@ bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidatio
     }
 
     if (pindexPrev) {
-        bool fDIP0008Active = VersionBitsState(pindexPrev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0008, versionbitscache) == THRESHOLD_ACTIVE;
+    	int nHeight = chainActive.Tip() ? chainActive.Tip()->nHeight : 0;
+        bool fDIP0008Active = nHeight >= Params().GetConsensus().DIP0008Height;
         if (fDIP0008Active && cbTx.nVersion < 2) {
             return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-version");
         }

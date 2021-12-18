@@ -1,4 +1,5 @@
-// Copyright (c) 2019 The Pigeon Core developers
+// Copyright (c) 2019 The Dash Core developers
+// Copyright (c) 2021-2022 The Pigeoncoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -220,7 +221,8 @@ void CChainLocksHandler::CheckActiveState()
     bool fDIP0008Active;
     {
         LOCK(cs_main);
-        fDIP0008Active = VersionBitsState(chainActive.Tip()->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0008, versionbitscache) == THRESHOLD_ACTIVE;
+        int nHeight = chainActive.Tip() ? chainActive.Tip()->nHeight : 0;
+        fDIP0008Active = nHeight >= Params().GetConsensus().DIP0008Height;
     }
 
     LOCK(cs);

@@ -117,6 +117,7 @@ test/cache/*
 .cproject
 .project
 .autotools
+.settings/
 /doc/doxygen/
 
 libpigeonconsensus.pc

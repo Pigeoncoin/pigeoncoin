@@ -1,6 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2019 The Pigeon Core developers
+// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2021-2022 The Pigeoncoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -140,7 +141,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     nHeight = pindexPrev->nHeight + 1;
 
     bool fDIP0003Active_context = nHeight >= chainparams.GetConsensus().DIP0003Height;
-    bool fDIP0008Active_context = VersionBitsState(chainActive.Tip(), chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0008, versionbitscache) == THRESHOLD_ACTIVE;
+    bool fDIP0008Active_context = nHeight >= chainparams.GetConsensus().DIP0008Height;
 
     pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus(), chainparams.BIP9CheckMasternodesUpgraded());
     // -regtest only: allow overriding block.nVersion with

@@ -1,4 +1,5 @@
-// Copyright (c) 2017-2020 The Pigeon Core developers
+// Copyright (c) 2017-2020 The Dash Core developers
+// Copyright (c) 2021-2022 The Pigeoncoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 

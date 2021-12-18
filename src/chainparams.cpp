@@ -1,6 +1,7 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin Core developers
-// Copyright (c) 2014-2020 The Pigeon Core developers
+// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2021-2022 The Pigeoncoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -233,7 +234,7 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 2100000; // Note: actual number of blocks per calendar year with DGW v3 is ~200700 (for example 449750 - 249050)
-        consensus.nMasternodePaymentsStartBlock = 2000000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
+        consensus.nMasternodePaymentsStartBlock = 1986540; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 2058000; // actual historical value
         consensus.nMasternodePaymentsIncreasePeriod = 576*30; // 17280 - actual historical value
         consensus.nInstantSendConfirmationsRequired = 6;
@@ -251,10 +252,11 @@ public:
         consensus.BIP34Hash = uint256S("0x000000bf3ab765e3f2c75ae426539633e5f94af22b94c7da67652a1d3f6e770b");
         consensus.BIP65Height = 1;
         consensus.BIP66Height = 1;
-        consensus.DIP0001Height = 2010000;
-        consensus.DIP0003Height = 2047579;
-        consensus.DIP0003EnforcementHeight = 2150000;
+        consensus.DIP0001Height = 1966380;
+        consensus.DIP0003Height = 1966380;
+        consensus.DIP0003EnforcementHeight = 1946218;
         consensus.DIP0003EnforcementHash = uint256S("0x00");
+        consensus.DIP0008Height = 1966380;
         consensus.nAfterExploitHeight = 186803;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetSpacing = 1 * 60; // PGN 1min
@@ -431,6 +433,7 @@ public:
         consensus.DIP0003EnforcementHeight = 15002;
         consensus.DIP0003EnforcementHash = uint256S("0x00");
         consensus.nAfterExploitHeight = 0;
+        consensus.DIP0008Height = 49;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
         consensus.nPowTargetSpacing = 1 * 60; // 1 min
@@ -758,6 +761,7 @@ public:
         consensus.DIP0003Height = 432;
         consensus.DIP0003EnforcementHeight = 500;
         consensus.DIP0003EnforcementHash = uint256();
+        consensus.DIP0008Height = 432;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
         consensus.nPowTargetTimespan = 24 * 60 * 60; // Pigeon: 1 day
         consensus.nPowTargetSpacing = 2.5 * 60; // Pigeon: 2.5 minutes

@@ -1,4 +1,5 @@
-// Copyright (c) 2014-2019 The Pigeon Core developers
+// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2021-2022 The Pigeoncoin Core developers
 
 #include "governance/governance-validators.h"
 #include "utilstrencodings.h"

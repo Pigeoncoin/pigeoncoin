@@ -12,7 +12,7 @@ compileSource()
 
     echo "configure complete"
 
-    make $*
+    make -j10 $*
 
     echo "compile complete"
 
@@ -22,7 +22,7 @@ depends()
 {
     echo "depends not built, building now"
     cd depends/
-    make HOST=x86_64-w64-mingw32 -j4 $*
+    make HOST=x86_64-w64-mingw32 -j10 $*
     cd ..
 }
 if [ -d $PWD"/depends/x86_64-w64-mingw32/" ]
