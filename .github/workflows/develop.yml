@@ -1,11 +1,11 @@
-name: Continuous Integration on v1.18.xxxx
+name: Continuous Integration on develop
 on:
   push:
     branches:
-    - v1.18.xxxx
+    - develop
   pull_request:
     branches:
-    - v1.18.xxxx
+    - develop
 env:
   SOURCE_ARTIFACT: source
 jobs:
