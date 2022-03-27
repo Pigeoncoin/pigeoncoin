@@ -1,15 +1,11 @@
 // Copyright (c) 2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_WALLET_RPCWALLET_H
-#define PIGEON_WALLET_RPCWALLET_H
-
-#include <string>
+#ifndef BITCOIN_WALLET_RPCWALLET_H
+#define BITCOIN_WALLET_RPCWALLET_H
 
 class CRPCTable;
-class CWallet;
 class JSONRPCRequest;
 
 void RegisterWalletRPCCommands(CRPCTable &t);
@@ -26,4 +22,4 @@ std::string HelpRequiringPassphrase(CWallet *);
 void EnsureWalletIsUnlocked(CWallet *);
 bool EnsureWalletIsAvailable(CWallet *, bool avoidException);
 
-#endif //PIGEON_WALLET_RPCWALLET_H
+#endif //BITCOIN_WALLET_RPCWALLET_H

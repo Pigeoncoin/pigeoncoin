@@ -1,5 +1,4 @@
 // Copyright (c) 2012-2015 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,7 +27,7 @@ static void ResetArgs(const std::string& strArg)
     for (std::string& s : vecArg)
         vecChar.push_back(s.c_str());
 
-    gArgs.ParseParameters(vecChar.size(), vecChar.data());
+    gArgs.ParseParameters(vecChar.size(), &vecChar[0]);
 }
 
 BOOST_AUTO_TEST_CASE(boolarg)
@@ -126,7 +125,7 @@ BOOST_AUTO_TEST_CASE(intarg)
     BOOST_CHECK_EQUAL(gArgs.GetArg("-bar", 11), 0);
 }
 
-BOOST_AUTO_TEST_CASE(doubledash)
+BOOST_AUTO_TEST_CASE(doublepigeon)
 {
     ResetArgs("--foo");
     BOOST_CHECK_EQUAL(gArgs.GetBoolArg("-foo", false), true);

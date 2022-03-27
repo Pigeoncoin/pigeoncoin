@@ -1,5 +1,4 @@
-// Copyright (c) 2012-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2012-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +8,6 @@
 #include "clientversion.h"
 #include "key.h"
 #include "merkleblock.h"
-#include "primitives/block.h"
 #include "random.h"
 #include "serialize.h"
 #include "streams.h"
@@ -85,8 +83,8 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize_with_tweak)
 
 BOOST_AUTO_TEST_CASE(bloom_create_insert_key)
 {
-    std::string strSecret = std::string("5Kg1gnAjaLfKiwhhPpGS3QfRg2m6awQvaj98JCZBZQ5SuS2F15C");
-    CPigeonSecret vchSecret;
+    std::string strSecret = std::string("7sQb6QHALg4XyHsJHsSNXnEHGhZfzTTUPJXJqaqK7CavQkiL9Ms");
+    CBitcoinSecret vchSecret;
     BOOST_CHECK(vchSecret.SetString(strSecret));
 
     CKey key = vchSecret.GetKey();
@@ -156,8 +154,8 @@ BOOST_AUTO_TEST_CASE(bloom_match)
     COutPoint prevOutPoint(uint256S("0x90c122d70786e899529d71dbeba91ba216982fb6ba58f3bdaab65e73b7e9260b"), 0);
     {
         std::vector<unsigned char> data(32 + sizeof(unsigned int));
-        memcpy(data.data(), prevOutPoint.hash.begin(), 32);
-        memcpy(data.data()+32, &prevOutPoint.n, sizeof(unsigned int));
+        memcpy(&data[0], prevOutPoint.hash.begin(), 32);
+        memcpy(&data[32], &prevOutPoint.n, sizeof(unsigned int));
         filter.insert(data);
     }
     BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(tx), "Simple Bloom filter didn't match manually serialized COutPoint");
@@ -179,17 +177,122 @@ BOOST_AUTO_TEST_CASE(bloom_match)
     BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(tx), "Simple Bloom filter matched COutPoint for an output we didn't care about");
 }
 
+BOOST_AUTO_TEST_CASE(dip2_bloom_match)
+{
+    // ProRegTx from testnet (txid: 39a1339d9bf26de701345beecc5de75a690bc9533741a3dbe90f2fd88b8ed461)
+    CDataStream stream(ParseHex("0300010001c02142f16969d106f4cb144e17975bf9261b8e331354879c6d006e71494b3460000000006b483045022100d6eb9e25fc3215e6a4b5180a1957319d6658103566f0274452bd50d0eddedff202200824a00f582a29c9e3694d34e5525275cabd08c488a0c55b4350c6bfa4fb2cf8012102a8d6433a8f799a13d3495f4aa5b99bd288adca5f59e0c9609f15a221220241c5feffffff0121c89a3b000000001976a914e54445646929fac8b7d6c71715913af44324978488ac00000000fd12010100000000009b9054ff7839b940277b8eb8211570b2f16850ef729ee635e24d722fbc4a46230100000000000000000000000000ffffc6c74af14e1f891cbc8a94fa7fea64ca9994870dca0f75bbd0750efda51589f86e30cc2305e7388c01ce0309c19a182cf37bced97c7da72236f660c0a395e765e6e06962ecff5a69d7de359c348a574176c210c37a25d4ffd917866fb0a300001976a914e54445646929fac8b7d6c71715913af44324978488ac26d5a99c01521d1fca6299de576bae82f901fb56e4b797a945e876ac69068f36411f9cdb72a01b273a53bd916d8c90dd584bd3a1c01dd84fec84eb046f66a4e3b30d39ea3215293a035166b5072349ebc08efd30c2c73ebd023d920f1db0aef91a4e"), SER_DISK, CLIENT_VERSION);
+    CTransaction proregtx(deserialize, stream);
+    // ProUpServTx from testnet (txid: 0c9627a054784f207db34c311b06e8bb797c4a120a236dbb02b51268dd186d39)
+    stream = CDataStream(ParseHex("030002000161d48e8bd82f0fe9dba3413753c90b695ae75dccee5b3401e76df29b9d33a139000000006a473044022036dfd41268e3a387b909d9d1cf61e4d5e97b6b37d5951e82c4ca4fed419b4b6a02203777d818319897a11cf4cd8b4c6495c5c3a5f96fcad6d3a0596431b1146b53c6012102a8d6433a8f799a13d3495f4aa5b99bd288adca5f59e0c9609f15a221220241c5feffffff01a1c69a3b000000001976a914e54445646929fac8b7d6c71715913af44324978488ac00000000b5010061d48e8bd82f0fe9dba3413753c90b695ae75dccee5b3401e76df29b9d33a13900000000000000000000ffffc6c74af14e1f000ccf39b295938f4021fc16b23e4eedbd64a6c9a5aaae6bc9ca085db4bc29ff911612dc4544fc470415cdd4be5659fee6aa7d84c3572c712f5904b2e5d38cb217762717d88e4e1a956a9e82ce132e2b9b144e26cb3ff1e53675ede2769d99f46796ea0b8cbf33b78c15fe9a437dc4d1131ce2af8fd2ed5b306b326f9fcffcd416"), SER_DISK, CLIENT_VERSION);
+    CTransaction proupservtx(deserialize, stream);
+    // ProUpRegTx from testnet (txid: 3037bf4e45d1a9d57891ea8baa72b38ad6323bd28945b11325bdd33ebea049b3)
+    stream = CDataStream(ParseHex("0300030001396d18dd6812b502bb6d230a124a7c79bbe8061b314cb37d204f7854a027960c000000006a47304402203aefa0e1a08469050edc1e5da6e24f783162bebc15cc006f717097e56e07fa0b02207c7f47d113355b095c7edd2408d0554aa6b87187bf95652c516fc7747720fb19012102a8d6433a8f799a13d3495f4aa5b99bd288adca5f59e0c9609f15a221220241c5feffffff01f2c49a3b000000001976a914e54445646929fac8b7d6c71715913af44324978488ac00000000e4010061d48e8bd82f0fe9dba3413753c90b695ae75dccee5b3401e76df29b9d33a13900000efda51589f86e30cc2305e7388c01ce0309c19a182cf37bced97c7da72236f660c0a395e765e6e06962ecff5a69d7de359c348a574176c210c37a25d4ffd917866fb0a31976a914e54445646929fac8b7d6c71715913af44324978488aca8141db635af714f32c7415b298937e171c6bb8a3c8627852ae2b69917ece86a411fa51861025bb5ff4ba4ad3be6090c4ba76b1671d70799ed6882c57bcfeaf27cbd558068e9b5fc1553abce8822fcee63e8f6fbb06ad5b753d47e794bfacadbde3f"), SER_DISK, CLIENT_VERSION);
+    CTransaction proupregtx(deserialize, stream);
+    // ProUpRevTx from testnet (txid: 70c41a5fea07a80c1297771c43eb58b8f52222b971f61f5c7c2030ec0baf7f9a)
+    stream = CDataStream(ParseHex("0300040001b349a0be3ed3bd2513b14589d23b32d68ab372aa8bea9178d5a9d1454ebf3730000000006a4730440220428d87daf3b0ddca9656d59592000f9930a88162c0b017ca460c69c33b76bda202200276a521d94acc57e010262aa1d7d016cebbe7a9806d26dbebb69102ce9cf7b2012102a8d6433a8f799a13d3495f4aa5b99bd288adca5f59e0c9609f15a221220241c5feffffff0183c39a3b000000001976a914e54445646929fac8b7d6c71715913af44324978488ac00000000a4010061d48e8bd82f0fe9dba3413753c90b695ae75dccee5b3401e76df29b9d33a1390000c024ffd34d15686f7a376ecdf45800ddcebf4eb966fd3123cf9450515a38881a0de852c97297bbd9cedb79280f3f1e31b092904a8870274a5a0e52de2ae1dc0bad74851dc0a1e4fe4c274535a2422d3e1510a7be2fbecaae73128e8eb2f336382fb376d2f82273a72960980972b02e3ecf895c00187e0cbe735dc44cb3d97711"), SER_DISK, CLIENT_VERSION);
+    CTransaction prouprevtx(deserialize, stream);
+
+    // check collateral outpoint match in ProRegTx
+    CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
+    filter.insert(COutPoint(uint256S("0x23464abc2f724de235e69e72ef5068f1b2701521b88e7b2740b93978ff54909b"), 1));
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proregtx), "Bloom filter didn't match collateral outpoint in ProRegTx");
+    // check owner keyid match in ProRegTx
+    filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
+    filter.insert(ParseHex("891cbc8a94fa7fea64ca9994870dca0f75bbd075"));
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proregtx), "Bloom filter didn't match Owner keyid in ProRegTx");
+    // check voting keyid match in ProRegTx
+    filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
+    filter.insert(ParseHex("359c348a574176c210c37a25d4ffd917866fb0a3"));
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proregtx), "Bloom filter didn't match Voting keyid in ProRegTx");
+    // check scriptPayout match in ProRegTx
+    filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
+    filter.insert(ParseHex("e54445646929fac8b7d6c71715913af443249784"));
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proregtx), "Bloom filter didn't match scriptPayout in ProRegTx");
+
+    // check proTxHash match in ProUpServTx
+    filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
+    filter.insert(uint256S("0x39a1339d9bf26de701345beecc5de75a690bc9533741a3dbe90f2fd88b8ed461"));
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proupservtx), "Bloom filter didn't match proTxHash in ProUpServTx");
+    // check scriptOperatorPayout match in ProUpServTx
+    filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
+    filter.insert(ParseHex("e54445646929fac8b7d6c71715913af443249784"));
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proupservtx), "Bloom filter didn't match scriptOperatorPayout in ProUpServTx");
+
+    // check proTxHash match in ProUpRegTx
+    filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
+    filter.insert(uint256S("0x39a1339d9bf26de701345beecc5de75a690bc9533741a3dbe90f2fd88b8ed461"));
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proupregtx), "Bloom filter didn't match proTxHash in ProUpRegTx");
+    // check voting keyid match in ProUpRegTx
+    filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
+    filter.insert(ParseHex("359c348a574176c210c37a25d4ffd917866fb0a3"));
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proupregtx), "Bloom filter didn't match Voting keyid in ProUpRegTx");
+    // check scriptPayout match in ProUpRegTx
+    filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
+    filter.insert(ParseHex("e54445646929fac8b7d6c71715913af443249784"));
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proupregtx), "Bloom filter didn't match scriptPayout in ProUpRegTx");
+
+    // check proTxHash match in ProUpRevTx
+    filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
+    filter.insert(uint256S("0x39a1339d9bf26de701345beecc5de75a690bc9533741a3dbe90f2fd88b8ed461"));
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(prouprevtx), "Bloom filter didn't match proTxHash in ProUpRevTx");
+
+    // check filter is not matching if it doesn't contain relative data
+    filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
+    // extend real data with additional byte
+    filter.insert(uint256S("0x39a1339d9bf26de701345beecc5de75a690bc9533741a3dbe90f2fd88b8ed46100"));
+    filter.insert(ParseHex("e54445646929fac8b7d6c71715913af44324978400"));
+    filter.insert(ParseHex("359c348a574176c210c37a25d4ffd917866fb0a300"));
+    filter.insert(uint256S("0x39a1339d9bf26de701345beecc5de75a690bc9533741a3dbe90f2fd88b8ed46100"));
+    BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(prouprevtx), "Bloom filter match unrelated data");
+    BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(proupregtx), "Bloom filter match unrelated data");
+}
+
+BOOST_AUTO_TEST_CASE(dip2_bloom_update)
+{
+    // ProRegTx from testnet (txid: 39a1339d9bf26de701345beecc5de75a690bc9533741a3dbe90f2fd88b8ed461)
+    CDataStream stream(ParseHex("0300010001c02142f16969d106f4cb144e17975bf9261b8e331354879c6d006e71494b3460000000006b483045022100d6eb9e25fc3215e6a4b5180a1957319d6658103566f0274452bd50d0eddedff202200824a00f582a29c9e3694d34e5525275cabd08c488a0c55b4350c6bfa4fb2cf8012102a8d6433a8f799a13d3495f4aa5b99bd288adca5f59e0c9609f15a221220241c5feffffff0121c89a3b000000001976a914e54445646929fac8b7d6c71715913af44324978488ac00000000fd12010100000000009b9054ff7839b940277b8eb8211570b2f16850ef729ee635e24d722fbc4a46230100000000000000000000000000ffffc6c74af14e1f891cbc8a94fa7fea64ca9994870dca0f75bbd0750efda51589f86e30cc2305e7388c01ce0309c19a182cf37bced97c7da72236f660c0a395e765e6e06962ecff5a69d7de359c348a574176c210c37a25d4ffd917866fb0a300001976a914e54445646929fac8b7d6c71715913af44324978488ac26d5a99c01521d1fca6299de576bae82f901fb56e4b797a945e876ac69068f36411f9cdb72a01b273a53bd916d8c90dd584bd3a1c01dd84fec84eb046f66a4e3b30d39ea3215293a035166b5072349ebc08efd30c2c73ebd023d920f1db0aef91a4e"), SER_DISK, CLIENT_VERSION);
+    CTransaction proregtx(deserialize, stream);
+    // ProUpServTx from testnet (txid: 0c9627a054784f207db34c311b06e8bb797c4a120a236dbb02b51268dd186d39)
+    stream = CDataStream(ParseHex("030002000161d48e8bd82f0fe9dba3413753c90b695ae75dccee5b3401e76df29b9d33a139000000006a473044022036dfd41268e3a387b909d9d1cf61e4d5e97b6b37d5951e82c4ca4fed419b4b6a02203777d818319897a11cf4cd8b4c6495c5c3a5f96fcad6d3a0596431b1146b53c6012102a8d6433a8f799a13d3495f4aa5b99bd288adca5f59e0c9609f15a221220241c5feffffff01a1c69a3b000000001976a914e54445646929fac8b7d6c71715913af44324978488ac00000000b5010061d48e8bd82f0fe9dba3413753c90b695ae75dccee5b3401e76df29b9d33a13900000000000000000000ffffc6c74af14e1f000ccf39b295938f4021fc16b23e4eedbd64a6c9a5aaae6bc9ca085db4bc29ff911612dc4544fc470415cdd4be5659fee6aa7d84c3572c712f5904b2e5d38cb217762717d88e4e1a956a9e82ce132e2b9b144e26cb3ff1e53675ede2769d99f46796ea0b8cbf33b78c15fe9a437dc4d1131ce2af8fd2ed5b306b326f9fcffcd416"), SER_DISK, CLIENT_VERSION);
+    CTransaction proupservtx(deserialize, stream);
+    // ProUpRegTx from testnet (txid: 3037bf4e45d1a9d57891ea8baa72b38ad6323bd28945b11325bdd33ebea049b3)
+    stream = CDataStream(ParseHex("0300030001396d18dd6812b502bb6d230a124a7c79bbe8061b314cb37d204f7854a027960c000000006a47304402203aefa0e1a08469050edc1e5da6e24f783162bebc15cc006f717097e56e07fa0b02207c7f47d113355b095c7edd2408d0554aa6b87187bf95652c516fc7747720fb19012102a8d6433a8f799a13d3495f4aa5b99bd288adca5f59e0c9609f15a221220241c5feffffff01f2c49a3b000000001976a914e54445646929fac8b7d6c71715913af44324978488ac00000000e4010061d48e8bd82f0fe9dba3413753c90b695ae75dccee5b3401e76df29b9d33a13900000efda51589f86e30cc2305e7388c01ce0309c19a182cf37bced97c7da72236f660c0a395e765e6e06962ecff5a69d7de359c348a574176c210c37a25d4ffd917866fb0a31976a914e54445646929fac8b7d6c71715913af44324978488aca8141db635af714f32c7415b298937e171c6bb8a3c8627852ae2b69917ece86a411fa51861025bb5ff4ba4ad3be6090c4ba76b1671d70799ed6882c57bcfeaf27cbd558068e9b5fc1553abce8822fcee63e8f6fbb06ad5b753d47e794bfacadbde3f"), SER_DISK, CLIENT_VERSION);
+    CTransaction proupregtx(deserialize, stream);
+    // ProUpRevTx from testnet (txid: 70c41a5fea07a80c1297771c43eb58b8f52222b971f61f5c7c2030ec0baf7f9a)
+    stream = CDataStream(ParseHex("0300040001b349a0be3ed3bd2513b14589d23b32d68ab372aa8bea9178d5a9d1454ebf3730000000006a4730440220428d87daf3b0ddca9656d59592000f9930a88162c0b017ca460c69c33b76bda202200276a521d94acc57e010262aa1d7d016cebbe7a9806d26dbebb69102ce9cf7b2012102a8d6433a8f799a13d3495f4aa5b99bd288adca5f59e0c9609f15a221220241c5feffffff0183c39a3b000000001976a914e54445646929fac8b7d6c71715913af44324978488ac00000000a4010061d48e8bd82f0fe9dba3413753c90b695ae75dccee5b3401e76df29b9d33a1390000c024ffd34d15686f7a376ecdf45800ddcebf4eb966fd3123cf9450515a38881a0de852c97297bbd9cedb79280f3f1e31b092904a8870274a5a0e52de2ae1dc0bad74851dc0a1e4fe4c274535a2422d3e1510a7be2fbecaae73128e8eb2f336382fb376d2f82273a72960980972b02e3ecf895c00187e0cbe735dc44cb3d97711"), SER_DISK, CLIENT_VERSION);
+    CTransaction prouprevtx(deserialize, stream);
+
+    // if ProRegTx matches, all related pro txes match too
+    CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
+    filter.insert(COutPoint(uint256S("0x23464abc2f724de235e69e72ef5068f1b2701521b88e7b2740b93978ff54909b"), 1));
+    BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(proupservtx), "Bloom filter matches without update");
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proregtx), "Bloom filter didn't match collateral outpoint in ProRegTx");
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proupservtx), "Bloom filter wasn't updated with proregtx hash");
+
+    // if ProUpRegTx matches, all related pro txes match too
+    filter = CBloomFilter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
+    filter.insert(ParseHex("359c348a574176c210c37a25d4ffd917866fb0a3"));
+    BOOST_CHECK_MESSAGE(!filter.IsRelevantAndUpdate(proupservtx), "Bloom filter matches without update");
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proupregtx), "Bloom filter didn't match Voting keyid in ProUpRegTx");
+    BOOST_CHECK_MESSAGE(filter.IsRelevantAndUpdate(proupservtx), "Bloom filter wasn't updated with proregtx hash");
+}
+
 BOOST_AUTO_TEST_CASE(merkle_block_1)
 {
-    CBlock block = getBlock13b8a();
+    // Random real block (0000000000013b8ab2cd513b0261a14096412195a72a0c4827d229dcc7e0f7af)
+    // With 9 txes
+    CBlock block;
+    CDataStream stream(ParseHex("0100000090f0a9f110702f808219ebea1173056042a714bad51b916cb6800000000000005275289558f51c9966699404ae2294730c3c9f9bda53523ce50e9b95e558da2fdb261b4d4c86041b1ab1bf930901000000010000000000000000000000000000000000000000000000000000000000000000ffffffff07044c86041b0146ffffffff0100f2052a01000000434104e18f7afbe4721580e81e8414fc8c24d7cfacf254bb5c7b949450c3e997c2dc1242487a8169507b631eb3771f2b425483fb13102c4eb5d858eef260fe70fbfae0ac00000000010000000196608ccbafa16abada902780da4dc35dafd7af05fa0da08cf833575f8cf9e836000000004a493046022100dab24889213caf43ae6adc41cf1c9396c08240c199f5225acf45416330fd7dbd022100fe37900e0644bf574493a07fc5edba06dbc07c311b947520c2d514bc5725dcb401ffffffff0100f2052a010000001976a914f15d1921f52e4007b146dfa60f369ed2fc393ce288ac000000000100000001fb766c1288458c2bafcfec81e48b24d98ec706de6b8af7c4e3c29419bfacb56d000000008c493046022100f268ba165ce0ad2e6d93f089cfcd3785de5c963bb5ea6b8c1b23f1ce3e517b9f022100da7c0f21adc6c401887f2bfd1922f11d76159cbc597fbd756a23dcbb00f4d7290141042b4e8625a96127826915a5b109852636ad0da753c9e1d5606a50480cd0c40f1f8b8d898235e571fe9357d9ec842bc4bba1827daaf4de06d71844d0057707966affffffff0280969800000000001976a9146963907531db72d0ed1a0cfb471ccb63923446f388ac80d6e34c000000001976a914f0688ba1c0d1ce182c7af6741e02658c7d4dfcd388ac000000000100000002c40297f730dd7b5a99567eb8d27b78758f607507c52292d02d4031895b52f2ff010000008b483045022100f7edfd4b0aac404e5bab4fd3889e0c6c41aa8d0e6fa122316f68eddd0a65013902205b09cc8b2d56e1cd1f7f2fafd60a129ed94504c4ac7bdc67b56fe67512658b3e014104732012cb962afa90d31b25d8fb0e32c94e513ab7a17805c14ca4c3423e18b4fb5d0e676841733cb83abaf975845c9f6f2a8097b7d04f4908b18368d6fc2d68ecffffffffca5065ff9617cbcba45eb23726df6498a9b9cafed4f54cbab9d227b0035ddefb000000008a473044022068010362a13c7f9919fa832b2dee4e788f61f6f5d344a7c2a0da6ae740605658022006d1af525b9a14a35c003b78b72bd59738cd676f845d1ff3fc25049e01003614014104732012cb962afa90d31b25d8fb0e32c94e513ab7a17805c14ca4c3423e18b4fb5d0e676841733cb83abaf975845c9f6f2a8097b7d04f4908b18368d6fc2d68ecffffffff01001ec4110200000043410469ab4181eceb28985b9b4e895c13fa5e68d85761b7eee311db5addef76fa8621865134a221bd01f28ec9999ee3e021e60766e9d1f3458c115fb28650605f11c9ac000000000100000001cdaf2f758e91c514655e2dc50633d1e4c84989f8aa90a0dbc883f0d23ed5c2fa010000008b48304502207ab51be6f12a1962ba0aaaf24a20e0b69b27a94fac5adf45aa7d2d18ffd9236102210086ae728b370e5329eead9accd880d0cb070aea0c96255fae6c4f1ddcce1fd56e014104462e76fd4067b3a0aa42070082dcb0bf2f388b6495cf33d789904f07d0f55c40fbd4b82963c69b3dc31895d0c772c812b1d5fbcade15312ef1c0e8ebbb12dcd4ffffffff02404b4c00000000001976a9142b6ba7c9d796b75eef7942fc9288edd37c32f5c388ac002d3101000000001976a9141befba0cdc1ad56529371864d9f6cb042faa06b588ac000000000100000001b4a47603e71b61bc3326efd90111bf02d2f549b067f4c4a8fa183b57a0f800cb010000008a4730440220177c37f9a505c3f1a1f0ce2da777c339bd8339ffa02c7cb41f0a5804f473c9230220585b25a2ee80eb59292e52b987dad92acb0c64eced92ed9ee105ad153cdb12d001410443bd44f683467e549dae7d20d1d79cbdb6df985c6e9c029c8d0c6cb46cc1a4d3cf7923c5021b27f7a0b562ada113bc85d5fda5a1b41e87fe6e8802817cf69996ffffffff0280651406000000001976a9145505614859643ab7b547cd7f1f5e7e2a12322d3788ac00aa0271000000001976a914ea4720a7a52fc166c55ff2298e07baf70ae67e1b88ac00000000010000000586c62cd602d219bb60edb14a3e204de0705176f9022fe49a538054fb14abb49e010000008c493046022100f2bc2aba2534becbdf062eb993853a42bbbc282083d0daf9b4b585bd401aa8c9022100b1d7fd7ee0b95600db8535bbf331b19eed8d961f7a8e54159c53675d5f69df8c014104462e76fd4067b3a0aa42070082dcb0bf2f388b6495cf33d789904f07d0f55c40fbd4b82963c69b3dc31895d0c772c812b1d5fbcade15312ef1c0e8ebbb12dcd4ffffffff03ad0e58ccdac3df9dc28a218bcf6f1997b0a93306faaa4b3a28ae83447b2179010000008b483045022100be12b2937179da88599e27bb31c3525097a07cdb52422d165b3ca2f2020ffcf702200971b51f853a53d644ebae9ec8f3512e442b1bcb6c315a5b491d119d10624c83014104462e76fd4067b3a0aa42070082dcb0bf2f388b6495cf33d789904f07d0f55c40fbd4b82963c69b3dc31895d0c772c812b1d5fbcade15312ef1c0e8ebbb12dcd4ffffffff2acfcab629bbc8685792603762c921580030ba144af553d271716a95089e107b010000008b483045022100fa579a840ac258871365dd48cd7552f96c8eea69bd00d84f05b283a0dab311e102207e3c0ee9234814cfbb1b659b83671618f45abc1326b9edcc77d552a4f2a805c0014104462e76fd4067b3a0aa42070082dcb0bf2f388b6495cf33d789904f07d0f55c40fbd4b82963c69b3dc31895d0c772c812b1d5fbcade15312ef1c0e8ebbb12dcd4ffffffffdcdc6023bbc9944a658ddc588e61eacb737ddf0a3cd24f113b5a8634c517fcd2000000008b4830450221008d6df731df5d32267954bd7d2dda2302b74c6c2a6aa5c0ca64ecbabc1af03c75022010e55c571d65da7701ae2da1956c442df81bbf076cdbac25133f99d98a9ed34c014104462e76fd4067b3a0aa42070082dcb0bf2f388b6495cf33d789904f07d0f55c40fbd4b82963c69b3dc31895d0c772c812b1d5fbcade15312ef1c0e8ebbb12dcd4ffffffffe15557cd5ce258f479dfd6dc6514edf6d7ed5b21fcfa4a038fd69f06b83ac76e010000008b483045022023b3e0ab071eb11de2eb1cc3a67261b866f86bf6867d4558165f7c8c8aca2d86022100dc6e1f53a91de3efe8f63512850811f26284b62f850c70ca73ed5de8771fb451014104462e76fd4067b3a0aa42070082dcb0bf2f388b6495cf33d789904f07d0f55c40fbd4b82963c69b3dc31895d0c772c812b1d5fbcade15312ef1c0e8ebbb12dcd4ffffffff01404b4c00000000001976a9142b6ba7c9d796b75eef7942fc9288edd37c32f5c388ac00000000010000000166d7577163c932b4f9690ca6a80b6e4eb001f0a2fa9023df5595602aae96ed8d000000008a4730440220262b42546302dfb654a229cefc86432b89628ff259dc87edd1154535b16a67e102207b4634c020a97c3e7bbd0d4d19da6aa2269ad9dded4026e896b213d73ca4b63f014104979b82d02226b3a4597523845754d44f13639e3bf2df5e82c6aab2bdc79687368b01b1ab8b19875ae3c90d661a3d0a33161dab29934edeb36aa01976be3baf8affffffff02404b4c00000000001976a9144854e695a02af0aeacb823ccbc272134561e0a1688ac40420f00000000001976a914abee93376d6b37b5c2940655a6fcaf1c8e74237988ac0000000001000000014e3f8ef2e91349a9059cb4f01e54ab2597c1387161d3da89919f7ea6acdbb371010000008c49304602210081f3183471a5ca22307c0800226f3ef9c353069e0773ac76bb580654d56aa523022100d4c56465bdc069060846f4fbf2f6b20520b2a80b08b168b31e66ddb9c694e240014104976c79848e18251612f8940875b2b08d06e6dc73b9840e8860c066b7e87432c477e9a59a453e71e6d76d5fe34058b800a098fc1740ce3012e8fc8a00c96af966ffffffff02c0e1e400000000001976a9144134e75a6fcb6042034aab5e18570cf1f844f54788ac404b4c00000000001976a9142b6ba7c9d796b75eef7942fc9288edd37c32f5c388ac00000000"), SER_NETWORK, PROTOCOL_VERSION);
+    stream >> block;
+
     CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
     // Match the last transaction
     filter.insert(uint256S("0x74d681e0e03bafa802c8aa084379aa98d9fcd632ddc2ed9782b586ec87451f20"));
 
     CMerkleBlock merkleBlock(block, filter);
-    BOOST_CHECK_EQUAL(merkleBlock.header.GetHash().GetHex(), block.GetHash().GetHex());
+    BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
-    BOOST_CHECK_EQUAL(merkleBlock.vMatchedTxn.size(), 1);
+    BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 1);
     std::pair<unsigned int, uint256> pair = merkleBlock.vMatchedTxn[0];
 
     BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256S("0x74d681e0e03bafa802c8aa084379aa98d9fcd632ddc2ed9782b586ec87451f20"));

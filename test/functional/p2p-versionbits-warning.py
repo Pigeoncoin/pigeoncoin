@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # Copyright (c) 2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test version bits warning system.
@@ -10,7 +9,7 @@ soft-forks, and test that warning alerts are generated.
 """
 
 from test_framework.mininode import *
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 import re
 from test_framework.blocktools import create_block, create_coinbase
@@ -28,7 +27,7 @@ class TestNode(NodeConnCB):
     def on_inv(self, conn, message):
         pass
 
-class VersionBitsWarningTest(PigeonTestFramework):
+class VersionBitsWarningTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -65,16 +64,12 @@ class VersionBitsWarningTest(PigeonTestFramework):
 
     def run_test(self):
         # Setup the p2p connection and start up the network thread.
-        test_node = TestNode()
+        self.nodes[0].add_p2p_connection(TestNode())
 
-        connections = []
-        connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_node))
-        test_node.add_connection(connections[0])
-
-        NetworkThread().start() # Start up network handling in another thread
+        network_thread_start()
 
         # Test logic begins here
-        test_node.wait_for_verack()
+        self.nodes[0].p2p.wait_for_verack()
 
         # 1. Have the node mine one period worth of blocks
         self.nodes[0].generate(VB_PERIOD)
@@ -82,26 +77,26 @@ class VersionBitsWarningTest(PigeonTestFramework):
         # 2. Now build one period of blocks on the tip, with < VB_THRESHOLD
         # blocks signaling some unknown bit.
         nVersion = VB_TOP_BITS | (1<<VB_UNKNOWN_BIT)
-        self.send_blocks_with_version(test_node, VB_THRESHOLD-1, nVersion)
+        self.send_blocks_with_version(self.nodes[0].p2p, VB_THRESHOLD-1, nVersion)
 
         # Fill rest of period with regular version blocks
         self.nodes[0].generate(VB_PERIOD - VB_THRESHOLD + 1)
         # Check that we're not getting any versionbit-related errors in
         # get*info()
         assert(not VB_PATTERN.match(self.nodes[0].getinfo()["errors"]))
-        assert(not VB_PATTERN.match(self.nodes[0].getmininginfo()["warnings"]))
+        assert(not VB_PATTERN.match(self.nodes[0].getmininginfo()["errors"]))
         assert(not VB_PATTERN.match(self.nodes[0].getnetworkinfo()["warnings"]))
 
         # 3. Now build one period of blocks with >= VB_THRESHOLD blocks signaling
         # some unknown bit
-        self.send_blocks_with_version(test_node, VB_THRESHOLD, nVersion)
+        self.send_blocks_with_version(self.nodes[0].p2p, VB_THRESHOLD, nVersion)
         self.nodes[0].generate(VB_PERIOD - VB_THRESHOLD)
         # Might not get a versionbits-related alert yet, as we should
         # have gotten a different alert due to more than 51/100 blocks
         # being of unexpected version.
         # Check that get*info() shows some kind of error.
         assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getinfo()["errors"])
-        assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getmininginfo()["warnings"])
+        assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getmininginfo()["errors"])
         assert(WARN_UNKNOWN_RULES_MINED in self.nodes[0].getnetworkinfo()["warnings"])
 
         # Mine a period worth of expected blocks so the generic block-version warning
@@ -114,10 +109,15 @@ class VersionBitsWarningTest(PigeonTestFramework):
             pass
         self.start_nodes()
 
+        # TODO this is a workaround. We have to wait for IBD to finish before we generate a block, as otherwise there
+        # won't be any warning generated. This workaround must be removed when we backport https://github.com/bitcoin/bitcoin/pull/12264
+        self.nodes[0].generate(1)
+        time.sleep(5)
+
         # Connecting one block should be enough to generate an error.
         self.nodes[0].generate(1)
         assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getinfo()["errors"])
-        assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getmininginfo()["warnings"])
+        assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getmininginfo()["errors"])
         assert(WARN_UNKNOWN_RULES_ACTIVE in self.nodes[0].getnetworkinfo()["warnings"])
         self.stop_nodes()
         self.test_versionbits_in_alert_file()

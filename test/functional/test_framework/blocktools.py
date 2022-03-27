@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 # Copyright (c) 2015-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Utilities for manipulating blocks and transactions."""
 
 from .mininode import *
-from .script import CScript, OP_TRUE, OP_CHECKSIG, OP_RETURN
+from .script import CScript, OP_TRUE, OP_CHECKSIG
 
 # Create a block (with regtest difficulty)
 def create_block(hashprev, coinbase, nTime=None):
@@ -22,34 +21,6 @@ def create_block(hashprev, coinbase, nTime=None):
     block.hashMerkleRoot = block.calc_merkle_root()
     block.calc_sha256()
     return block
-
-# From BIP141
-WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
-
-
-def get_witness_script(witness_root, witness_nonce):
-    witness_commitment = uint256_from_str(hash256(ser_uint256(witness_root)+ser_uint256(witness_nonce)))
-    output_data = WITNESS_COMMITMENT_HEADER + ser_uint256(witness_commitment)
-    return CScript([OP_RETURN, output_data])
-
-
-# According to BIP141, blocks with witness rules active must commit to the
-# hash of all in-block transactions including witness.
-def add_witness_commitment(block, nonce=0):
-    # First calculate the merkle root of the block's
-    # transactions, with witnesses.
-    witness_nonce = nonce
-    witness_root = block.calc_witness_merkle_root()
-    # witness_nonce should go to coinbase witness.
-    block.vtx[0].wit.vtxinwit = [CTxInWitness()]
-    block.vtx[0].wit.vtxinwit[0].scriptWitness.stack = [ser_uint256(witness_nonce)]
-
-    # witness commitment is the last OP_RETURN output in coinbase
-    block.vtx[0].vout.append(CTxOut(0, get_witness_script(witness_root, witness_nonce)))
-    block.vtx[0].rehash()
-    block.hashMerkleRoot = block.calc_merkle_root()
-    block.rehash()
-
 
 def serialize_script_num(value):
     r = bytearray(0)
@@ -69,19 +40,24 @@ def serialize_script_num(value):
 # Create a coinbase transaction, assuming no miner fees.
 # If pubkey is passed in, the coinbase output will be a P2PK output;
 # otherwise an anyone-can-spend output.
-def create_coinbase(height, pubkey = None):
+def create_coinbase(height, pubkey = None, dip4_activated=False):
     coinbase = CTransaction()
     coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff), 
                 ser_string(serialize_script_num(height)), 0xffffffff))
     coinbaseoutput = CTxOut()
-    coinbaseoutput.nValue = 5000 * COIN
-    halvings = int(height/240) # regtest
+    coinbaseoutput.nValue = 500 * COIN
+    halvings = int(height/150) # regtest
     coinbaseoutput.nValue >>= halvings
     if (pubkey != None):
         coinbaseoutput.scriptPubKey = CScript([pubkey, OP_CHECKSIG])
     else:
         coinbaseoutput.scriptPubKey = CScript([OP_TRUE])
     coinbase.vout = [ coinbaseoutput ]
+    if dip4_activated:
+        coinbase.nVersion = 3
+        coinbase.nType = 5
+        cbtx_payload = CCbTx(2, height, 0, 0)
+        coinbase.vExtraPayload = cbtx_payload.serialize()
     coinbase.calc_sha256()
     return coinbase
 
@@ -109,3 +85,31 @@ def get_legacy_sigopcount_tx(tx, fAccurate=True):
         # scriptSig might be of type bytes, so convert to CScript for the moment
         count += CScript(j.scriptSig).GetSigOpCount(fAccurate)
     return count
+
+# Identical to GetMasternodePayment in C++ code
+def get_masternode_payment(nHeight, blockValue):
+    ret = int(blockValue / 5)
+
+    nMNPIBlock = 350
+    nMNPIPeriod = 10
+
+    if nHeight > nMNPIBlock:
+        ret += int(blockValue / 20)
+    if nHeight > nMNPIBlock+(nMNPIPeriod* 1):
+        ret += int(blockValue / 20)
+    if nHeight > nMNPIBlock+(nMNPIPeriod* 2):
+        ret += int(blockValue / 20)
+    if nHeight > nMNPIBlock+(nMNPIPeriod* 3):
+        ret += int(blockValue / 40)
+    if nHeight > nMNPIBlock+(nMNPIPeriod* 4):
+        ret += int(blockValue / 40)
+    if nHeight > nMNPIBlock+(nMNPIPeriod* 5):
+        ret += int(blockValue / 40)
+    if nHeight > nMNPIBlock+(nMNPIPeriod* 6):
+        ret += int(blockValue / 40)
+    if nHeight > nMNPIBlock+(nMNPIPeriod* 7):
+        ret += int(blockValue / 40)
+    if nHeight > nMNPIBlock+(nMNPIPeriod* 9):
+        ret += int(blockValue / 40)
+
+    return ret

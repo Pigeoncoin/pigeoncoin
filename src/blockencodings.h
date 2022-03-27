@@ -1,10 +1,9 @@
 // Copyright (c) 2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_BLOCK_ENCODINGS_H
-#define PIGEON_BLOCK_ENCODINGS_H
+#ifndef BITCOIN_BLOCK_ENCODINGS_H
+#define BITCOIN_BLOCK_ENCODINGS_H
 
 #include "primitives/block.h"
 
@@ -17,7 +16,7 @@ struct TransactionCompressor {
 private:
     CTransactionRef& tx;
 public:
-    explicit TransactionCompressor(CTransactionRef& txIn) : tx(txIn) {}
+    TransactionCompressor(CTransactionRef& txIn) : tx(txIn) {}
 
     ADD_SERIALIZE_METHODS;
 
@@ -76,7 +75,7 @@ public:
     std::vector<CTransactionRef> txn;
 
     BlockTransactions() {}
-    explicit BlockTransactions(const BlockTransactionsRequest& req) :
+    BlockTransactions(const BlockTransactionsRequest& req) :
         blockhash(req.blockhash), txn(req.indexes.size()) {}
 
     ADD_SERIALIZE_METHODS;
@@ -149,7 +148,7 @@ public:
     // Dummy for deserialization
     CBlockHeaderAndShortTxIDs() {}
 
-    CBlockHeaderAndShortTxIDs(const CBlock& block, bool fUseWTXID);
+    CBlockHeaderAndShortTxIDs(const CBlock& block);
 
     uint64_t GetShortID(const uint256& txhash) const;
 
@@ -199,9 +198,9 @@ protected:
     CTxMemPool* pool;
 public:
     CBlockHeader header;
-    explicit PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
+    PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}
 
-    // extra_txn is a list of extra transactions to look at, in <witness hash, reference> form
+    // extra_txn is a list of extra transactions to look at, in <hash, reference> form
     ReadStatus InitData(const CBlockHeaderAndShortTxIDs& cmpctblock, const std::vector<std::pair<uint256, CTransactionRef>>& extra_txn);
     bool IsTxAvailable(size_t index) const;
     ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing);

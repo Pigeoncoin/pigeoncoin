@@ -10,14 +10,14 @@ can be found in the contrib/init folder.
     contrib/init/pigeond.conf:       Upstart service configuration file
     contrib/init/pigeond.init:       CentOS compatible SysV style init script
 
-Service User
+1. Service User
 ---------------------------------
 
-All three Linux startup configurations assume the existence of a "pigeon" user
+All three Linux startup configurations assume the existence of a "pigeoncore" user
 and group.  They must be created before attempting to use these scripts.
 The OS X configuration assumes pigeond will be set up for the current user.
 
-Configuration
+2. Configuration
 ---------------------------------
 
 At a bare minimum, pigeond requires that the rpcpassword setting be set
@@ -46,36 +46,36 @@ relative to the data directory. `wallet` *only* supports relative paths.
 For an example configuration file that describes the configuration settings,
 see `contrib/debian/examples/pigeon.conf`.
 
-Paths
+3. Paths
 ---------------------------------
 
-### Linux
+3a) Linux
 
 All three configurations assume several paths that might need to be adjusted.
 
 Binary:              `/usr/bin/pigeond`  
-Configuration file:  `/etc/pigeon/pigeon.conf`  
+Configuration file:  `/etc/pigeoncore/pigeon.conf`  
 Data directory:      `/var/lib/pigeond`  
 PID file:            `/var/run/pigeond/pigeond.pid` (OpenRC and Upstart) or `/var/lib/pigeond/pigeond.pid` (systemd)  
 Lock file:           `/var/lock/subsys/pigeond` (CentOS)  
 
 The configuration file, PID directory (if applicable) and data directory
-should all be owned by the pigeon user and group.  It is advised for security
+should all be owned by the pigeoncore user and group.  It is advised for security
 reasons to make the configuration file and data directory only readable by the
-pigeon user and group.  Access to pigeon-cli and other pigeond rpc clients
+pigeoncore user and group.  Access to pigeon-cli and other pigeond rpc clients
 can then be controlled by group membership.
 
-### Mac OS X
+3b) Mac OS X
 
 Binary:              `/usr/local/bin/pigeond`  
-Configuration file:  `~/Library/Application Support/Pigeon/pigeon.conf`  
-Data directory:      `~/Library/Application Support/Pigeon`  
-Lock file:           `~/Library/Application Support/Pigeon/.lock`  
+Configuration file:  `~/Library/Application Support/PigeonCore/pigeon.conf`  
+Data directory:      `~/Library/Application Support/PigeonCore`
+Lock file:           `~/Library/Application Support/PigeonCore/.lock`
 
-Installing Service Configuration
+4. Installing Service Configuration
 -----------------------------------
 
-### systemd
+4a) systemd
 
 Installing this .service file consists of just copying it to
 /usr/lib/systemd/system directory, followed by the command
@@ -84,14 +84,14 @@ Installing this .service file consists of just copying it to
 To test, run `systemctl start pigeond` and to enable for system startup run
 `systemctl enable pigeond`
 
-### OpenRC
+4b) OpenRC
 
 Rename pigeond.openrc to pigeond and drop it in /etc/init.d.  Double
 check ownership and permissions and make it executable.  Test it with
 `/etc/init.d/pigeond start` and configure it to run on startup with
 `rc-update add pigeond`
 
-### Upstart (for Debian/Ubuntu based distributions)
+4c) Upstart (for Debian/Ubuntu based distributions)
 
 Drop pigeond.conf in /etc/init.  Test by running `service pigeond start`
 it will automatically start on reboot.
@@ -99,7 +99,7 @@ it will automatically start on reboot.
 NOTE: This script is incompatible with CentOS 5 and Amazon Linux 2014 as they
 use old versions of Upstart and do not supply the start-stop-daemon utility.
 
-### CentOS
+4d) CentOS
 
 Copy pigeond.init to /etc/init.d/pigeond. Test by running `service pigeond start`.
 
@@ -107,7 +107,7 @@ Using this script, you can adjust the path and flags to the pigeond program by
 setting the PIGEOND and FLAGS environment variables in the file
 /etc/sysconfig/pigeond. You can also use the DAEMONOPTS environment variable here.
 
-### Mac OS X
+4e) Mac OS X
 
 Copy org.pigeon.pigeond.plist into ~/Library/LaunchAgents. Load the launch agent by
 running `launchctl load ~/Library/LaunchAgents/org.pigeon.pigeond.plist`.
@@ -116,9 +116,9 @@ This Launch Agent will cause pigeond to start whenever the user logs in.
 
 NOTE: This approach is intended for those wanting to run pigeond as the current user.
 You will need to modify org.pigeon.pigeond.plist if you intend to use it as a
-Launch Daemon with a dedicated pigeon user.
+Launch Daemon with a dedicated pigeoncore user.
 
-Auto-respawn
+5. Auto-respawn
 -----------------------------------
 
 Auto respawning is currently only configured for Upstart and systemd.

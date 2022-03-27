@@ -1,0 +1,211 @@
+name: Continuous Integration on master
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+env:
+  SOURCE_ARTIFACT: source
+  VERSION: 1.18.1.0
+jobs:
+  create-source-distribution:
+    name: Create Source Distribution
+    runs-on: ubuntu-18.04
+    env:
+      ARTIFACT_DIR: source
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install Required Packages
+        run: |
+          sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake
+          sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler
+          sudo apt-get install software-properties-common
+          sudo add-apt-repository ppa:pivx/pivx
+          sudo apt-get update
+          sudo apt-get install -y libboost-all-dev libdb4.8-dev libdb4.8++-dev libevent-dev python3-setuptools
+          sudo apt-get update
+          pip3 install wheel
+          pip3 install --user futoin-cid
+      - name: Create Distribution Tarball
+        run: |
+          ./autogen.sh
+          ./configure
+          make dist
+      - name: Download Dependencies
+        run: make -C depends download
+      - name: Create Dependencies Tarball
+        run: tar -czf depends.tar.gz depends
+      - name: Prepare Files for Artifact
+        run: |
+          mkdir -p $ARTIFACT_DIR
+          mv depends.tar.gz pigeoncore-*.tar.gz $ARTIFACT_DIR
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ env.SOURCE_ARTIFACT }}
+          path: ${{ env.ARTIFACT_DIR }}
+  build-ubuntu18:
+    name: Build for Ubuntu 18.04
+    needs: create-source-distribution
+    runs-on: ubuntu-18.04
+    env:
+      ARTIFACT_DIR: pigeoncoin-ubuntu18
+      TEST_LOG_ARTIFACT_DIR: test-logs
+    steps:
+      - name: Getting Source
+        uses: actions/download-artifact@v1
+        with:
+          name: ${{ env.SOURCE_ARTIFACT }}
+      - name: Extract Archives
+        run: |
+          tar -xzf depends.tar.gz
+          tar -xzf pigeoncore-*.tar.gz --strip-components=1
+        working-directory: ${{ env.SOURCE_ARTIFACT }}
+      - name: Install Required Packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-zmq
+      - name: Build Dependencies
+        run: |
+          sudo apt-get update
+          make -C depends -j$(nproc)
+        working-directory: ${{ env.SOURCE_ARTIFACT }}
+      - name: Build Pigeoncore
+        run: |
+          ./configure --prefix=$(realpath depends/x86_64-pc-linux-gnu)
+          make -j$(nproc)
+        working-directory: ${{ env.SOURCE_ARTIFACT }}
+      - name: Prepare Files for Artifact
+        run: |
+          mkdir -p $ARTIFACT_DIR
+          mv $SOURCE_ARTIFACT/src/{pigeon-cli,pigeon-tx,pigeond,qt/pigeon-qt} $ARTIFACT_DIR
+          strip $ARTIFACT_DIR/*
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ env.ARTIFACT_DIR }}-${{ env.VERSION }}
+          path: ${{ env.ARTIFACT_DIR }}
+  build-ubuntu20:
+    name: Build for Ubuntu 20.04
+    needs: create-source-distribution
+    runs-on: ubuntu-20.04
+    env:
+      ARTIFACT_DIR: pigeoncoin-ubuntu20
+      TEST_LOG_ARTIFACT_DIR: test-logs
+    steps:
+      - name: Getting Source
+        uses: actions/download-artifact@v1
+        with:
+          name: ${{ env.SOURCE_ARTIFACT }}
+      - name: Extract Archives
+        run: |
+          tar -xzf depends.tar.gz
+          tar -xzf pigeoncore-*.tar.gz --strip-components=1
+        working-directory: ${{ env.SOURCE_ARTIFACT }}
+      - name: Install Required Packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-zmq
+      - name: Build Dependencies
+        run: |
+          sudo apt-get update
+          make -C depends -j$(nproc)
+        working-directory: ${{ env.SOURCE_ARTIFACT }}
+      - name: Build Pigeoncore
+        run: |
+          ./configure --prefix=$(realpath depends/x86_64-pc-linux-gnu)
+          make -j$(nproc)
+        working-directory: ${{ env.SOURCE_ARTIFACT }}
+      - name: Prepare Files for Artifact
+        run: |
+          mkdir -p $ARTIFACT_DIR
+          mv $SOURCE_ARTIFACT/src/{pigeon-cli,pigeon-tx,pigeond,qt/pigeon-qt} $ARTIFACT_DIR
+          strip $ARTIFACT_DIR/*
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ env.ARTIFACT_DIR }}-${{ env.VERSION }}
+          path: ${{ env.ARTIFACT_DIR }}
+  build-windows:
+    name: Build for Windows
+    needs: create-source-distribution
+    runs-on: ubuntu-18.04
+    env:
+      ARTIFACT_DIR: pigeoncoin-win
+    steps:
+      - name: Getting Source
+        uses: actions/download-artifact@v1
+        with:
+          name: ${{ env.SOURCE_ARTIFACT }}
+      - name: Extract Archives
+        run: |
+          tar -xzf depends.tar.gz
+          tar -xzf pigeoncore-*.tar.gz --strip-components=1
+        working-directory: ${{ env.SOURCE_ARTIFACT }}
+      - name: Install Required Packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-mingw-w64-x86-64 gcc-mingw-w64-x86-64
+      - name: Switch MinGW GCC and G++ to POSIX Threading
+        run: |
+          sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
+          sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
+      - name: Build Dependencies
+        run:
+          make -C depends -j$(nproc) HOST=x86_64-w64-mingw32
+        working-directory: ${{ env.SOURCE_ARTIFACT }}
+      - name: Build Pigeoncore
+        run: |
+          ./configure --prefix=$(realpath depends/x86_64-w64-mingw32)
+          make -j$(nproc)
+        working-directory: ${{ env.SOURCE_ARTIFACT }}
+      - name: Prepare Files for Artifact
+        run: |
+          mkdir -p $ARTIFACT_DIR
+          mv $SOURCE_ARTIFACT/src/{pigeon-cli.exe,pigeon-tx.exe,pigeond.exe,qt/pigeon-qt.exe} $ARTIFACT_DIR
+          strip $ARTIFACT_DIR/*
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ env.ARTIFACT_DIR }}-${{ env.VERSION }}
+          path: ${{ env.ARTIFACT_DIR }}
+  #build-macos:
+  #  name: Build for macos
+  #  needs: create-source-distribution
+  #  runs-on: macos-10.15
+  #  env:
+  #    ARTIFACT_DIR: ${env.BINARIES-PREFIX}-macos-${env.VERSION}
+  #  steps:
+  #  - name: Getting Source
+  #    uses: actions/download-artifact@v1
+  #    with:
+  #      name: ${{ env.SOURCE_ARTIFACT }}
+  #  - name: Extract Archives
+  #    run: |
+  #      tar -xzf depends.tar.gz
+  #      tar -xzf pigeoncore-*.tar.gz --strip-components=1
+  #    working-directory: ${{ env.SOURCE_ARTIFACT }}
+  #  - name: Use Xcode instead of Command Line Tools
+  #    run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+  #  - name: Install Required Packages
+  #    run: brew install automake coreutils pkg-config
+  #  - name: Build Dependencies
+  #    run: make -C depends -j$(sysctl -n hw.activecpu)
+  #    working-directory: ${{ env.SOURCE_ARTIFACT }}
+  #  - name: Build Pigeoncore
+  #    run: |
+  #      ./configure --disable-jni --prefix=$(grealpath depends/x86_64-apple-darwin*)
+  #      make -j$(sysctl -n hw.activecpu)
+  #    working-directory: ${{ env.SOURCE_ARTIFACT }}
+  #  - name: Prepare Files for Artifact
+  #    run: |
+  #      mkdir -p $ARTIFACT_DIR
+  #      mv $SOURCE_ARTIFACT/src/{pigeon-cli,pigeon-tx,pigeond,qt/pigeon-qt} $ARTIFACT_DIR
+  #  - name: Upload Artifact
+  #    uses: actions/upload-artifact@v1
+  #    with:
+  #      name: mac-binaries
+  #      path: ${{ env.ARTIFACT_DIR }}

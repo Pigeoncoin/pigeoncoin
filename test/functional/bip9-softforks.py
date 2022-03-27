@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
+# Copyright (c) 2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP 9 soft forks.
@@ -23,7 +22,7 @@ import itertools
 
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
-from test_framework.mininode import CTransaction, NetworkThread
+from test_framework.mininode import CTransaction, network_thread_start
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import CScript, OP_1NEGATE, OP_CHECKSEQUENCEVERIFY, OP_DROP
@@ -31,13 +30,13 @@ from test_framework.script import CScript, OP_1NEGATE, OP_CHECKSEQUENCEVERIFY, O
 class BIP9SoftForksTest(ComparisonTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [['-whitelist=127.0.0.1']]
+        self.extra_args = [['-whitelist=127.0.0.1', '-dip3params=9000:9000']]
         self.setup_clean_chain = True
 
     def run_test(self):
         self.test = TestManager(self, self.options.tmpdir)
         self.test.add_all_connections(self.nodes)
-        NetworkThread().start() # Start up network handling in another thread
+        network_thread_start()
         self.test.run()
 
     def create_transaction(self, node, coinbase, to_address, amount):
@@ -77,13 +76,12 @@ class BIP9SoftForksTest(ComparisonTestFramework):
     def test_BIP(self, bipName, activated_version, invalidate, invalidatePostSignature, bitno):
         assert_equal(self.get_bip9_status(bipName)['status'], 'defined')
         assert_equal(self.get_bip9_status(bipName)['since'], 0)
-
         # generate some coins for later
         self.coinbase_blocks = self.nodes[0].generate(2)
         self.height = 3  # height of the next block to build
         self.tip = int("0x" + self.nodes[0].getbestblockhash(), 0)
         self.nodeaddress = self.nodes[0].getnewaddress()
-        self.last_block_time = int(time.time())
+        self.last_block_time = self.mocktime + 1
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'defined')
         assert_equal(self.get_bip9_status(bipName)['since'], 0)
@@ -246,7 +244,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         self.setup_chain()
         self.setup_network()
         self.test.add_all_connections(self.nodes)
-        NetworkThread().start()
+        network_thread_start()
         self.test.test_nodes[0].wait_for_verack()
 
     def get_tests(self):

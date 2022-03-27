@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test wallet import RPCs.
@@ -9,23 +8,24 @@ Test rescan behavior of importaddress, importpubkey, importprivkey, and
 importmulti RPCs with different types of keys and rescan options.
 
 In the first part of the test, node 0 creates an address for each type of
-import RPC call and sends PGN to it. Then other nodes import the addresses,
+import RPC call and sends BTC to it. Then other nodes import the addresses,
 and the test makes listtransactions and getbalance calls to confirm that the
 importing node either did or did not execute rescans picking up the send
 transactions.
 
-In the second part of the test, node 0 sends more PGN to each address, and the
+In the second part of the test, node 0 sends more BTC to each address, and the
 test makes more listtransactions and getbalance calls to confirm that the
 importing nodes pick up the new transactions regardless of whether rescans
 happened previously.
 """
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (assert_raises_rpc_error, connect_nodes, sync_blocks, assert_equal, set_node_times)
 
 import collections
 import enum
 import itertools
+import sys
 
 Call = enum.Enum("Call", "single multi")
 Data = enum.Enum("Data", "address pub priv")
@@ -71,7 +71,7 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
     def check(self, txid=None, amount=None, confirmations=None):
         """Verify that getbalance/listtransactions return expected values."""
 
-        balance = self.node.getbalance(self.label, 0, True)
+        balance = self.node.getbalance(self.label, 0, False, True)
         assert_equal(balance, self.expected_balance)
 
         txs = self.node.listtransactions(self.label, 10000, 0, True)
@@ -115,7 +115,7 @@ IMPORT_NODES = [ImportNode(*fields) for fields in itertools.product((False, True
 TIMESTAMP_WINDOW = 2 * 60 * 60
 
 
-class ImportRescanTest(PigeonTestFramework):
+class ImportRescanTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2 + len(IMPORT_NODES)
 
@@ -123,7 +123,8 @@ class ImportRescanTest(PigeonTestFramework):
         extra_args = [[] for _ in range(self.num_nodes)]
         for i, import_node in enumerate(IMPORT_NODES, 2):
             if import_node.prune:
-                extra_args[i] += ["-prune=1"]
+                # txindex is enabled by default in Pigeon and needs to be disabled for import-rescan.py
+                extra_args[i] += ["-prune=1", "-txindex=0", "-reindex"]
 
         self.add_nodes(self.num_nodes, extra_args)
         self.start_nodes()
@@ -166,6 +167,7 @@ class ImportRescanTest(PigeonTestFramework):
                 variant.check()
 
         # Create new transactions sending to each address.
+        fee = self.nodes[0].getnetworkinfo()["relayfee"]
         for i, variant in enumerate(IMPORT_VARIANTS):
             variant.sent_amount = 10 - (2 * i + 1) / 8.0
             variant.sent_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.sent_amount)

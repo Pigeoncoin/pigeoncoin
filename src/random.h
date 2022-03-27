@@ -1,11 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2009-2014 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_RANDOM_H
-#define PIGEON_RANDOM_H
+#ifndef BITCOIN_RANDOM_H
+#define BITCOIN_RANDOM_H
 
 #include "crypto/chacha20.h"
 #include "crypto/common.h"
@@ -23,6 +22,8 @@ void GetRandBytes(unsigned char* buf, int num);
 uint64_t GetRand(uint64_t nMax);
 int GetRandInt(int nMax);
 uint256 GetRandHash();
+
+bool GetRandBool(double rate);
 
 /**
  * Add a little bit of randomness to the output of GetStrongRangBytes.
@@ -60,7 +61,7 @@ private:
         if (requires_seed) {
             RandomSeed();
         }
-        rng.Output(bytebuf, sizeof(bytebuf));
+        rng.Keystream(bytebuf, sizeof(bytebuf));
         bytebuf_size = sizeof(bytebuf);
     }
 
@@ -111,6 +112,14 @@ public:
         }
     }
 
+    uint32_t rand32(uint32_t nMax) {
+        return rand32() % nMax;
+    }
+
+    uint32_t operator()(uint32_t nMax) {
+        return rand32(nMax);
+    }
+
     /** Generate random bytes. */
     std::vector<unsigned char> randbytes(size_t len);
 
@@ -144,4 +153,4 @@ bool Random_SanityCheck();
 /** Initialize the RNG. */
 void RandomInit();
 
-#endif // PIGEON_RANDOM_H
+#endif // BITCOIN_RANDOM_H

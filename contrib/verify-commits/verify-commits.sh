@@ -1,6 +1,5 @@
 #!/bin/sh
 # Copyright (c) 2014-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -40,7 +39,7 @@ PREV_COMMIT=""
 while true; do
 	if [ "$CURRENT_COMMIT" = $VERIFIED_ROOT ]; then
 		echo "There is a valid path from "$CURRENT_COMMIT" to $VERIFIED_ROOT where all commits are signed!"
-		exit 0
+		exit 0;
 	fi
 
 	if [ "$CURRENT_COMMIT" = $VERIFIED_SHA512_ROOT ]; then
@@ -52,15 +51,15 @@ while true; do
 	fi
 
 	if [ "$NO_SHA1" = "1" ]; then
-		export PIGEON_VERIFY_COMMITS_ALLOW_SHA1=0
+		export BITCOIN_VERIFY_COMMITS_ALLOW_SHA1=0
 	else
-		export PIGEON_VERIFY_COMMITS_ALLOW_SHA1=1
+		export BITCOIN_VERIFY_COMMITS_ALLOW_SHA1=1
 	fi
 
 	if [ "${REVSIG_ALLOWED#*$CURRENT_COMMIT}" != "$REVSIG_ALLOWED" ]; then
-		export PIGEON_VERIFY_COMMITS_ALLOW_REVSIG=1
+		export BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG=1
 	else
-		export PIGEON_VERIFY_COMMITS_ALLOW_REVSIG=0
+		export BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG=0
 	fi
 
 	if ! git -c "gpg.program=${DIR}/gpg.sh" verify-commit "$CURRENT_COMMIT" > /dev/null; then

@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the REST API."""
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from struct import *
 from io import BytesIO
@@ -41,7 +40,7 @@ def http_post_call(host, port, path, requestdata = '', response_object = 0):
 
     return conn.getresponse().read()
 
-class RESTTest (PigeonTestFramework):
+class RESTTest (BitcoinTestFramework):
     FORMAT_SEPARATOR = "."
 
     def set_test_params(self):
@@ -61,7 +60,7 @@ class RESTTest (PigeonTestFramework):
         self.nodes[2].generate(100)
         self.sync_all()
 
-        assert_equal(self.nodes[0].getbalance(), 5000)
+        assert_equal(self.nodes[0].getbalance(), 500)
 
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
         self.sync_all()

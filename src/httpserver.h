@@ -1,10 +1,9 @@
-// Copyright (c) 2015-2016 The Bitcoin Core developers
-// Copyright (c) 2017 The Pigeon Core developers
+// Copyright (c) 2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIGEON_HTTPSERVER_H
-#define PIGEON_HTTPSERVER_H
+#ifndef BITCOIN_HTTPSERVER_H
+#define BITCOIN_HTTPSERVER_H
 
 #include <string>
 #include <stdint.h>
@@ -62,7 +61,7 @@ private:
     bool replySent;
 
 public:
-    explicit HTTPRequest(struct evhttp_request* req);
+    HTTPRequest(struct evhttp_request* req);
     ~HTTPRequest();
 
     enum RequestMethod {
@@ -151,4 +150,4 @@ private:
 
 std::string urlDecode(const std::string &urlEncoded);
 
-#endif // PIGEON_HTTPSERVER_H
+#endif // BITCOIN_HTTPSERVER_H

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet backup features.
@@ -9,7 +8,7 @@ Test case is:
 4 nodes. 1 2 and 3 send transactions between each other,
 fourth node is a miner.
 1 2 3 each mine a block to start, then
-Miner creates 100 blocks so 1 2 3 each have 50 mature
+Miner creates 100 blocks so 1 2 3 each have 500 mature
 coins to spend.
 Then 5 iterations of 1/2/3 sending coins amongst
 themselves to get transactions in the wallets,
@@ -22,7 +21,7 @@ Miner then generates 101 more blocks, so any
 transaction fees paid mature.
 
 Sanity check:
-  Sum(1,2,3,4 balances) == 114*50
+  Sum(1,2,3,4 balances) == 114*500
 
 1/2/3 are shutdown, and their wallets erased.
 Then restore using wallet.dat backup. And
@@ -34,10 +33,10 @@ and confirm again balances are correct.
 from random import randint
 import shutil
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-class WalletBackupTest(PigeonTestFramework):
+class WalletBackupTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
@@ -106,9 +105,9 @@ class WalletBackupTest(PigeonTestFramework):
         self.nodes[3].generate(100)
         sync_blocks(self.nodes)
 
-        assert_equal(self.nodes[0].getbalance(), 5000)
-        assert_equal(self.nodes[1].getbalance(), 5000)
-        assert_equal(self.nodes[2].getbalance(), 5000)
+        assert_equal(self.nodes[0].getbalance(), 500)
+        assert_equal(self.nodes[1].getbalance(), 500)
+        assert_equal(self.nodes[2].getbalance(), 500)
         assert_equal(self.nodes[3].getbalance(), 0)
 
         self.log.info("Creating transactions")
@@ -140,8 +139,8 @@ class WalletBackupTest(PigeonTestFramework):
         total = balance0 + balance1 + balance2 + balance3
 
         # At this point, there are 214 blocks (103 for setup, then 10 rounds, then 101.)
-        # 114 are mature, so the sum of all wallets should be 114 * 50 = 5700.
-        assert_equal(total, 570000)
+        # 114 are mature, so the sum of all wallets should be 114 * 500 = 57000.
+        assert_equal(total, 57000)
 
         ##
         # Test restoring spender wallets from backups
@@ -153,6 +152,7 @@ class WalletBackupTest(PigeonTestFramework):
         # Start node2 with no chain
         shutil.rmtree(self.options.tmpdir + "/node2/regtest/blocks")
         shutil.rmtree(self.options.tmpdir + "/node2/regtest/chainstate")
+        shutil.rmtree(self.options.tmpdir + "/node2/regtest/evodb")
 
         # Restore wallets from backup
         shutil.copyfile(tmpdir + "/node0/wallet.bak", tmpdir + "/node0/regtest/wallet.dat")
@@ -174,6 +174,7 @@ class WalletBackupTest(PigeonTestFramework):
         #start node2 with no chain
         shutil.rmtree(self.options.tmpdir + "/node2/regtest/blocks")
         shutil.rmtree(self.options.tmpdir + "/node2/regtest/chainstate")
+        shutil.rmtree(self.options.tmpdir + "/node2/regtest/evodb")
 
         self.start_three()
 
@@ -190,6 +191,16 @@ class WalletBackupTest(PigeonTestFramework):
         assert_equal(self.nodes[0].getbalance(), balance0)
         assert_equal(self.nodes[1].getbalance(), balance1)
         assert_equal(self.nodes[2].getbalance(), balance2)
+
+        # Backup to source wallet file must fail
+        sourcePaths = [
+            tmpdir + "/node0/regtest/wallet.dat",
+            tmpdir + "/node0/./regtest/wallet.dat",
+            tmpdir + "/node0/regtest/",
+            tmpdir + "/node0/regtest"]
+
+        for sourcePath in sourcePaths:
+            assert_raises_rpc_error(-4, "backup failed", self.nodes[0].backupwallet, sourcePath)
 
 
 if __name__ == '__main__':

@@ -3,66 +3,42 @@ Developer Notes
 
 Various coding styles have been used during the history of the codebase,
 and the result is not very consistent. However, we're now trying to converge to
-a single style, which is specified below. When writing patches, favor the new
-style over attempting to mimic the surrounding style, except for move-only
-commits.
-
-Do not submit patches solely to modify the style of existing code.
-
-- **Indentation and whitespace rules** as specified in
-[src/.clang-format](/src/.clang-format). You can use the provided
+a single style, so please use it in new code. Old code will be converted
+gradually and you are encouraged to use the provided
 [clang-format-diff script](/contrib/devtools/README.md#clang-format-diffpy)
-tool to clean up patches automatically before submission.
+to clean up the patch automatically before submitting a pull request.
+
+- Basic rules specified in [src/.clang-format](/src/.clang-format).
   - Braces on new lines for namespaces, classes, functions, methods.
   - Braces on the same line for everything else.
   - 4 space indentation (no tabs) for every block except namespaces.
   - No indentation for `public`/`protected`/`private` or for `namespace`.
   - No extra spaces inside parenthesis; don't do ( this )
   - No space after function names; one space after `if`, `for` and `while`.
-  - If an `if` only has a single-statement `then`-clause, it can appear
-    on the same line as the `if`, without braces. In every other case,
-    braces are required, and the `then` and `else` clauses must appear
+  - If an `if` only has a single-statement then-clause, it can appear
+    on the same line as the if, without braces. In every other case,
+    braces are required, and the then and else clauses must appear
     correctly indented on a new line.
-
-- **Symbol naming conventions**. These are preferred in new code, but are not
-required when doing so would need changes to significant pieces of existing
-code.
-  - Variable and namespace names are all lowercase, and may use `_` to
-    separate words (snake_case).
-    - Class member variables have a `m_` prefix.
-    - Global variables have a `g_` prefix.
-  - Constant names are all uppercase, and use `_` to separate words.
-  - Class names, function names and method names are UpperCamelCase
-    (PascalCase). Do not prefix class names with `C`.
-
-- **Miscellaneous**
   - `++i` is preferred over `i++`.
-  - `nullptr` is preferred over `NULL` or `(void*)0`.
-  - `static_assert` is preferred over `assert` where possible. Generally; compile-time checking is preferred over run-time checking.
+  - Align pointers and references to the left i.e. use `type& var` and not `type &var`.
 
 Block style example:
 ```c++
-int g_count = 0;
-
 namespace foo
 {
 class Class
 {
-    std::string m_name;
-
-public:
     bool Function(const std::string& s, int n)
     {
         // Comment summarising what this section of code does
         for (int i = 0; i < n; ++i) {
-            int total_sum = 0;
             // When something fails, return early
             if (!Something()) return false;
             ...
-            if (SomethingElse(i)) {
-                total_sum += ComputeSomething(g_count);
+            if (SomethingElse()) {
+                DoMore();
             } else {
-                DoSomething(m_name, total_sum);
+                DoLess();
             }
         }
 
@@ -153,7 +129,7 @@ to see it.
 
 **testnet and regtest modes**
 
-Run with the -testnet option to run with "play pigeons" on the test network, if you
+Run with the -testnet option to run with "play coins" on the test network, if you
 are testing multi-machine code that needs to operate across the internet.
 
 If you are testing something that can run on one machine, run with the -regtest option.
@@ -203,17 +179,28 @@ Threads
 
 - ThreadOpenConnections : Initiates new connections to peers.
 
+- ThreadOpenMasternodeConnections : Opens network connections to masternodes.
+
 - ThreadMessageHandler : Higher-level message handling (sending and receiving).
 
 - DumpAddresses : Dumps IP addresses of nodes to peers.dat.
 
 - ThreadFlushWalletDB : Close the wallet.dat file if it hasn't been used in 500ms.
 
-- ThreadRPCServer : Remote procedure call handler, listens on port 8756 for connections and services them.
-
-- PigeonMiner : Generates pigeons (if wallet is enabled).
+- ThreadRPCServer : Remote procedure call handler, listens on port 9998 for connections and services them.
 
 - Shutdown : Does an orderly shutdown of everything.
+
+- CSigSharesManager::WorkThreadMain : Processes pending BLS signature shares.
+
+- CInstantSendManager::WorkThreadMain : Processes pending InstantSend locks.
+
+Thread pools
+------------
+
+- CBLSWorker : A highly parallelized worker/helper for BLS/DKG calculations.
+
+- CDKGSessionManager : A thread pool for processing LLMQ messages.
 
 Ignoring IDE/editor files
 --------------------------
@@ -277,7 +264,7 @@ Wallet
 
   - *Rationale*: In RPC code that conditionally uses the wallet (such as
     `validateaddress`) it is easy to forget that global pointer `pwalletMain`
-    can be nullptr. See `test/functional/disablewallet.py` for functional tests
+    can be NULL. See `test/functional/disablewallet.py` for functional tests
     exercising the API with `-disablewallet`
 
 - Include `db_cxx.h` (BerkeleyDB header) only when `ENABLE_WALLET` is set
@@ -331,12 +318,6 @@ C++ data structures
 
   - *Rationale*: Ensure determinism by avoiding accidental use of uninitialized
     values. Also, static analyzers balk about this.
-
-- By default, declare single-argument constructors `explicit`.
-
-  - *Rationale*: This is a precaution to avoid unintended conversions that might
-    arise when single-argument constructors are used as implicit conversion
-    functions.
 
 - Use explicitly signed or unsigned `char`s, or even better `uint8_t` and
   `int8_t`. Do not use bare `char` unless it is to pass to a third-party API.
@@ -400,8 +381,7 @@ Threads and synchronization
 ----------------------------
 
 - Build and run tests with `-DDEBUG_LOCKORDER` to verify that no potential
-  deadlocks are introduced. As of 0.12, this is defined by default when
-  configuring with `--enable-debug`
+  deadlocks are introduced.
 
 - When using `LOCK`/`TRY_LOCK` be aware that the lock exists in the context of
   the current scope, so surround the statement and the code that needs the lock
@@ -475,7 +455,7 @@ Subtrees
 
 Several parts of the repository are subtrees of software maintained elsewhere.
 
-Some of these are maintained by active developers of Pigeon Core, in which case changes should probably go
+Some of these are maintained by active developers of Bitcoin Core, in which case changes should probably go
 directly upstream without being PRed directly against the project.  They will be merged back in the next
 subtree merge.
 
@@ -492,10 +472,10 @@ Current subtrees include:
   - Upstream at https://github.com/google/leveldb ; Maintained by Google, but open important PRs to Core to avoid delay
 
 - src/libsecp256k1
-  - Upstream at https://github.com/pigeon-core/secp256k1/ ; actively maintaned by Core contributors.
+  - Upstream at https://github.com/bitcoin-core/secp256k1/ ; actively maintaned by Core contributors.
 
 - src/crypto/ctaes
-  - Upstream at https://github.com/pigeon-core/ctaes ; actively maintained by Core contributors.
+  - Upstream at https://github.com/bitcoin-core/ctaes ; actively maintained by Core contributors.
 
 - src/univalue
   - Upstream at https://github.com/jgarzik/univalue ; report important PRs to Core to avoid delay.
@@ -543,31 +523,11 @@ Git and GitHub tips
 
         [remote "upstream-pull"]
                 fetch = +refs/pull/*:refs/remotes/upstream-pull/*
-                url = git@github.com:pigeon/pigeon.git
+                url = git@github.com:bitcoin/bitcoin.git
 
   This will add an `upstream-pull` remote to your git repository, which can be fetched using `git fetch --all`
   or `git fetch upstream-pull`. Afterwards, you can use `upstream-pull/NUMBER/head` in arguments to `git show`,
   `git checkout` and anywhere a commit id would be acceptable to see the changes from pull request NUMBER.
-
-Scripted diffs
---------------
-
-For reformatting and refactoring commits where the changes can be easily automated using a bash script, we use
-scripted-diff commits. The bash script is included in the commit message and our Travis CI job checks that
-the result of the script is identical to the commit. This aids reviewers since they can verify that the script
-does exactly what it's supposed to do. It is also helpful for rebasing (since the same script can just be re-run
-on the new master commit).
-
-To create a scripted-diff:
-
-- start the commit message with `scripted-diff:` (and then a description of the diff on the same line)
-- in the commit message include the bash script between lines containing just the following text:
-    - `-BEGIN VERIFY SCRIPT-`
-    - `-END VERIFY SCRIPT-`
-
-The scripted-diff is verified by the tool `contrib/devtools/commit-script-check.sh`
-
-Commit `bb81e173` is an example of a scripted-diff.
 
 RPC interface guidelines
 --------------------------
@@ -598,18 +558,20 @@ A few guidelines for introducing and reviewing new RPC interfaces:
     is specified as-is in BIP22.
 
 - Missing arguments and 'null' should be treated the same: as default values. If there is no
-  default value, both cases should fail in the same way. The easiest way to follow this
-  guideline is detect unspecified arguments with `params[x].isNull()` instead of
-  `params.size() <= x`. The former returns true if the argument is either null or missing,
-  while the latter returns true if is missing, and false if it is null.
+  default value, both cases should fail in the same way.
 
   - *Rationale*: Avoids surprises when switching to name-based arguments. Missing name-based arguments
   are passed as 'null'.
 
+  - *Exception*: Many legacy exceptions to this exist, one of the worst ones is
+    `getbalance` which follows a completely different code path based on the
+    number of arguments. We are still in the process of cleaning these up. Do not introduce
+    new ones.
+
 - Try not to overload methods on argument type. E.g. don't make `getblock(true)` and `getblock("hash")`
   do different things.
 
-  - *Rationale*: This is impossible to use with `pigeon-cli`, and can be surprising to users.
+  - *Rationale*: This is impossible to use with `bitcoin-cli`, and can be surprising to users.
 
   - *Exception*: Some RPC calls can take both an `int` and `bool`, most notably when a bool was switched
     to a multi-value, or due to other historical reasons. **Always** have false map to 0 and
@@ -628,19 +590,14 @@ A few guidelines for introducing and reviewing new RPC interfaces:
 
 - Add every non-string RPC argument `(method, idx, name)` to the table `vRPCConvertParams` in `rpc/client.cpp`.
 
-  - *Rationale*: `pigeon-cli` and the GUI debug console use this table to determine how to
+  - *Rationale*: `bitcoin-cli` and the GUI debug console use this table to determine how to
     convert a plaintext command line to JSON. If the types don't match, the method can be unusable
     from there.
 
 - A RPC method must either be a wallet method or a non-wallet method. Do not
-  introduce new methods such as `signrawtransaction` that differ in behavior
-  based on presence of a wallet.
+  introduce new methods such as `getinfo` and `signrawtransaction` that differ
+  in behavior based on presence of a wallet.
 
   - *Rationale*: as well as complicating the implementation and interfering
     with the introduction of multi-wallet, wallet and non-wallet code should be
     separated to avoid introducing circular dependencies between code units.
-
-- Try to make the RPC response a JSON object.
-
-  - *Rationale*: If a RPC response is not a JSON object then it is harder to avoid API breakage if
-    new data in the response is needed.

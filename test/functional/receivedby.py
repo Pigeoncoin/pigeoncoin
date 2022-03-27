@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Pigeon Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listreceivedbyaddress RPC."""
 
-from test_framework.test_framework import PigeonTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 def get_sub_array_from_array(object_array, to_match):
@@ -23,10 +22,10 @@ def get_sub_array_from_array(object_array, to_match):
         return item
     return []
 
-class ReceivedByTest(PigeonTestFramework):
+class ReceivedByTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.enable_mocktime()
+        self.set_cache_mocktime()
 
     def run_test(self):
         '''
@@ -57,7 +56,7 @@ class ReceivedByTest(PigeonTestFramework):
 
         #Empty Tx
         addr = self.nodes[1].getnewaddress()
-        assert_array_result(self.nodes[1].listreceivedbyaddress(0,True),
+        assert_array_result(self.nodes[1].listreceivedbyaddress(0, False, True),
                            {"address":addr},
                            {"address":addr, "account":"", "amount":0, "confirmations":0, "txids":[]})
 
@@ -124,7 +123,7 @@ class ReceivedByTest(PigeonTestFramework):
 
         #Create a new account named "mynewaccount" that has a 0 balance
         self.nodes[1].getaccountaddress("mynewaccount")
-        received_by_account_json = get_sub_array_from_array(self.nodes[1].listreceivedbyaccount(0,True),{"account":"mynewaccount"})
+        received_by_account_json = get_sub_array_from_array(self.nodes[1].listreceivedbyaccount(0, False, True),{"account":"mynewaccount"})
         if len(received_by_account_json) == 0:
             raise AssertionError("No accounts found in node")
 
