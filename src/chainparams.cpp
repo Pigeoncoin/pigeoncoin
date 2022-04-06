@@ -308,10 +308,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_DIP0008].nThreshold = 3226; // 80% of 4032
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000065da5a22187c98d2"); // 1480000
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000008b58726f3f2ca043"); // 1480000
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x0000000000081d8baa7fb0ddfcedc9f9eaacd8241a47d787756cf4e0ea831f25"); // 1480000
+        consensus.defaultAssumeValid = uint256S("0x000000000033926d0e6cc2f8fc4a66c7077d1bc23028fffdf8e2d3df7c65b82d"); // 1480000
 
         std::vector<FounderRewardStructure> rewardStructures = {  {1420000, 5}// 5% founder/dev fee for blocks between startFounder block and 500k block
 
@@ -388,14 +388,15 @@ public:
         checkpointData = (CCheckpointData) {
             {
                 {1480000, uint256S("0x0000000000081d8baa7fb0ddfcedc9f9eaacd8241a47d787756cf4e0ea831f25")},
+                {2039126, uint256S("0x00000000016d6a716bf6cc8c718b20a273d1c1a106efe6d92c64653ba4295322")},
             }
         };
 
         chainTxData = ChainTxData{
-            1568755000, // * UNIX timestamp of last known number of transactions (Block 1173619)
-            519492,   // * total number of transactions between genesis and that timestamp
+            1649271949, // * UNIX timestamp of last known number of transactions (Block 2039126)
+            3604057,   // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
-            0.1         // * estimated number of transactions per second after that timestamp
+            0.028         // * estimated number of transactions per second after that timestamp
         };
     }
 };
