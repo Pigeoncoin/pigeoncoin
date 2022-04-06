@@ -234,7 +234,7 @@ public:
     CMainParams() {
         strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 2100000; // Note: actual number of blocks per calendar year with DGW v3 is ~200700 (for example 449750 - 249050)
-        consensus.nMasternodePaymentsStartBlock = 1986540; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
+        consensus.nMasternodePaymentsStartBlock = 2094230; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 2058000; // actual historical value
         consensus.nMasternodePaymentsIncreasePeriod = 576*30; // 17280 - actual historical value
         consensus.nInstantSendConfirmationsRequired = 6;
@@ -252,11 +252,11 @@ public:
         consensus.BIP34Hash = uint256S("0x000000bf3ab765e3f2c75ae426539633e5f94af22b94c7da67652a1d3f6e770b");
         consensus.BIP65Height = 1;
         consensus.BIP66Height = 1;
-        consensus.DIP0001Height = 2094230;
-        consensus.DIP0003Height = 2094230;
+        consensus.DIP0001Height = consensus.nMasternodePaymentsStartBlock;
+        consensus.DIP0003Height = consensus.nMasternodePaymentsStartBlock;
         consensus.DIP0003EnforcementHeight = 2074070;
         consensus.DIP0003EnforcementHash = uint256S("0x00");
-        consensus.DIP0008Height = 2094230;
+        consensus.DIP0008Height = consensus.nMasternodePaymentsStartBlock;
         consensus.nAfterExploitHeight = 186803;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetSpacing = 1 * 60; // PGN 1min
@@ -344,12 +344,10 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0x000000f049bef9fec0179131874c54c76c0ff59f695db30a4f0da52072c99492"));
         assert(genesis.hashMerkleRoot == uint256S("0xf0cc5f92b11a6655a4939fc239e8bf960cd0453b87b5a0820ab36904279341a5"));
 
-        vSeeds.emplace_back("seed.pigeoncoin.org", true);
-        vSeeds.emplace_back("seed2.pigeoncoin.org", true);
-        vSeeds.emplace_back("seed3.pigeoncoin.org", true);
-        vSeeds.emplace_back("seed4.pigeoncoin.org", true);
-        vSeeds.emplace_back("157.230.41.76", true);
-        vSeeds.emplace_back("seed.pigeoncoin.xyz", true);
+        vSeeds.emplace_back("165.232.173.117", true);
+        vSeeds.emplace_back("159.89.177.213", true);
+        vSeeds.emplace_back("138.68.75.8", true);
+        vSeeds.emplace_back("47.151.7.226", true);
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,55);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,122);
@@ -361,7 +359,7 @@ public:
         nExtCoinType = 5;
 
         // PchMsg Fork
-        pchMessageForktime = INT_MAX;
+        pchMessageForktime = 1653004800;
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
