@@ -253,7 +253,7 @@ public:
         consensus.BIP65Height = 1;
         consensus.BIP66Height = 1;
         consensus.DIP0001Height = consensus.nMasternodePaymentsStartBlock;
-        consensus.DIP0003Height = consensus.nMasternodePaymentsStartBlock;
+        consensus.DIP0003Height = 2074070;
         consensus.DIP0003EnforcementHeight = 2074070;
         consensus.DIP0003EnforcementHash = uint256S("0x00");
         consensus.DIP0008Height = consensus.nMasternodePaymentsStartBlock;
