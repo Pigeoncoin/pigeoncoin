@@ -345,6 +345,7 @@ public:
         assert(genesis.hashMerkleRoot == uint256S("0xf0cc5f92b11a6655a4939fc239e8bf960cd0453b87b5a0820ab36904279341a5"));
 
         vSeeds.emplace_back("165.232.173.117", true);
+        vSeeds.emplace_back("161.35.4.115", true);
         vSeeds.emplace_back("159.89.177.213", true);
         vSeeds.emplace_back("138.68.75.8", true);
         vSeeds.emplace_back("47.151.7.226", true);
