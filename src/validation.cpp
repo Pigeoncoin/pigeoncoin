@@ -1016,12 +1016,21 @@ NOTE:   unlike bitcoin we are using PREVIOUS block height here,
 CAmount GetBlockSubsidy(int nPrevHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly)
 {
     double dDiff;
+    
+    // Realign block payouts to original PGN code by block 4.2 million
+    if (nPrevHeight <= 2100000) {
+        return 5000 * COIN;
+    } else if (nPrevHeight <= 2300000) {
+        return 4178.57142858 * COIN;
+    } else if (nPrevHeight <= 4200000) {
+        return 2194.88 * COIN;
+    }
 
     CAmount nSubsidy = 5000 * COIN;
 
     // yearly decline of production by ~7.1% per year, projected ~18M coins max by year 2050+.
     for (int i = consensusParams.nSubsidyHalvingInterval; i <= nPrevHeight; i += consensusParams.nSubsidyHalvingInterval) {
-        nSubsidy -= nSubsidy/14;
+        nSubsidy -= nSubsidy/2;
     }
 
     // this is only active on devnets
