@@ -123,7 +123,10 @@ UniValue getinfo(const JSONRPCRequest& request)
     }
     obj.push_back(Pair("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK())));
 #endif
-    obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
+    int nHeight = chainActive.Height();
+    bool enforceHeightFee = nHeight > Params().GetConsensus().nEnforceMinFeeHeight;
+    UniValue minRelayFeeAmount = enforceHeightFee ? ValueFromAmount(::enforcedMinRelayTxFee.GetFeePerK()) : ValueFromAmount(::minRelayTxFee.GetFeePerK());
+    obj.push_back(Pair("relayfee",      minRelayFeeAmount));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
 }

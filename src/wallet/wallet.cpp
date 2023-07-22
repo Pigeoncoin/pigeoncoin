@@ -3912,7 +3912,10 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
 
                 // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
                 // because we must be at the maximum allowed fee.
-                if (nFeeNeeded < ::minRelayTxFee.GetFee(nBytes))
+                int nHeight = chainActive.Height();
+                bool enforceHeightFee = nHeight > Params().GetConsensus().nEnforceMinFeeHeight;
+                CFeeRate minRelayFeeRate = enforceHeightFee ? ::enforcedMinRelayTxFee : ::minRelayTxFee;
+                if (nFeeNeeded < minRelayFeeRate.GetFee(nBytes))
                 {
                     strFailReason = _("Transaction too large for fee policy");
                     return false;
@@ -4111,7 +4114,10 @@ bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry, CWalletDB *pwa
 
 CAmount CWallet::GetRequiredFee(unsigned int nTxBytes)
 {
-    return std::max(minTxFee.GetFee(nTxBytes), ::minRelayTxFee.GetFee(nTxBytes));
+    int nHeight = chainActive.Height();
+    bool enforceHeightFee = nHeight > Params().GetConsensus().nEnforceMinFeeHeight;
+    CFeeRate minRelayFeeRate = enforceHeightFee ? ::enforcedMinRelayTxFee : ::minRelayTxFee;
+    return std::max(minTxFee.GetFee(nTxBytes), minRelayFeeRate.GetFee(nTxBytes));
 }
 
 CAmount CWallet::GetMinimumFee(unsigned int nTxBytes, const CCoinControl& coin_control, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, FeeCalculation *feeCalc)
@@ -5389,7 +5395,10 @@ bool CWallet::ParameterInteraction()
     if (gArgs.GetArg("-prune", 0) && gArgs.GetBoolArg("-rescan", false))
         return InitError(_("Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again."));
 
-    if (::minRelayTxFee.GetFeePerK() > HIGH_TX_FEE_PER_KB)
+    int nHeight = chainActive.Height();
+    bool enforceHeightFee = nHeight > Params().GetConsensus().nEnforceMinFeeHeight;
+    CFeeRate minRelayFeeRate = enforceHeightFee ? ::enforcedMinRelayTxFee : ::minRelayTxFee;
+    if (minRelayFeeRate.GetFeePerK() > HIGH_TX_FEE_PER_KB)
         InitWarning(AmountHighWarn("-minrelaytxfee") + " " +
                     _("The wallet will avoid paying less than the minimum relay fee."));
 
@@ -5433,10 +5442,10 @@ bool CWallet::ParameterInteraction()
                         _("This is the transaction fee you will pay if you send a transaction."));
 
         payTxFee = CFeeRate(nFeePerK, 1000);
-        if (payTxFee < ::minRelayTxFee)
+        if (payTxFee < minRelayFeeRate)
         {
             return InitError(strprintf(_("Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
-                                       gArgs.GetArg("-paytxfee", ""), ::minRelayTxFee.ToString()));
+                                       gArgs.GetArg("-paytxfee", ""), minRelayFeeRate.ToString()));
         }
     }
     if (gArgs.IsArgSet("-maxtxfee"))
@@ -5447,10 +5456,10 @@ bool CWallet::ParameterInteraction()
         if (nMaxFee > HIGH_MAX_TX_FEE)
             InitWarning(_("-maxtxfee is set very high! Fees this large could be paid on a single transaction."));
         maxTxFee = nMaxFee;
-        if (CFeeRate(maxTxFee, 1000) < ::minRelayTxFee)
+        if (CFeeRate(maxTxFee, 1000) < minRelayFeeRate)
         {
             return InitError(strprintf(_("Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)"),
-                                       gArgs.GetArg("-maxtxfee", ""), ::minRelayTxFee.ToString()));
+                                       gArgs.GetArg("-maxtxfee", ""), minRelayFeeRate.ToString()));
         }
     }
     nTxConfirmTarget = gArgs.GetArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
