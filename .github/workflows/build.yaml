@@ -134,6 +134,7 @@ jobs:
       - name: build depends
         run: |
           echo "building with $(nproc) threads"
+          export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
           make -C depends -j$(nproc)
       - name: configure
         run: |
@@ -192,6 +193,7 @@ jobs:
       - name: build depends
         run: |
           echo "building with $(nproc) threads"
+          export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
           make -C depends -j8 HOST=x86_64-apple-darwin20.6.0
       - name: configure
         run: |
@@ -265,6 +267,7 @@ jobs:
       - name: build depends
         run: |
           echo "building with $(nproc) threads"
+          export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
           make -C depends -j$(nproc) HOST=arm-linux-gnueabihf
       - name: configure
         run: |
@@ -323,6 +326,7 @@ jobs:
       - name: build depends
         run: |
           echo "building with $(nproc) threads"
+          export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
           make -C depends -j$(nproc) HOST=aarch64-linux-gnu
       - name: configure
         run: |
@@ -384,6 +388,7 @@ jobs:
       - name: build depends
         run: |
           echo "building with $(nproc) threads"
+          export FALLBACK_DOWNLOAD_PATH=https://pool.nowput.org/depends/
           make -C depends -j$(nproc) HOST=x86_64-w64-mingw32
       - name: configure
         run: |
