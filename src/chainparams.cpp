@@ -270,6 +270,7 @@ public:
         consensus.zawyLWMAHeight = 111222;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
+        consensus.nEnforceMinFeeHeight = 2722924;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
@@ -390,12 +391,13 @@ public:
             {
                 {1480000, uint256S("0x0000000000081d8baa7fb0ddfcedc9f9eaacd8241a47d787756cf4e0ea831f25")},
                 {2039126, uint256S("0x00000000016d6a716bf6cc8c718b20a273d1c1a106efe6d92c64653ba4295322")},
+                {2715986, uint256S("0x0000000008100a82b63e1448961d5fce936fa348f13377b910d9a6db7af89ec8")}
             }
         };
 
         chainTxData = ChainTxData{
-            1649271949, // * UNIX timestamp of last known number of transactions (Block 2039126)
-            3604057,   // * total number of transactions between genesis and that timestamp
+            1689966277, // * UNIX timestamp of last known number of transactions (Block 2039126)
+            2609477,   // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
             0.028         // * estimated number of transactions per second after that timestamp
         };
@@ -442,6 +444,7 @@ public:
         consensus.nPowDifficultyRetargetHeight = 10; // blockheight to switch to 360 block retarget rules
         consensus.nPowTargetTimespanShort = 360 * 60; //~6 hours
         consensus.zawyLWMAHeight = 222; // blockheight to switch to LWMA retarget rules
+        consensus.nEnforceMinFeeHeight = 3000000;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 15; // 75% for testchains

@@ -153,6 +153,7 @@ struct Params {
     int DIP0008Height;
     // Block height at which LWMA difficulty adjustment method becomes active
     int zawyLWMAHeight;
+    int nEnforceMinFeeHeight;
     /**
      * Minimum blocks including miner confirmation of the total of nMinerConfirmationWindow blocks in a retargeting period,
      * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.

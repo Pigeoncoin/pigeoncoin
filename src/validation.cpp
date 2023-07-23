@@ -105,6 +105,7 @@ uint256 hashAssumeValid;
 arith_uint256 nMinimumChainWork;
 
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
+const CFeeRate enforcedMinRelayTxFee = CFeeRate(MIN_RELAY_TX_FEE);
 CAmount maxTxFee = DEFAULT_TRANSACTION_MAXFEE;
 
 CBlockPolicyEstimator feeEstimator;
@@ -652,7 +653,9 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         } // end LOCK(pool.cs)
 
         CAmount nFees = 0;
-        if (!Consensus::CheckTxInputs(tx, state, view, GetSpendHeight(view), nFees)) {
+        int spendHeight = GetSpendHeight(view);
+        bool enforceHeightFee = spendHeight > Params().GetConsensus().nEnforceMinFeeHeight;
+        if (!Consensus::CheckTxInputs(tx, state, view, spendHeight, nFees, enforceHeightFee)) {
             return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
         }
 
@@ -1930,7 +1933,8 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         if (!tx.IsCoinBase())
         {
             CAmount txfee = 0;
-            if (!Consensus::CheckTxInputs(tx, state, view, pindex->nHeight, txfee)) {
+            bool enforceHeightFee = pindex->nHeight > Params().GetConsensus().nEnforceMinFeeHeight;
+            if (!Consensus::CheckTxInputs(tx, state, view, pindex->nHeight, txfee, enforceHeightFee)) {
                 return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
             }
             nFees += txfee;
